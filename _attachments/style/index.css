@@ -1,8 +1,0 @@
-.server-controls {
-	padding:0 8px;
-}
-.server-controls a { opacity:0.75; }
-.server-controls a:hover { opacity:1; }
-.server-controls .server-addclient {}
-.server-controls .server-configure { float:right; padding-left:6px; }
-.server-controls .server-close { float:right; padding-left:6px; }
