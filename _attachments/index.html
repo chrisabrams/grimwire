@@ -1,146 +1,110 @@
 <!doctype html>
 <html>
 	<head>
-		<title>grimwire :: application index</title>
+		<title>grimwire: do magic</title>
 		<base href="http://grimwire.com/" />
+		<meta charset="UTF-8"></meta>
 
 		<!-- security policies -->
 		<meta http-equiv="X-WebKit-CSP" content="script-src 'self' ajax.googleapis.com"></meta>
 
 		<!-- styling -->
 		<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.css" />
+		<link rel="stylesheet" href="/assets/fontello/css/icons.css" />
 		<link rel="stylesheet" href="/index.css" />
 		<link rel="icon" type="image/vnd.microsoft.icon" href="/assets/icons/16x16/global_telecom.png" />
 	</head>
 	
-	<body style="background:url(http://farm9.staticflickr.com/8433/7880382896_7ab7a4a9a6_o.jpg) bottom left no-repeat fixed;background-size:cover">
+	<body>
 
-		<!-- taskbar -->
-		<div class="navbar navbar-fixed-bottom">
-			<div class="navbar-inner">
-				<div class="container" style="width: auto; padding: 0 20px;">
-					<a class="brand" href="#"><img src="/assets/icons/16x16/global_telecom.png" /> grimwire</a>
-					<ul class="nav">
-						<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">social.app</a>
-							<ul class="dropdown-menu">
-								<li>
-									<div class="server-controls">
-										<a class="server-addclient" href="#"><img src="/assets/icons/16x16/add.png" title="Add Client" /></a>
-										<a class="server-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close App" /></a>
-										<a class="server-configure" href="#"><img src="/assets/icons/16x16/gear_in.png" title="Configure App" /></a>
-									</div>
-								</li>
-								<li class="divider"></li>
-								<li><a href="#">httpl://social.app</a></li>
-								<li><a href="#">httpl://social.app/info</a></li>
-							</ul>
-						</li>
-						<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">profile.app</a>
-							<ul class="dropdown-menu">
-								<li>
-									<div class="server-controls">
-										<a class="server-addclient" href="#"><img src="/assets/icons/16x16/add.png" title="Add Client" /></a>
-										<a class="server-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close App" /></a>
-										<a class="server-configure" href="#"><img src="/assets/icons/16x16/gear_in.png" title="Configure App" /></a>
-									</div>
-								</li>
-								<li class="divider"></li>
-								<li><a href="#">httpl://profile.app</a></li>
-							</ul>
-						</li>
-						<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">wall.app</a>
-							<ul class="dropdown-menu">
-								<li>
-									<div class="server-controls">
-										<a class="server-addclient" href="#"><img src="/assets/icons/16x16/add.png" title="Add Client" /></a>
-										<a class="server-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close App" /></a>
-										<a class="server-configure" href="#"><img src="/assets/icons/16x16/gear_in.png" title="Configure App" /></a>
-									</div>
-								</li>
-								<li class="divider"></li>
-								<li><a href="#">httpl://wall.app</a></li>
-							</ul>
-						</li>
-						<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">friends.app</a>
-							<ul class="dropdown-menu">
-								<li>
-									<div class="server-controls">
-										<a class="server-addclient" href="#"><img src="/assets/icons/16x16/add.png" title="Add Client" /></a>
-										<a class="server-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close App" /></a>
-										<a class="server-configure" href="#"><img src="/assets/icons/16x16/gear_in.png" title="Configure App" /></a>
-									</div>
-								</li>
-								<li class="divider"></li>
-								<li><a href="#">httpl://friends.app</a></li>
-							</ul>
-						</li>
-						<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">facebook.app</a>
-							<ul class="dropdown-menu">
-								<li>
-									<div class="server-controls">
-										<a class="server-addclient" href="#"><img src="/assets/icons/16x16/add.png" title="Add Client" /></a>
-										<a class="server-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close App" /></a>
-										<a class="server-configure" href="#"><img src="/assets/icons/16x16/gear_in.png" title="Configure App" /></a>
-									</div>
-								</li>
-								<li class="divider"></li>
-								<li><a href="#">httpl://facebook.app</a></li>
-							</ul>
-						</li>
-					</ul>
-					<ul class="nav pull-right">
-						<li><a href="#" style="padding:8px 0 0"><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></a></li>
-					</ul>
-				</div>
+		<!-- active servers -->
+		<ul id="topside-bar" class="nav nav-pills">
+			<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">social.app</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">httpl://social.app</a></li>
+					<li><a href="#">httpl://social.app/info</a></li>
+				</ul>
+			</li>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">profile.app</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">httpl://profile.app</a></li>
+				</ul>
+			</li>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">wall.app</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">httpl://wall.app</a></li>
+				</ul>
+			</li>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">friends.app</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">httpl://friends.app</a></li>
+				</ul>
+			</li>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">facebook.app</a>
+				<ul class="dropdown-menu">
+					<li><a href="#">httpl://facebook.app</a></li>
+				</ul>
+			</li>
+		</ul>
+
+		<!-- sigils -->
+		<div id="leftside-bar">
+			<ul class="sigils">
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-cancel-squared charged" draggable="true" title="&laquo;Close&raquo;"></i></li>
+				<li><i class="icon-help" draggable="true" title="&laquo;Help&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-thumbs-up" draggable="true" title="&laquo;Like&raquo;"></i></li>
+				<li><i class="icon-comment" draggable="true" title="&laquo;Comment&raquo;"></i></li>
+				<li><i class="icon-mail-1" draggable="true" title="&laquo;Mail&raquo;"></i></li>
+				<li><i class="icon-rss" draggable="true" title="&laquo;Broadcast&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-vcard" draggable="true" title="&laquo;Contact&raquo;"></i></li>
+				<li><i class="icon-location" draggable="true" title="&laquo;Find&raquo;"></i></li>
+				<li><i class="icon-calendar" draggable="true" title="&laquo;Schedule&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-edit" draggable="true" title="&laquo;Edit&raquo;"></i></li>
+				<li><i class="icon-chart-line" draggable="true" title="&laquo;Chart&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-install" draggable="true" title="&laquo;Install&raquo;"></i></li>
+				<li><i class="icon-bookmark" draggable="true" title="&laquo;Bookmark&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+				<li><i class="icon-print" draggable="true" title="&laquo;Print&raquo;"></i></li>
+				<li><i class="icon-code" draggable="true" title="&laquo;Edit Code&raquo;"></i></li>
+				<li><i class="icon-cog" draggable="true" title="&laquo;Configure&raquo;"></i></li>
+				<li class="divider">&mdash;</li>
+
+				<!-- <li><i class="icon-home"></i></li>
+				<li><i class="icon-login"></i></li>
+				<li><i class="icon-logout"></i></li>
+				<li><i class="icon-folder-open"></i></li>
+				<li><i class="icon-floppy"></i></li> 
+				<li><i class="icon-megaphone-1"></i></li>
+				<li><i class="icon-phone"></i></li>
+				<li><i class="icon-book-1"></i></li>
+				<li><i class="icon-camera-1"></i></li>
+				<li><i class="icon-popup"></i></li>-->
+			</ul>
+		</div>
+
+		<div id="center">
+			<!-- client region -->
+			<div class="client-region">
+				<div id="intro" style="width:450px"><h1>Local <small>0.2.0 unstable</small></h1><p>Safely run user applications on the page using Web Workers.</p><h4>Introduction</h4><p>The Web Workers API runs scripts in threads which can only reach the document via messaging. This provides enough safety to run user applications on the page, but makes it hard for those apps to render to the document. To overcome this limitation, LinkAP emulates HTTP over the Workers's messaging system, allowing applications to serve HTML as if they were remote.</p><p>By way of example, all of the content on this page is served by embedded application servers.</p><blockquote><small>Click the script icons on the top right of an app to view and modify its source.</small></blockquote></div>
+			</div>
+			<!-- client region -->
+			<div class="client-region">
+				<div id="features" style="width:500px"><ul class="nav nav-pills"><li class="active"><a href="httpl://features.doc/httpl">HTTPL</a></li><li><a href="httpl://features.doc/apps">Applications</a></li><li><a href="httpl://features.doc/env">The Page</a></li><li><a href="httpl://features.doc/more">Learn More</a></li></ul><p>Applications running in Web Workers respond to HTTPL requests from the page:</p><form action="httpl://features.doc/httpl" method="post" class="form-horizontal"><legend>Local Form <small>targets httpl://features.doc</small></legend><div class="control-group"><label class="control-label">Text input</label><div class="controls"><input type="text" name="input" class="input-xlarge"></div></div><div class="control-group"><label class="control-label">Select</label><div class="controls"><select name="select" class="input-xlarge"><option value="A">A</option><option value="A">B</option></select></div></div><div class="control-group"><label class="control-label">Checkboxes</label><div class="controls"><label class="checkbox inline"><input type="checkbox" name="checks" value="1"> 1</label><label class="checkbox inline"><input type="checkbox" name="checks" value="2"> 2</label><label class="checkbox inline"><input type="checkbox" name="checks" value="3"> 3</label></div></div><div class="control-group"><label class="control-label">Radios</label><div class="controls"><label class="radio inline"><input type="radio" value="1" checked="checked" name="radios"> 1</label><label class="radio inline"><input type="radio" value="2" name="radios"> 2</label><label class="radio inline"><input type="radio" value="3" name="radios"> 3</label></div></div><div class="control-group"><label class="control-label">Textarea</label><div class="controls"><div class="textarea"><textarea name="textarea"></textarea></div></div></div><div class="control-group"><label class="control-label"></label><div class="controls"><input type="submit" class="btn"></div></div></form></div>
+			</div>
+			<!-- client region -->
+			<div class="client-region">
+				The document
 			</div>
 		</div>
 
-		<!-- layout table (welcome back, 2001) -->
-		<table class="client-layout"><tr>
-			<td>
-				<!-- client region -->
-				<div class="client-region">
-					<div class="chrome dropdown">
-						<a class="client-region-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close Client" /></a>
-						<a class="dropdown-toggle" data-toggle="dropdown" href="#"><b class="caret"></b> httpl://social.app/news</a>
-						<ul class="dropdown-menu">
-							<li><a href="#">httpl://social.app</a></li>
-							<li><a href="#">httpl://social.app/info</a></li>
-						</ul>
-					</div>
-					<div class="document">The document</div>
-				</div>
-				<!-- client region -->
-				<div class="client-region">
-					<div class="chrome dropdown">
-						<a class="client-region-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close Client" /></a>
-						<a class="dropdown-toggle" data-toggle="dropdown" href="#"><b class="caret"></b> httpl://social.app/news</a>
-						<ul class="dropdown-menu">
-							<li><a href="#">httpl://social.app</a></li>
-							<li><a href="#">httpl://social.app/info</a></li>
-						</ul>
-					</div>
-					<div class="document">The document</div>
-				</div>
-			</td>
-			<td>
-				<!-- client region -->
-				<div class="client-region">
-					<div class="chrome dropdown">
-						<a class="client-region-close" href="#"><img src="/assets/icons/16x16/delete.png" title="Close Client" /></a>
-						<a class="dropdown-toggle" data-toggle="dropdown" href="#"><b class="caret"></b> httpl://social.app/news</a>
-						<ul class="dropdown-menu">
-							<li><a href="#">httpl://social.app</a></li>
-							<li><a href="#">httpl://social.app/info</a></li>
-						</ul>
-					</div>
-					<div class="document">The document</div>
-				</div>
-			</td>
-		</tr></table>
-
 		<!-- :DEBUG: build notice -->
-		<div style="position:absolute;top:0;right:0;background:white;padding:5px">Styles document.</div>
+		<div style="position:absolute;bottom:0;right:0;background:red;color:white;padding:5px">Styles document.</div>
 
 		<!-- base libraries -->
 		<script src="/local/lib/link.js"></script>

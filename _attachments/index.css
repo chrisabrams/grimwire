@@ -1,55 +1,51 @@
-.server-controls {
-	padding:0 8px;
+body {
+	padding-bottom:50px;
 }
-.server-controls a { opacity:0.75; }
-.server-controls a:hover { opacity:1; }
-.server-controls .server-addclient {}
-.server-controls .server-configure { float:right; padding-left:6px; }
-.server-controls .server-close { float:right; padding-left:6px; }
 
-.client-layout td {
-	vertical-align:top;
+#topside-bar { margin:0; }
+#topside-bar li { line-height:12px; }
+#topside-bar li > a {
+	padding-top: 5px;
+	padding-bottom: 7px;
+	margin-top: 1px;
+	margin-bottom: 2px;
+}
+
+#leftside-bar {
+	float:left;
+	width:36px;
+}
+#leftside-bar ul.sigils {
+	list-style:none;
+	margin-left:0;
+}
+#leftside-bar ul.sigils li {
+	font-size:24px;
+	line-height:32px;
+}
+#leftside-bar ul.sigils li.divider {
+	font-size:12px;
+	line-height: 10px;
+	padding-top: 1px;
+	color: #888;
+}
+
+.sigils i, .sigil {
+}
+.sigils i.charged, .sigil.charged {
+	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
+}
+.sigils i:hover, .sigil:hover {
+	text-shadow:0 0 6px #08c, 0 0 2px #05a, 0 0 3px #666;
+	color: #fafafa;
+	cursor: pointer;
+}
+
+#center {
+	margin-left:40px;
 }
 
 .client-region {
-	border-left:1px solid #ccc;
-	border-right:1px solid #ccc;
-	background: #fff;
-}
-.client-region .chrome {
-	border-bottom: 1px solid #a6a6a6;
-	border-top: 1px solid #fff;
-	color: #505050;
-	font-weight: bold;
-	
-	font-size: .85em;
-	line-height: 2em;
-	padding:0 0.5em;
-
-	background: #dddddd;
-	background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #dddddd), color-stop(1, #fafafa));
-	background: -ms-linear-gradient(bottom, #dddddd, #fafafa);
-	background: -moz-linear-gradient(center bottom, #dddddd 0%, #fafafa 100%);
-	background: -o-linear-gradient(bottom, #dddddd, #fafafa);
-	filter: progid:dximagetransform.microsoft.gradient(startColorStr='#e6e6e6', EndColorStr='#ffffff');
-	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#fafafa',EndColorStr='#dddddd')";
-}
-.client-region .chrome a { color: #505050; }
-.client-region .document {
-	overflow: hidden;
-	min-width:50px;
-	min-height:10px;
-}
-.client-region .document {
-	resize: vertical;
-	width:100%;
-	border-bottom:1px solid #ddd;
-}
-.client-region:last-child .document {
-	resize: both;
-	border-bottom:1px solid #ccc;
-}
-.client-region .chrome .client-region-close {
-	float:right;
-	margin-left:1em;
+	display:inline-block;
+	vertical-align:top;
 }
