@@ -13,21 +13,28 @@ body {
 
 #leftside-bar {
 	float:left;
-	width:36px;
+	width:55px;
+    padding-left:13px;
+    margin-top:10px;
+
+    opacity:0.5;
 }
+#leftside-bar:hover { opacity:1 }
 #leftside-bar ul.sigils {
 	list-style:none;
 	margin-left:0;
 }
 #leftside-bar ul.sigils li {
-	font-size:24px;
-	line-height:32px;
+	font-size:28px;
+	line-height:40px;
 }
 #leftside-bar ul.sigils li.divider {
 	font-size:12px;
 	line-height: 10px;
 	padding-top: 1px;
-	color: #888;
+    text-align:center;
+    margin-left:-15px;
+	color: #ddd;
 }
 
 .sigils i, .sigil {
@@ -42,7 +49,7 @@ body {
 }
 
 #center {
-	margin-left:40px;
+	margin-left:70px;
 }
 
 .client-region {
