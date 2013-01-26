@@ -86,8 +86,8 @@ Environment.setRegionPostProcessor(function(elem) {
 // ====
 
 // instantiate environment servers
-// var personaServer = new PersonaServer();
-// Environment.addServer('user.env', personaServer);
+var appServer = new Grim.AppServer();
+Environment.addServer('app', appServer);
 
 // instantiate apps
 Environment.addServer('targets.app', new Environment.WorkerServer({

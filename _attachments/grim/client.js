@@ -17,6 +17,19 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	}
 	ClientRegion.prototype = Object.create(Environment.ClientRegion.prototype);
 
+	ClientRegion.prototype.__handleResponse = function(e, request, response) {
+		var requestTarget = this.__chooseRequestTarget(e, request);
+		if (requestTarget == this.element && !response.body && response.headers['content-type'] == 'text/html') {
+			// destroy region if it's served blank html
+			this.terminate();
+			Environment.removeClientRegion(this);
+			this.element.parentNode.removeChild(this.element);
+		} else {
+			CommonClient.handleResponse(requestTarget, this.element, response);
+			Environment.postProcessRegion(requestTarget);
+		}
+	};
+
 	ClientRegion.prototype.__chooseRequestTarget = function(e, request) {
 		// output region requests always render back responses to themselves
 		if (e.target.tagName == 'OUTPUT') {
