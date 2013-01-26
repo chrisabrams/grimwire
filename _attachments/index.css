@@ -55,4 +55,9 @@ body {
 .client-region {
 	display:inline-block;
 	vertical-align:top;
+	margin:1em;
+
+	max-width:500px;
+	max-height:800px;
+	overflow:hidden;
 }

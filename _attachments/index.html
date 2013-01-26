@@ -20,15 +20,15 @@
 		<!-- active servers -->
 		<ul id="topside-bar" class="nav nav-pills">
 			<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">social.app</a>
+			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0)">social.app</a>
 				<ul class="dropdown-menu">
-					<li><a href="#">httpl://social.app</a></li>
-					<li><a href="#">httpl://social.app/info</a></li>
+					<li><a href="httpl://v4.grim.social.app">Grim Social, v4</a></li>
+					<li><a href="httpl://v3.grim.social.app">Grim Social, v3</a></li>
 				</ul>
 			</li>
 			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">profile.app</a>
 				<ul class="dropdown-menu">
-					<li><a href="#">httpl://profile.app</a></li>
+					<li><a href="">httpl://profile.app</a></li>
 				</ul>
 			</li>
 			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">wall.app</a>
@@ -41,11 +41,6 @@
 					<li><a href="#">httpl://friends.app</a></li>
 				</ul>
 			</li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">facebook.app</a>
-				<ul class="dropdown-menu">
-					<li><a href="#">httpl://facebook.app</a></li>
-				</ul>
-			</li>
 		</ul>
 
 		<!-- sigils -->
@@ -53,6 +48,7 @@
 			<ul class="sigils">
 				<li><i class="icon-bookmark" draggable="true" title="&amp;Bookmark"></i></li>
 				<li><i class="icon-archive" draggable="true" title="&amp;Store"></i></li>
+				<li><i class="icon-search" draggable="true" title="Find"></i></li>
 				<li class="divider">&mdash;</li>
 				<li><i class="icon-thumbs-up" draggable="true" title="&amp;Like"></i></li>
 				<li><i class="icon-comment" draggable="true" title="&amp;Comment"></i></li>
@@ -67,8 +63,6 @@
 				<li class="divider">&mdash;</li>
 				<li><i class="icon-edit" draggable="true" title="&amp;Edit"></i></li>
 				<li><i class="icon-chart-line" draggable="true" title="&amp;Analyze"></i></li>
-				<li class="divider">&mdash;</li>
-				<li><i class="icon-install" draggable="true" title="&amp;Install"></i></li>
 				<li class="divider">&mdash;</li>
 				<li><i class="icon-print" draggable="true" title="&amp;Print"></i></li>
 				<li><i class="icon-code" draggable="true" title="&amp;Modify Code"></i></li>
@@ -92,16 +86,7 @@
 
 		<div id="center">
 			<!-- client region -->
-			<div class="client-region">
-				<div id="intro" style="width:450px"><h1>Local <small>0.2.0 unstable</small></h1><p>Safely run user applications on the page using Web Workers.</p><h4>Introduction</h4><p>The Web Workers API runs scripts in threads which can only reach the document via messaging. This provides enough safety to run user applications on the page, but makes it hard for those apps to render to the document. To overcome this limitation, LinkAP emulates HTTP over the Workers's messaging system, allowing applications to serve HTML as if they were remote.</p><p>By way of example, all of the content on this page is served by embedded application servers.</p><blockquote><small>Click the script icons on the top right of an app to view and modify its source.</small></blockquote></div>
-			</div>
-			<!-- client region -->
-			<div class="client-region">
-				<div id="features" style="width:500px"><ul class="nav nav-pills"><li class="active"><a href="httpl://features.doc/httpl">HTTPL</a></li><li><a href="httpl://features.doc/apps">Applications</a></li><li><a href="httpl://features.doc/env">The Page</a></li><li><a href="httpl://features.doc/more">Learn More</a></li></ul><p>Applications running in Web Workers respond to HTTPL requests from the page:</p><form action="httpl://features.doc/httpl" method="post" class="form-horizontal"><legend>Local Form <small>targets httpl://features.doc</small></legend><div class="control-group"><label class="control-label">Text input</label><div class="controls"><input type="text" name="input" class="input-xlarge"></div></div><div class="control-group"><label class="control-label">Select</label><div class="controls"><select name="select" class="input-xlarge"><option value="A">A</option><option value="A">B</option></select></div></div><div class="control-group"><label class="control-label">Checkboxes</label><div class="controls"><label class="checkbox inline"><input type="checkbox" name="checks" value="1"> 1</label><label class="checkbox inline"><input type="checkbox" name="checks" value="2"> 2</label><label class="checkbox inline"><input type="checkbox" name="checks" value="3"> 3</label></div></div><div class="control-group"><label class="control-label">Radios</label><div class="controls"><label class="radio inline"><input type="radio" value="1" checked="checked" name="radios"> 1</label><label class="radio inline"><input type="radio" value="2" name="radios"> 2</label><label class="radio inline"><input type="radio" value="3" name="radios"> 3</label></div></div><div class="control-group"><label class="control-label">Textarea</label><div class="controls"><div class="textarea"><textarea name="textarea"></textarea></div></div></div><div class="control-group"><label class="control-label"></label><div class="controls"><input type="submit" class="btn"></div></div></form></div>
-			</div>
-			<!-- client region -->
-			<div class="client-region">
-				The document
+			<div id='app-targets' class="client-region">
 			</div>
 		</div>
 
@@ -122,6 +107,7 @@
 		<!-- environment -->
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 		<script src="/assets/bootstrap/js/bootstrap.min.js"></script>
+		<script src="/grim/client.js"></script>
 		<script src="/index.js"></script>
 	</body>
 </html>
