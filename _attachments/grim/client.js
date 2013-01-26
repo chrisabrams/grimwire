@@ -1,7 +1,7 @@
 Grim = (typeof Grim == 'undefined') ? {} : Grim;
 (function(exports) {
 	var __id = 0;
-	function __popId() { return 'client-region-'+__id++; }
+	exports.genClientRegionId = function() { return 'client-region-'+__id++; };
 
 	// ClientRegion
 	// ============
@@ -9,11 +9,11 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// an isolated region of the DOM
 	function ClientRegion(id) {
 		Environment.ClientRegion.call(this, id);
-		this.element.addEventListener('drop', __handleDrop.bind(this));
-		this.element.addEventListener('dragover', __handleDragover.bind(this));
-		this.element.addEventListener('dragenter', __handleDragenter.bind(this));
-		this.element.addEventListener('dragleave', __handleDragleave.bind(this));
-		this.element.addEventListener('dragend', __handleDragend.bind(this));
+		this.element.addEventListener('drop', this.__handleDrop.bind(this));
+		this.element.addEventListener('dragover', this.__handleDragover.bind(this));
+		this.element.addEventListener('dragenter', this.__handleDragenter.bind(this));
+		this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
+		this.element.addEventListener('dragend', this.__handleDragend.bind(this));
 	}
 	ClientRegion.prototype = Object.create(Environment.ClientRegion.prototype);
 
@@ -38,7 +38,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__createRelativeRegion = function(e, request) {
 		var elem = document.createElement('div');
-		elem.id = __popId();
+		elem.id = exports.genClientRegionId();
 		elem.className = "client-region";
 		switch (request.target) {
 			case '-above':
@@ -56,7 +56,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	// transforms dropped 'link' objects into request events
-	function __handleDrop(e) {
+	ClientRegion.prototype.__handleDrop = function(e) {
 
 		this.element.classList.remove('drophover');
 
@@ -81,9 +81,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		e.stopPropagation();
 		this.dispatchRequest(request);
 		return false;
-	}
+	};
 
-	function __handleDragover(e) {
+	ClientRegion.prototype.__handleDragover = function(e) {
 		if (e.dataTransfer.types.indexOf('application/request+json') !== -1) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
@@ -93,28 +93,28 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			e.dataTransfer.dropEffect = 'link';
 			return false;
 		}
-	}
+	};
 
-	function __handleDragenter(e) {
+	ClientRegion.prototype.__handleDragenter = function(e) {
 		// if (e.target != this.element) { return; }
 		if (e.dataTransfer.types.indexOf('application/request+json') !== -1) {
 			this.element.classList.add('drophover');
 		} else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1) {
 			this.element.classList.add('drophover');
 		}
-	}
+	};
 
-	function __handleDragleave(e) {
+	ClientRegion.prototype.__handleDragleave = function(e) {
 		// dragleave is fired on all children, so only pay attention if it dragleaves our region
 		var rect = this.element.getBoundingClientRect();
 		if (e.clientX >= (rect.left + rect.width) || e.clientX <= rect.left || e.clientY >= (rect.top + rect.height) || e.clientY <= rect.top) {
 			this.element.classList.remove('drophover');
 		}
-	}
+	};
 
-	function __handleDragend(e) {
+	ClientRegion.prototype.__handleDragend = function(e) {
 		this.element.classList.remove('drophover');
-	}
+	};
 
 	exports.ClientRegion = ClientRegion;
 })(Grim);
