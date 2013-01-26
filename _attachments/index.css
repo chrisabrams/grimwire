@@ -55,9 +55,15 @@ body {
 .client-region {
 	display:inline-block;
 	vertical-align:top;
-	margin:1em;
+	padding:0.5em;
+	margin:0.5em;
+	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 
 	max-width:500px;
 	max-height:800px;
 	overflow:hidden;
+}
+.drophover {
+	border:1px solid #ccc;
+	box-shadow:inset 0px 0px 6px rgba(0,0,0,0.35);
 }

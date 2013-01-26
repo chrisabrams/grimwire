@@ -52,6 +52,10 @@ Environment.setRegionPostProcessor(function(elem) {
 Environment.addServer('targets.app', new Environment.WorkerServer({
 	scriptUrl : '/grim/apps/debug/targets.js'
 }));
+Environment.addServer('forms.app', new Environment.WorkerServer({
+	scriptUrl : '/grim/apps/debug/forms.js'
+}));
 
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('app-targets')).dispatchRequest('httpl://targets.app');
+Environment.addClientRegion(new Grim.ClientRegion('app-forms')).dispatchRequest('httpl://forms.app');
