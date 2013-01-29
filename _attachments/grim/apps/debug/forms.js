@@ -15,4 +15,9 @@ app.onHttpRequest(function(request, response) {
 		Link.responder(response).ok('html').end(JSON.stringify(request.body));
 	}).error(response);
 });
-app.postMessage('loaded');
+app.postMessage('loaded', {
+	category : 'Debug',
+	name     : 'Forms',
+	author   : 'pfraze',
+	version  : 'v2'
+});

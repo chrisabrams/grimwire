@@ -87,29 +87,12 @@ Environment.setRegionPostProcessor(function(elem) {
 // ====
 
 // instantiate environment servers
-var appServer = new Grim.AppServer();
-Environment.addServer('app', appServer);
+Environment.addServer('app', new Grim.AppServer());
+apps = Link.navigator('httpl://app');
 
 // instantiate apps
-Environment.addServer('targets_v1.debug.app', new Environment.WorkerServer({
-	scriptUrl : '/grim/apps/debug/targets.js',
-	domains : ['app', 'debug.app', 'targets_v1.debug.app'], // :TODO: should be generated
-	startUrl : 'httpl://targets_v1.debug.app',
-	class : 'App', // :TODO: should be received from app
-	task : 'Debug',
-	name : 'Targets v1'
-}));
-Environment.addServer('forms_v1.debug.app', new Environment.WorkerServer({
-	scriptUrl : '/grim/apps/debug/forms.js',
-	domains : ['app', 'debug.app', 'forms_v1.debug.app'], // :TODO: should be generated
-	startUrl : 'httpl://forms_v1.debug.app',
-	class : 'App', // :TODO: should be received from app
-	task : 'Debug',
-	name : 'Forms v1'
-}));
+apps.post({ scriptUrl : '/grim/apps/debug/targets.js' });
+apps.post({ scriptUrl : '/grim/apps/debug/forms.js' });
 
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
-Environment.addClientRegion(new Grim.ClientRegion('app-targets')).dispatchRequest('httpl://targets_v1.debug.app');
-Environment.addClientRegion(new Grim.ClientRegion('app-forms')).dispatchRequest('httpl://forms_v1.debug.app');
-

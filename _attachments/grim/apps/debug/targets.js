@@ -9,4 +9,9 @@ app.onHttpRequest(function(request, response) {
 		].join(''));
 	}).error(response);
 });
-app.postMessage('loaded');
+app.postMessage('loaded', {
+	category : 'Debug',
+	name     : 'Targets',
+	author   : 'pfraze',
+	version  : 'v1'
+});

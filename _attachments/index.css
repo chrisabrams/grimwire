@@ -12,7 +12,7 @@ a { color:#06c }
 	margin-top: 1px;
 	margin-bottom: 2px;
 }
-#topside-bar > a { float:right; padding:5px; }
+#topside-bar form > a { float:right; padding:5px; }
 #topside-bar .torch { color:rgb(218, 0, 0); }
 #topside-bar .reset { color:rgb(30, 156, 35); }
 
