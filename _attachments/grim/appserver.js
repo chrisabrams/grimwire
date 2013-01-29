@@ -12,15 +12,24 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	AppServer.prototype.handleHttpRequest = function(request, response) {
 		var router = Link.router(request);
-		var respond = Link.responder(response);
-		router.pm('/', /HEAD|GET/i, this.$getApps.bind(this, request, respond));
-		router.pm('/', /POST/i, this.$addApp.bind(this, request, respond));
-		router.pma(RegExp('/null/?','i'), /HEAD|GET/i, /html/i, this.$getNull.bind(this, request, respond));
+
+		router.pm('/', /HEAD|GET/i, this.$getApps.bind(this, request, response));
+		router.pm('/', /POST/i, this.$addApp.bind(this, request, response));
+		router.pma(RegExp('/null/?','i'), /HEAD|GET/i, /html/i, this.$getNull.bind(this, request, response));
 		router.error(response);
 	};
 
 	// GET|HEAD /
-	AppServer.prototype.$getApps = function(request, respond) {
+	AppServer.prototype.$getApps = function(request, response) {
+		var respond = Link.responder(response);
+        var router = Link.router(request);
+        router.a(/html/i, function() {
+            respond.ok('html').end('ok');
+        });
+        router.a(/json/i, function() {
+            respond.ok('json').end('["ok"]');
+        });
+        router.error(response, ['path','method']);
 		// build headers
 		// var headerer = Link.headerer();
 		// headerer.addLink('/', 'self current');
@@ -38,12 +47,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	// POST /
-	AppServer.prototype.$addApp = function(request, respond) {
+	AppServer.prototype.$addApp = function(request, response) {
 	};
 
 	// GET /null html
-	AppServer.prototype.$getNull = function(request, respond) {
-		respond.ok('text/html').end('');
+	AppServer.prototype.$getNull = function(request, response) {
+		Link.responder(response).ok('text/html').end('');
 	};
 
 	// GET|HEAD /:app

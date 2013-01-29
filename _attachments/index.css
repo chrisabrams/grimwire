@@ -2,7 +2,7 @@ body {
 	padding-bottom:50px;
 }
 
-#topside-bar { margin:0; }
+#topside-bar { margin:0; position:fixed; z-index:100; }
 #topside-bar li { line-height:12px; }
 #topside-bar li > a {
 	padding-top: 5px;
@@ -12,10 +12,11 @@ body {
 }
 
 #leftside-bar {
-	float:left;
+	position:fixed;
+	top:40px;
+	z-index:100;
 	width:55px;
     padding-left:13px;
-    margin-top:10px;
 
     opacity:0.5;
 }
@@ -49,13 +50,22 @@ body {
 }
 
 #center {
-	margin-left:70px;
+	position:absolute;
+	height:100%; width:100%;
+
+	padding-left:70px;
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
-	min-height:1000px;
+
+	-moz-column-count: 3;
+	-moz-column-gap: 20px;
+	-webkit-column-count: 3;
+	-webkit-column-gap: 20px;
+	column-count: 3;
+	column-gap: 20px;
 }
+#center .top_padding { height:30px; }
 
 .client-region {
-	display:inline-block;
 	vertical-align:top;
 	padding:0.75em;
 	margin:0.25em;
