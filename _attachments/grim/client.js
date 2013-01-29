@@ -7,13 +7,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// ============
 	// EXPORTED
 	// an isolated region of the DOM
-	function ClientRegion(id) {
+	function ClientRegion(id, options) {
 		Environment.ClientRegion.call(this, id);
-		this.element.addEventListener('drop', this.__handleDrop.bind(this));
-		this.element.addEventListener('dragover', this.__handleDragover.bind(this));
-		this.element.addEventListener('dragenter', this.__handleDragenter.bind(this));
-		this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
-		this.element.addEventListener('dragend', this.__handleDragend.bind(this));
+
+		options = options || {};
+		if (options.droptarget !== false) {
+			this.element.addEventListener('drop', this.__handleDrop.bind(this));
+			this.element.addEventListener('dragover', this.__handleDragover.bind(this));
+			this.element.addEventListener('dragenter', this.__handleDragenter.bind(this));
+			this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
+			this.element.addEventListener('dragend', this.__handleDragend.bind(this));
+		}
 	}
 	ClientRegion.prototype = Object.create(Environment.ClientRegion.prototype);
 
@@ -59,6 +63,13 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				break;
 			case '-below':
 				this.element.parentNode.insertBefore(elem, this.element.nextSibling);
+				break;
+			case '-top':
+				var center = document.getElementById('center');
+				center.insertBefore(elem, center.firstChild);
+				break;
+			case '-bottom':
+				document.getElementById('center').appendChild(elem);
 				break;
 			default:
 				console.log("Unrecognized link target: ", request.target, e);

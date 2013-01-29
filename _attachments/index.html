@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title>grimwire: do magic</title>
+		<title>grimwire</title>
 		<base href="http://grimwire.com/" />
 		<meta charset="UTF-8"></meta>
 
@@ -18,55 +18,33 @@
 	<body>
 
 		<!-- active servers -->
-		<ul id="topside-bar" class="nav nav-pills">
-			<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0)">social.app</a>
-				<ul class="dropdown-menu">
-					<li><a href="httpl://v4.grim.social.app">Grim Social, v4</a></li>
-					<li><a href="httpl://v3.grim.social.app">Grim Social, v3</a></li>
-				</ul>
-			</li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">profile.app</a>
-				<ul class="dropdown-menu">
-					<li><a href="">httpl://profile.app</a></li>
-				</ul>
-			</li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">wall.app</a>
-				<ul class="dropdown-menu">
-					<li><a href="#">httpl://wall.app</a></li>
-				</ul>
-			</li>
-			<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">friends.app</a>
-				<ul class="dropdown-menu">
-					<li><a href="#">httpl://friends.app</a></li>
-				</ul>
-			</li>
-		</ul>
+		<div id="topside-bar"></div>
 
 		<!-- sigils -->
 		<div id="leftside-bar">
 			<ul class="sigils">
-				<li><i class="icon-bookmark" draggable="true" title="&amp;Bookmark"></i></li>
-				<li><i class="icon-archive" draggable="true" title="&amp;Store"></i></li>
+				<li><i class="icon-back" draggable="true" title="Back"></i></li>
+				<li><i class="icon-bookmark" draggable="true" title="Bookmark"></i></li>
+				<li><i class="icon-archive" draggable="true" title="Store"></i></li>
 				<li><i class="icon-search" draggable="true" title="Find"></i></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-thumbs-up" draggable="true" title="&amp;Like"></i></li>
-				<li><i class="icon-comment" draggable="true" title="&amp;Comment"></i></li>
-				<li><i class="icon-mail-1" draggable="true" title="&amp;Mail"></i></li>
-				<li><i class="icon-megaphone-1" draggable="true" title="&amp;Broadcast"></i></li>
+				<li><i class="icon-thumbs-up" draggable="true" title="Like"></i></li>
+				<li><i class="icon-comment" draggable="true" title="Comment"></i></li>
+				<li><i class="icon-mail-1" draggable="true" title="Mail"></i></li>
+				<li><i class="icon-megaphone-1" draggable="true" title="Broadcast"></i></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-vcard" draggable="true" title="&amp;Contact"></i></li>
-				<li><i class="icon-location" draggable="true" title="&amp;Map"></i></li>
-				<li><i class="icon-calendar" draggable="true" title="&amp;Schedule"></i></li>
+				<li><i class="icon-vcard" draggable="true" title="Contact"></i></li>
+				<li><i class="icon-location" draggable="true" title="Map"></i></li>
+				<li><i class="icon-calendar" draggable="true" title="Schedule"></i></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-credit-card" draggable="true" title="&amp;Pay"></i></li>
+				<li><i class="icon-credit-card" draggable="true" title="Pay"></i></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-edit" draggable="true" title="&amp;Edit"></i></li>
-				<li><i class="icon-chart-line" draggable="true" title="&amp;Analyze"></i></li>
+				<li><i class="icon-edit" draggable="true" title="Edit"></i></li>
+				<li><i class="icon-chart-line" draggable="true" title="Analyze"></i></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-print" draggable="true" title="&amp;Print"></i></li>
-				<li><i class="icon-code" draggable="true" title="&amp;Modify Code"></i></li>
-				<li><i class="icon-cog" draggable="true" title="&amp;Configure"></i></li>
+				<li><i class="icon-print" draggable="true" title="Print"></i></li>
+				<li><i class="icon-code" draggable="true" title="Modify Code"></i></li>
+				<li><i class="icon-cog" draggable="true" title="Configure"></i></li>
 
 				<!-- 
 				<li><i class="icon-search" draggable="true" title="Find"></i></li>

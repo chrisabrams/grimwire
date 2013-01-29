@@ -78,6 +78,7 @@ Environment.setDispatchHandler(function(origin, request) {
 // dom update post-processor
 Environment.setRegionPostProcessor(function(elem) {
 	// addPersonaCtrls(elem);
+	$('.dropdown-toggle', elem).dropdown();
 });
 
 
@@ -90,13 +91,25 @@ var appServer = new Grim.AppServer();
 Environment.addServer('app', appServer);
 
 // instantiate apps
-Environment.addServer('targets.app', new Environment.WorkerServer({
-	scriptUrl : '/grim/apps/debug/targets.js'
+Environment.addServer('targets_v1.debug.app', new Environment.WorkerServer({
+	scriptUrl : '/grim/apps/debug/targets.js',
+	domains : ['app', 'debug.app', 'targets_v1.debug.app'], // :TODO: should be generated
+	startUrl : 'httpl://targets_v1.debug.app',
+	class : 'App', // :TODO: should be received from app
+	task : 'Debug',
+	name : 'Targets v1'
 }));
-Environment.addServer('forms.app', new Environment.WorkerServer({
-	scriptUrl : '/grim/apps/debug/forms.js'
+Environment.addServer('forms_v1.debug.app', new Environment.WorkerServer({
+	scriptUrl : '/grim/apps/debug/forms.js',
+	domains : ['app', 'debug.app', 'forms_v1.debug.app'], // :TODO: should be generated
+	startUrl : 'httpl://forms_v1.debug.app',
+	class : 'App', // :TODO: should be received from app
+	task : 'Debug',
+	name : 'Forms v1'
 }));
 
 // load client regions
-Environment.addClientRegion(new Grim.ClientRegion('app-targets')).dispatchRequest('httpl://targets.app');
-Environment.addClientRegion(new Grim.ClientRegion('app-forms')).dispatchRequest('httpl://forms.app');
+Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
+Environment.addClientRegion(new Grim.ClientRegion('app-targets')).dispatchRequest('httpl://targets_v1.debug.app');
+Environment.addClientRegion(new Grim.ClientRegion('app-forms')).dispatchRequest('httpl://forms_v1.debug.app');
+

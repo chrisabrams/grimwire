@@ -1,8 +1,10 @@
 body {
 	padding-bottom:50px;
 }
+a { color:#06c }
 
-#topside-bar { margin:0; position:fixed; z-index:100; }
+#topside-bar { position:fixed; z-index:100; width:100%; }
+#topside-bar ul { margin:0; }
 #topside-bar li { line-height:12px; }
 #topside-bar li > a {
 	padding-top: 5px;
@@ -10,6 +12,9 @@ body {
 	margin-top: 1px;
 	margin-bottom: 2px;
 }
+#topside-bar > a { float:right; padding:5px; }
+#topside-bar .torch { color:rgb(218, 0, 0); }
+#topside-bar .reset { color:rgb(30, 156, 35); }
 
 #leftside-bar {
 	position:fixed;
@@ -17,10 +22,7 @@ body {
 	z-index:100;
 	width:55px;
     padding-left:13px;
-
-    opacity:0.5;
 }
-#leftside-bar:hover { opacity:1 }
 #leftside-bar ul.sigils {
 	list-style:none;
 	margin-left:0;
@@ -39,13 +41,13 @@ body {
 }
 
 .sigils i, .sigil {
+    opacity:0.5;
 }
 .sigils i.charged, .sigil.charged {
 	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
 }
 .sigils i:hover, .sigil:hover {
-	text-shadow:0 0 6px #08c, 0 0 2px #05a, 0 0 3px #666;
-	color: #fafafa;
+	opacity:1.0;
 	cursor: pointer;
 }
 
@@ -54,7 +56,6 @@ body {
 	height:100%; width:100%;
 
 	padding-left:70px;
-	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 
 	-moz-column-count: 3;
 	-moz-column-gap: 20px;
@@ -63,7 +64,10 @@ body {
 	column-count: 3;
 	column-gap: 20px;
 }
-#center .top_padding { height:30px; }
+#center:not(.drophover) {
+	border:1px solid #fff; /* so we can add borders in other states and not change layout */
+}
+#center .topside_padding { height:40px; }
 
 .client-region {
 	vertical-align:top;
