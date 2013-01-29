@@ -84,7 +84,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			for (var i=1; i <= 5; i++) {
 				var d = [];
 				for (var j=0; j < i; j++) {
-					d.push(c[fields[j]].replace(/ /g,'_').replace(/\./g,'').toLowerCase());
+					d.unshift(c[fields[j]].replace(/ /g,'_').replace(/\./g,'').toLowerCase());
 				}
 				domains.push(d.join('.'));
 			}
@@ -123,7 +123,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			appsByCategory[category] = (appsByCategory[category] || []).concat(apps[domain]);
 		}
 		var renderAppItem = function(app) {
-			return ['<li><a target="-bottom" href="', app.config.startUrl,'">'+app.config.name+'</a></li>'].join('');
+			return [
+				'<li>',
+					'<a target="-bottom" href="', app.config.startUrl, '">',
+						app.config.name, '<br/><small>', app.config.author, ', ', app.config.version, '</small>',
+					'</a>',
+				'</li>'].join('');
 		};
 		for (category in appsByCategory) {
 			html.push([
@@ -138,8 +143,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		return [
 		'<form action="httpl://app" data-output="true">',
 			'<a class="torch" target="-bottom" href="httpl://app/null" title="Torch"><i class="sigil icon-fire"></i></a>',
-			'<a class="freeze" target="-bottom" href="javascript:void(0)" title="Freeze :TODO:"><i class="sigil icon-snowflake"></i></a>',
-			'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="sigil icon-leaf-1"></i></a>',
+			//'<a class="freeze" target="-bottom" href="javascript:void(0)" title="Freeze :TODO:"><i class="sigil icon-snowflake"></i></a>',
+			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="sigil icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills">',
 				'<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>',
 				html.join(''),

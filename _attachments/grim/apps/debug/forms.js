@@ -4,7 +4,7 @@ app.onHttpRequest(function(request, response) {
 	Link.router(request).mpa('get', '/', /html/, function() {
 		Link.responder(response).ok('html').end([
 			'[<a href="httpl://app/null">X</a>] ',
-			'<form method="post" action="httpl://', app.config.domain, '">',
+			'<form method="post" action="httpl://v2.pfraze.forms.debug.app">',
 				'<input type="text" name="foo" />',
 			'<input class="btn" name="button" draggable=true type="submit" value="Submit Inplace"/>',
 				'<input class="btn" name="button" draggable=true formtarget="-above" type="submit" value="Submit Above" />',
