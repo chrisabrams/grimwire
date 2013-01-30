@@ -12,26 +12,24 @@ function bodyRewrite(md) { return (md) ? marked(md) : ''; }
 app.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
-			Link.responder(response).ok('html').end([
-				'Markdown Converter, powered by marked.js (link :TODO:)',
-				'interface :TODO:'
-			].join(''));
+			if (request.query.url) {
+				var mdRequest = Link.dispatch({
+					method  : 'get',
+					url     : request.query.url,
+					headers : { accept:'text/plain' }
+				});
+				Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
+			} else {
+				Link.responder(response).ok('html').end([
+					'Markdown Converter, powered by marked.js (link :TODO:)',
+					'interface :TODO:'
+				].join(''));
+			}
 		})
 		.mpta('post', '/', /markdown/, /html/, function() {
 			Link.responder(response).ok('html').end([
 				'accept markdown string :TODO:'
 			].join(''));
-		})
-		.mpta('post', '/', /json/, /html/, function() {
-			if (!request.body || !request.body.url) {
-				return Link.responder(response).badRequest('html').end('request body: `url` is required');
-			}
-			var mdRequest = Link.dispatch({
-				method  : 'get',
-				url     : request.body.url,
-				headers : { accept:'text/plain' }
-			});
-			Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
 		})
 		.error(response);
 });
