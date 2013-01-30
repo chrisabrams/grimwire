@@ -70,9 +70,9 @@ a { color:#06c }
 	-webkit-column-gap: 0;
 	column-count: 3;
 	column-gap: 0;*/
-    -moz-column-width:500px;
-    -webkit-column-width:500px;
-    column-width:500px;
+    -moz-column-width:450px;
+    -webkit-column-width:450px;
+    column-width:450px;
 }
 #center:not(.drophover) {
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
@@ -84,7 +84,6 @@ a { color:#06c }
 	margin:0.25em;
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 
-	max-width:500px;
 	max-height:800px;
 	overflow:hidden;
 

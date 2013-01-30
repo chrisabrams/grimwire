@@ -110,6 +110,7 @@ Environment.addServer('scripts.env', new Grim.ScriptServer());
 apps.post({ scriptUrl : '/grim/apps/debug/targets.js' });
 apps.post({ scriptUrl : '/grim/apps/debug/forms.js' });
 apps.post({ scriptUrl : '/grim/apps/convert/markdown.js' });
+apps.post({ scriptUrl : '/grim/apps/edit/text.js' });
 apps.post({ scriptUrl : '/grim/apps/help/about.js' })
 	.then(function(res) {
 		if (res.status == 200) {

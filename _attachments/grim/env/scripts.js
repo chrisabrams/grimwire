@@ -64,11 +64,11 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				router.a(/json/i, function() {
 					respond.ok('json', headerer).end(server.config);
 				});
-				router.a(/javascript/i, function() {
+				router.a(/javascript|plain/i, function() {
 					// retrieve source
 					promise(server.getSource())
 						.then(function(source) {
-							// send back html
+							// send back content
 							respond.ok('application/javascript', headerer).end(source);
 						})
 						.except(function(err) { respond.badGateway(headerer).end(); });
