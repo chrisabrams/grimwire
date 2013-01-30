@@ -71,6 +71,18 @@ Environment.setDispatchHandler(function(origin, request) {
 
 	// allow request
 	var response = Link.dispatch(request);
+	response.then(function(res) {
+		if (/log\.util\.app/.test(request.url) === false) {
+			log.post(res.status+' '+request.url);
+		}
+		return res;
+	});
+	response.except(function(err) { 
+		if (/log\.util\.app/.test(request.url) === false) {
+			log.post(err.response.status+' '+request.url);
+		}
+		return err;
+	});
 	response.except(logError, request);
 	return response;
 });
@@ -86,9 +98,13 @@ Environment.setRegionPostProcessor(function(elem) {
 // Init
 // ====
 
+// global navigators
+var apps = Link.navigator('httpl://app');
+var log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TODO: should be log.util.app
+
 // instantiate environment servers
 Environment.addServer('app', new Grim.AppServer());
-apps = Link.navigator('httpl://app');
+Environment.addServer('scripts.env', new Grim.ScriptServer());
 
 // instantiate apps
 apps.post({ scriptUrl : '/grim/apps/debug/targets.js' });
@@ -97,9 +113,21 @@ apps.post({ scriptUrl : '/grim/apps/convert/markdown.js' });
 apps.post({ scriptUrl : '/grim/apps/help/about.js' })
 	.then(function(res) {
 		if (res.status == 200) {
-			Environment.addClientRegion(new Grim.ClientRegion('firstapp')).dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
+			Environment.clientRegions.firstapp.dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
+		}
+	});
+apps.post({ scriptUrl : '/grim/apps/util/log.js' })
+	.then(function(res) {
+		if (res.status == 200) {
+			Environment.clientRegions.secondapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
+			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffers on log.util.app
+			log.post('Log up.').then(console.log.bind(console)).except(console.log.bind(console));
 		}
 	});
 
+//log.post('No chance.');
+
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
+Environment.addClientRegion(new Grim.ClientRegion('firstapp'));
+Environment.addClientRegion(new Grim.ClientRegion('secondapp'));
