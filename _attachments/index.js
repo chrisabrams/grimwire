@@ -93,6 +93,13 @@ apps = Link.navigator('httpl://app');
 // instantiate apps
 apps.post({ scriptUrl : '/grim/apps/debug/targets.js' });
 apps.post({ scriptUrl : '/grim/apps/debug/forms.js' });
+apps.post({ scriptUrl : '/grim/apps/convert/markdown.js' });
+apps.post({ scriptUrl : '/grim/apps/help/about.js' })
+	.then(function(res) {
+		if (res.status == 200) {
+			Environment.addClientRegion(new Grim.ClientRegion('firstapp')).dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
+		}
+	});
 
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');

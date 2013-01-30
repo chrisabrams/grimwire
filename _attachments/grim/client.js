@@ -56,7 +56,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	ClientRegion.prototype.__createRelativeRegion = function(e, request) {
 		var elem = document.createElement('div');
 		elem.id = exports.genClientRegionId();
-		elem.className = "client-region";
+		elem.className = "client-region init";
+        //elem.style['max-height'] = 0;
 		switch (request.target) {
 			case '-above':
 				this.element.parentNode.insertBefore(elem, this.element);
@@ -75,6 +76,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				console.log("Unrecognized link target: ", request.target, e);
 				return this.element;
 		}
+        setTimeout(function() { elem.classList.remove('init'); }, 0); // trigger transition
 		Environment.addClientRegion(new ClientRegion(elem.id));
 		return elem;
 	};

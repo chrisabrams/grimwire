@@ -104,6 +104,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			Environment.addServer(domain, server);
 
 			self.serversBroadcast.emit('update');
+			respond.ok('application/json').end(server.config);
 		});
 	};
 
@@ -143,7 +144,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		return [
 		'<form action="httpl://app" data-output="true">',
 			'<a class="torch" target="-bottom" href="httpl://app/null" title="Torch"><i class="sigil icon-fire"></i></a>',
-			//'<a class="freeze" target="-bottom" href="javascript:void(0)" title="Freeze :TODO:"><i class="sigil icon-snowflake"></i></a>',
+			'<a class="freeze" target="-bottom" href="javascript:void(0)" title="Freeze :TODO:"><i class="sigil icon-snowflake"></i></a>',
 			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="sigil icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills">',
 				'<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>',
