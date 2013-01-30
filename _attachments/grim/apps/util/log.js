@@ -36,7 +36,6 @@ app.onHttpRequest(function(request, response) {
 		router.ma('GET', /event-stream/, function() {
 			respond.ok('event-stream', headerer);
 			logBroadcast.addStream(response); // add the log updates listener
-			logBroadcast.emitTo(response, 'update'); // go ahead and refresh, to make sure we're 100%
 		});
 		// add log entry
 		router.mt('POST', /html|plain/, function() {

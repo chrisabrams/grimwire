@@ -119,13 +119,11 @@ apps.post({ scriptUrl : '/grim/apps/help/about.js' })
 apps.post({ scriptUrl : '/grim/apps/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
-			Environment.clientRegions.secondapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
 			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffers on log.util.app
-			log.post('Log up.').then(console.log.bind(console)).except(console.log.bind(console));
+			log.post('Log up.');
+			Environment.clientRegions.secondapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
 		}
 	});
-
-//log.post('No chance.');
 
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
