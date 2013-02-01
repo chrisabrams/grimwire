@@ -26,9 +26,12 @@ app.onHttpRequest(function(request, response) {
 			].join(''));
 		}
 	}).mpt('post', '/', /form\-data/, function() {
+		var content = (typeof request.body.parts[2].body != 'string') ?
+			JSON.stringify(request.body.parts[2].body) :
+			request.body.parts[2].body;
 		Link.responder(response).ok('html').end([
-			'<textarea class="input-block-level" rows="28" name="text">',
-				JSON.stringify(request.body.parts[2].body).replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+			'<textarea class="input-block-level" rows="10" name="text">',
+				content.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
 			'</textarea>'
 		].join(''));
 	}).error(response);

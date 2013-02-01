@@ -22,8 +22,9 @@ a { color:#06c }
 	margin-top: 1px;
 	margin-bottom: 2px;
 }
-#topside-bar form > intent, #topside-bar form > a { float:right; padding:5px; }
+#topside-bar form > intent, #topside-bar form > a { float:right; padding:5px; font-size:28px; }
 #topside-bar .torch { color:rgb(218, 0, 0); }
+#topside-bar .freeze { color:rgb(82, 168, 236); }
 #topside-bar .reset { color:rgb(30, 156, 35); }
 
 #leftside-bar {
@@ -71,17 +72,13 @@ a { color:#06c }
 	position:absolute;
 	height:100%; width:100%;
 
-	left:70px; top:26px;
+	left:70px; top:25px;
 
-	/*-moz-column-count: 3;
-	-moz-column-gap: 0;
-	-webkit-column-count: 3;
-	-webkit-column-gap: 0;
-	column-count: 3;
-	column-gap: 0;*/
     -moz-column-width:450px;
     -webkit-column-width:450px;
     column-width:450px;
+
+    -webkit-transition: box-shadow .25s ease-in-out;
 }
 #center:not(.requesthover) {
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
@@ -96,6 +93,6 @@ a { color:#06c }
 	max-height:800px;
 	overflow:hidden;
 
-    -webkit-transition: max-height .25s ease-in-out;
+    -webkit-transition: box-shadow .25s ease-in-out, background-color .5s ease-in-out;
 }
-.client-region.init { max-height:0 }
+.client-region.init { background-color:#fafafa }

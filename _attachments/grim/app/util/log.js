@@ -6,13 +6,16 @@ var log = [];
 var logBroadcast = Link.broadcaster();
 
 function renderHtml() {
+	var style = 'width:60px; text-align:center; background:#eee; color:#808080';
 	var entriesHtml = log
-		.map(function(entry) { return '<p>['+entry.time.toTimeString().slice(0,8)+'] '+entry.msg+'</p>'; })
+		.slice(-10)
+		.map(function(entry) { return '<tr><td style="'+style+'">'+entry.time.toTimeString().slice(0,8)+'</td><td>'+entry.msg+'</td></tr>'; })
 		.join('');
 	var html = [
-		'<h5>log</h5>',
 		'<form action="httpl://v1.pfraze.log.util.app" data-output="true">',
-			entriesHtml,
+			'<table class="log-entries table table-condensed table-bordered">',
+				entriesHtml,
+			'</table>',
 		'</form>'
 	].join('');
 	return html;

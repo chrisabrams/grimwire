@@ -109,7 +109,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	// GET /null html
 	function $getNull(request, response) {
-		console.log('got', request)
 		Link.responder(response).ok('text/html').end('');
 	}
 
@@ -144,7 +143,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 		return [
 		'<form action="httpl://app" data-output="true">',
-			'<a class="torch" href="httpl://app/null" title="Torch"><i class="intent icon-fire"></i></a>',
+			'<a class="torch intent icon-fire" href="httpl://app/null" title="Torch"></a>',
 			'<intent class="freeze" action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
 			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="intent icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills">',
