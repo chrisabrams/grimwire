@@ -20,13 +20,13 @@
 		<!-- active servers -->
 		<div id="topside-bar"></div>
 
-		<!-- sigils -->
+		<!-- intents -->
 		<div id="leftside-bar">
-			<ul class="sigils">
-				<li><i class="icon-off" draggable="true" title="Load :TODO:"></i></li>
-				<li><i class="icon-plus" draggable="true" title="Expand :TODO:"></i></li>
+			<ul class="intents">
+				<li><intent action="http://grimwire.com/intents/load" draggable="true"><i class="icon-off" title="Load"></i></intent></li>
+				<li><intent action="http://grimwire.com/intents/expand" draggable="true"><i class="icon-plus" title="Expand"></i></intent></li>
 				<li class="divider">&mdash;</li>
-				<li><i class="icon-edit" draggable="true" title="Edit"></i></li>
+				<li><intent action="http://grimwire.com/intents/edit" draggable="true"><i class="icon-edit" title="Edit"></i></intent></li>
 
 
 				<!-- <li><i class="icon-back" draggable="true" title="Back"></i></li>
@@ -93,6 +93,7 @@
 		<script src="/grim/client.js"></script>
 		<script src="/grim/center-elem.js"></script>
 		<script src="/grim/appserver.js"></script>
+		<script src="/grim/intents.js"></script>
 		<script src="/grim/env/scripts.js"></script>
 		<script src="/index.js"></script>
 	</body>

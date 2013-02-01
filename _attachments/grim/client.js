@@ -18,8 +18,72 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
 			this.element.addEventListener('dragend', this.__handleDragend.bind(this));
 		}
+		this.element.addEventListener('intend', handleIntend.bind(this));
 	}
 	ClientRegion.prototype = Object.create(Environment.ClientRegion.prototype);
+
+	ClientRegion.prototype.dispatchIntent = function(intent, element) {
+		if (typeof intent === 'string') {
+			intent = { action:intent };
+		}
+		var ie = new CustomEvent('intend', { bubbles:true, cancelable:true, detail:intent });
+		(element || this.element).dispatchEvent(ie);
+	};
+
+	function handleIntend(e) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		var intent = e.detail;
+
+		// find intent executor
+		var request = { url:false, method:'post', headers:{} };
+		// :TODO:
+		if (intent.action == 'http://grimwire.com/intents/edit') {
+			request.url = 'httpl://v1.pfraze.text.edit.app';
+		} else if (intent.action == 'http://grimwire.com/intents/torch') {
+			request.url = 'httpl://app/null';
+		}
+		if (!request.url) {
+			console.log('No application available to execute', intent.action, intent);
+			return;
+		}
+
+		// collect our data
+		var contextData;
+		var form = CommonClient.findParentNode.byTag(e.target, 'FORM');
+		if (form) {
+			contextData = CommonClient.extractRequest.fromForm(form);
+		} else {
+			contextData = this.element.innerHTML;
+		}
+
+		// form request body
+		request.headers['content-type'] = 'multipart/form-data';
+		request.body = {
+			'content-delimiter':'----------------',
+			parts: [
+				{ 'content-type':'text/uri-list', body:intent.action },
+				{ 'content-type':'application/json', body:this.contextLinks },
+				{ 'content-type':this.contextType, body:contextData }
+			]
+		};
+
+		// add attachments
+		// :TODO:
+
+		this.__reviewRequest(request);
+		this.__contextualizeRequest(request);
+
+		var self = this;
+		request.target = '-below';
+		request.stream = false;
+		promise(Environment.dispatch(this, request))
+			.then(function(response) {
+				self.__updateContext(request, response);
+				self.__handleResponse(e, request, response);
+			});
+	}
 
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
@@ -84,49 +148,61 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// transforms dropped 'link' objects into request events
 	ClientRegion.prototype.__handleDrop = function(e) {
 
-		this.element.classList.remove('drophover');
+		e.preventDefault();
+		e.stopPropagation();
+		this.element.classList.remove('requesthover');
+		this.element.classList.remove('intenthover');
+		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
 
 		// try to parse known data formats
 		var request = null;
-		var data = e.dataTransfer.getData('application/request+json');
-		if (data) {
-			request = JSON.parse(data);
-		} else {
-			data = e.dataTransfer.getData('text/uri-list');
+		if (has('application/request+json')) {
+			request = JSON.parse(e.dataTransfer.getData('application/request+json'));
+		} else if (has('application/intent+json')) {
+			var data = e.dataTransfer.getData('text/uri-list');
 			if (data) {
 				request = { method:'get', url:data };
 			}
 		}
-		if (!request) {
-			return; // let somebody else handle the event
+		if (request) {
+			delete request.target; // we're choosing the target
+			this.dispatchRequest(request);
+			return false;
 		}
-		delete request.target; // we're choosing the target
 
-		// dispatch
-		e.preventDefault();
-		e.stopPropagation();
-		this.dispatchRequest(request);
-		return false;
+		if (has('application/intent+json')) {
+			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')), e.target);
+			return false;
+		}
 	};
 
 	ClientRegion.prototype.__handleDragover = function(e) {
-		if (e.dataTransfer.types.indexOf('application/request+json') !== -1) {
+		if (!e.dataTransfer.types) return;
+		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+		if (has('application/request+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1) {
+		} else if (has('text/uri-list')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
+			return false;
+		} else if (has('application/intent+json')) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'move';
 			return false;
 		}
 	};
 
 	ClientRegion.prototype.__handleDragenter = function(e) {
-		// if (e.target != this.element) { return; }
-		if (e.dataTransfer.types.indexOf('application/request+json') !== -1) {
-			this.element.classList.add('drophover');
-		} else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1) {
-			this.element.classList.add('drophover');
+		if (!e.dataTransfer.types) return;
+		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+		if (has('application/request+json')) {
+			this.element.classList.add('requesthover');
+		} else if (has('text/uri-list')) {
+			this.element.classList.add('requesthover');
+		} else if (has('application/intent+json')) {
+			this.element.classList.add('intenthover');
 		}
 	};
 
@@ -134,12 +210,14 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		// dragleave is fired on all children, so only pay attention if it dragleaves our region
 		var rect = this.element.getBoundingClientRect();
 		if (e.clientX >= (rect.left + rect.width) || e.clientX <= rect.left || e.clientY >= (rect.top + rect.height) || e.clientY <= rect.top) {
-			this.element.classList.remove('drophover');
+			this.element.classList.remove('requesthover');
+			this.element.classList.remove('intenthover');
 		}
 	};
 
 	ClientRegion.prototype.__handleDragend = function(e) {
-		this.element.classList.remove('drophover');
+		this.element.classList.remove('requesthover');
+		this.element.classList.remove('intenthover');
 	};
 
 	exports.ClientRegion = ClientRegion;

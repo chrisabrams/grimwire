@@ -1,9 +1,3 @@
-// :DEBUG:
-// =======
-
-$('.sigils i').on('click', function(e) {
-	$(e.target).toggleClass('charged');
-});
 
 // Env Behaviors
 // =============
@@ -42,7 +36,6 @@ Environment.setRegionPostProcessor(function(elem) {
 	// addPersonaCtrls(elem);
 	$('.dropdown-toggle', elem).dropdown();
 });
-
 
 
 // Init
