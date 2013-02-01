@@ -43,7 +43,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			request.url = 'httpl://v1.pfraze.text.edit.app';
 		} else if (intent.action == 'http://grimwire.com/intents/torch') {
 			request.url = 'httpl://app/null';
-		}
+		} else if (intent.action == 'http://grimwire.com/intents/render') {
+            request.url = 'httpl://app/echo';
+        }
 		if (!request.url) {
 			console.log('No application available to execute', intent.action, intent);
 			return;
@@ -53,7 +55,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		var contextData;
 		var form = CommonClient.findParentNode.byTag(e.target, 'FORM');
 		if (form) {
-			contextData = CommonClient.extractRequest.fromForm(form);
+			contextData = CommonClient.extractRequest(form, this.element).body; // :TODO: replace with extractPayload
 		} else {
 			contextData = this.element.innerHTML;
 		}

@@ -19,7 +19,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			}).bind(this))
 			.pm('/', /HEAD|GET/i, $getApps.bind(this, request, response))
 			.pmt('/', /POST/i, /json/i, $addApp.bind(this, request, response))
-			.pa(RegExp('/null/?','i'), /html/i, $getNull.bind(this, request, response))
+			.pa(RegExp('/null/?','i'), /html/i, $null.bind(this, request, response))
+            .pa(RegExp('/echo/?','i'), /html/i, $echo.bind(this, request, response))
 			.error(response);
 	};
 
@@ -107,10 +108,20 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		});
 	}
 
-	// GET /null html
-	function $getNull(request, response) {
+	// /null html
+	function $null(request, response) {
 		Link.responder(response).ok('text/html').end('');
 	}
+
+    // /echo html
+    function $echo(request, response) {
+        var content = request.body;
+        if (/post/i.test(request.method) && /multipart\/form\-data/.test(request.headers['content-type']))
+            content = content.parts[2].body;
+        if (typeof content === 'object')
+            content = content.text || JSON.stringify(content);
+        Link.responder(response).ok('text/html').end(content);
+    }
 
 	// GET|HEAD /:app
 	function $getApp(request, respond, appName) {

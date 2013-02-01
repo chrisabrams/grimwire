@@ -43,6 +43,7 @@ app.onHttpRequest(function(request, response) {
 		// add log entry
 		router.mt('POST', /html|plain/, function() {
 			log.push({ msg:request.body, time:(new Date()) }); // store the entry
+			console.log(request.body);
 			logBroadcast.emit('update'); // tell our listeners about the change
 			respond.ok().end();
 		});

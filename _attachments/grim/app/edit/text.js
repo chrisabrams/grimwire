@@ -30,9 +30,11 @@ app.onHttpRequest(function(request, response) {
 			JSON.stringify(request.body.parts[2].body) :
 			request.body.parts[2].body;
 		Link.responder(response).ok('html').end([
+            '<form>',
 			'<textarea class="input-block-level" rows="10" name="text">',
 				content.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-			'</textarea>'
+			'</textarea>',
+            '</form>'
 		].join(''));
 	}).error(response);
 });
