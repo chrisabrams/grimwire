@@ -12,20 +12,19 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	AppServer.prototype = Object.create(Environment.Server.prototype);
 
 	AppServer.prototype.handleHttpRequest = function(request, response) {
-		var router = Link.router(request);
-		var self = this;
-		router.pma('/', /GET/i, 'text/event-stream', function() {
-			Link.responder(response).ok('text/event-stream');
-			self.serversBroadcast.addStream(response);
-		});
-		router.pm('/', /HEAD|GET/i, this.$getApps.bind(this, request, response));
-		router.pmt('/', /POST/i, /json/i, this.$addApp.bind(this, request, response));
-		router.pma(RegExp('/null/?','i'), /HEAD|GET/i, /html/i, this.$getNull.bind(this, request, response));
-		router.error(response);
+		Link.router(request)
+			.pma('/', /GET/i, 'text/event-stream', (function() {
+				Link.responder(response).ok('text/event-stream');
+				this.serversBroadcast.addStream(response);
+			}).bind(this))
+			.pm('/', /HEAD|GET/i, $getApps.bind(this, request, response))
+			.pmt('/', /POST/i, /json/i, $addApp.bind(this, request, response))
+			.pma(RegExp('/null/?','i'), /HEAD|GET/i, /html/i, $getNull.bind(this, request, response))
+			.error(response);
 	};
 
 	// GET|HEAD /
-	AppServer.prototype.$getApps = function(request, response) {
+	function $getApps(request, response) {
 		var respond = Link.responder(response);
 		var router = Link.router(request);
 
@@ -51,10 +50,10 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			// HEAD
 			respond.ok(null, headerer).end();
 		}
-	};
+	}
 
 	// POST /
-	AppServer.prototype.$addApp = function(request, response) {
+	function $addApp(request, response) {
 		var self = this;
 		var respond = Link.responder(response);
 		var router = Link.router(request);
@@ -106,16 +105,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			self.serversBroadcast.emit('update');
 			respond.ok('application/json').end(server.config);
 		});
-	};
+	}
 
 	// GET /null html
-	AppServer.prototype.$getNull = function(request, response) {
+	function $getNull(request, response) {
 		Link.responder(response).ok('text/html').end('');
-	};
+	}
 
 	// GET|HEAD /:app
-	AppServer.prototype.$getApp = function(request, respond, appName) {
-	};
+	function $getApp(request, respond, appName) {
+		Link.responder(response).notImplemented().end();
+	}
 
 	AppServer.prototype.renderAppsHtml = function(apps) {
 		var html = [], appsByCategory = {}, domain, category;
