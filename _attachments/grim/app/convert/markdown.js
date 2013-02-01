@@ -1,6 +1,6 @@
 importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
-importScripts('/grim/apps/convert/lib/marked.js');
+importScripts('/grim/app/convert/lib/marked.js');
 
 marked.setOptions({ gfm: true, tables: true });
 function headerRewrite(headers) {

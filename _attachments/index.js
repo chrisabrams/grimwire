@@ -48,16 +48,9 @@ centerElem.addEventListener('dragend', function(e) {
 });
 
 
-// Definitions
-// ===========
-
+// Env Behaviors
+// =============
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
-
-// helpers
-function logError(err, request) {
-	console.log(err.message, request);
-	return err;
-}
 
 // request wrapper
 Environment.setDispatchHandler(function(origin, request) {
@@ -71,19 +64,19 @@ Environment.setDispatchHandler(function(origin, request) {
 
 	// allow request
 	var response = Link.dispatch(request);
-	response.then(function(res) {
+	response.then(function (res) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post(res.status+' '+request.url);
 		}
 		return res;
 	});
-	response.except(function(err) { 
+	response.except(function (err) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post(err.response.status+' '+request.url);
 		}
+		console.log(err.message, request);
 		return err;
 	});
-	response.except(logError, request);
 	return response;
 });
 
@@ -107,20 +100,20 @@ Environment.addServer('app', new Grim.AppServer());
 Environment.addServer('scripts.env', new Grim.ScriptServer());
 
 // instantiate apps
-apps.post({ scriptUrl : '/grim/apps/debug/targets.js' });
-apps.post({ scriptUrl : '/grim/apps/debug/forms.js' });
-apps.post({ scriptUrl : '/grim/apps/convert/markdown.js' });
-apps.post({ scriptUrl : '/grim/apps/edit/text.js' });
-apps.post({ scriptUrl : '/grim/apps/help/about.js' })
+apps.post({ scriptUrl : '/grim/app/debug/targets.js' });
+apps.post({ scriptUrl : '/grim/app/debug/forms.js' });
+apps.post({ scriptUrl : '/grim/app/convert/markdown.js' });
+apps.post({ scriptUrl : '/grim/app/edit/text.js' });
+apps.post({ scriptUrl : '/grim/app/help/about.js' })
 	.then(function(res) {
 		if (res.status == 200) {
 			Environment.clientRegions.firstapp.dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
 		}
 	});
-apps.post({ scriptUrl : '/grim/apps/util/log.js' })
+apps.post({ scriptUrl : '/grim/app/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
-			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffers on log.util.app
+			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffer on log.util.app
 			log.post('Log up.');
 			Environment.clientRegions.secondapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
 		}
