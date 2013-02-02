@@ -9,6 +9,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// an isolated region of the DOM
 	function ClientRegion(id, options) {
 		Environment.ClientRegion.call(this, id);
+		this.animWrapper = this.element.parentNode;
+		this.parentColumn = CommonClient.findParentNode.byTag(this.element, 'TD');
 
 		options = options || {};
 		if (options.droptarget !== false) {
@@ -38,13 +40,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		// find intent executor
 		var request = { url:false, method:'post', headers:{} };
-		// :TODO:
+		// :TODO: intent mapping config
 		if (intent.action == 'http://grimwire.com/intents/edit') {
 			request.url = 'httpl://v1.pfraze.text.edit.app';
+			request.target = '-below';
 		} else if (intent.action == 'http://grimwire.com/intents/torch') {
 			request.url = 'httpl://app/null';
 		} else if (intent.action == 'http://grimwire.com/intents/render') {
             request.url = 'httpl://app/echo';
+			request.target = '-below';
         }
 		if (!request.url) {
 			console.log('No application available to execute', intent.action, intent);
@@ -78,7 +82,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		this.__contextualizeRequest(request);
 
 		var self = this;
-		request.target = '-below';
 		request.stream = false;
 		promise(Environment.dispatch(this, request))
 			.then(function(response) {
@@ -93,7 +96,11 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			// destroy region if it's served blank html
 			this.terminate();
 			Environment.removeClientRegion(this);
-			this.element.parentNode.removeChild(this.element);
+
+			// animate and remove nodes
+			var animWrapper = this.element.parentNode;
+			animWrapper.classList.add('die');
+			setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
 		} else {
 			CommonClient.handleResponse(requestTarget, this.element, response);
 			Environment.postProcessRegion(requestTarget);
@@ -120,31 +127,32 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	ClientRegion.prototype.__createRelativeRegion = function(e, request) {
-		var elem = document.createElement('div');
-		elem.id = exports.genClientRegionId();
-		elem.className = "client-region init";
-        //elem.style['max-height'] = 0;
+		var animWrapperEl = document.createElement('div');
+		animWrapperEl.className = "client-region-animwrapper init";
+
+		var clientRegionEl = document.createElement('div');
+		clientRegionEl.id = exports.genClientRegionId();
+		clientRegionEl.className = "client-region";
+		animWrapperEl.appendChild(clientRegionEl);
+
+		var column = this.parentColumn || document.querySelector('#center td');
 		switch (request.target) {
 			case '-above':
-				this.element.parentNode.insertBefore(elem, this.element);
+				column.insertBefore(animWrapperEl, this.animWrapper);
 				break;
 			case '-below':
-				this.element.parentNode.insertBefore(elem, this.element.nextSibling);
+				column.insertBefore(animWrapperEl, this.animWrapper.nextSibling);
 				break;
-			case '-top':
-				var center = document.getElementById('center');
-				center.insertBefore(elem, center.firstChild);
-				break;
-			case '-bottom':
-				document.getElementById('center').appendChild(elem);
+			case '-blank':
+				column.appendChild(animWrapperEl);
 				break;
 			default:
 				console.log("Unrecognized link target: ", request.target, e);
-				return this.element;
+				column.appendChild(animWrapperEl);
 		}
-        setTimeout(function() { elem.classList.remove('init'); }, 0); // trigger transition
-		Environment.addClientRegion(new ClientRegion(elem.id));
-		return elem;
+        setTimeout(function() { animWrapperEl.classList.remove('init'); }, 0); // trigger transition
+		Environment.addClientRegion(new ClientRegion(clientRegionEl.id));
+		return clientRegionEl;
 	};
 
 	// transforms dropped 'link' objects into request events

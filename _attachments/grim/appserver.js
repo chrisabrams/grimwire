@@ -137,7 +137,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		var renderAppItem = function(app) {
 			return [
 				'<li>',
-					'<a target="-bottom" href="', app.config.startUrl, '">',
+					'<a target="-blank" href="', app.config.startUrl, '">',
 						app.config.name, '<br/><small>', app.config.author, ', ', app.config.version, '</small>',
 					'</a>',
 				'</li>'].join('');
@@ -154,7 +154,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 		return [
 		'<form action="httpl://app" data-output="true">',
-			'<a class="torch intent icon-fire" href="httpl://app/null" title="Torch"></a>',
 			'<intent class="freeze" action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
 			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="intent icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills">',

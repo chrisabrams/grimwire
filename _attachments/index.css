@@ -49,7 +49,7 @@ form, .table { margin-bottom:0; }
 	font-size:28px;
 	line-height:40px;
 }
-#leftside-bar ul.intents li.divider {
+#leftside-bar ul.intents .divider {
 	font-size:12px;
 	line-height: 10px;
 	padding-top: 1px;
@@ -71,18 +71,17 @@ form, .table { margin-bottom:0; }
 
 #center {
 	position:absolute;
-	height:100%; width:100%;
-
 	left:70px; top:25px;
-
-    -moz-column-width:450px;
-    -webkit-column-width:450px;
-    column-width:450px;
+	height:100%;
 
     -webkit-transition: box-shadow .25s ease-in-out;
 }
 #center:not(.requesthover) {
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
+}
+#center > tbody > tr > td {
+	vertical-align:top;
+	width:530px;
 }
 
 .client-region {
@@ -92,8 +91,23 @@ form, .table { margin-bottom:0; }
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 
 	max-height:800px;
+	width:500px;
 	overflow:hidden;
 
-    -webkit-transition: box-shadow .25s ease-in-out, background-color .5s ease-in-out;
+	-webkit-transition: box-shadow .25s ease-in-out;
 }
-.client-region.init { background-color:#fafafa }
+.client-region-animwrapper {
+	width:530px;
+	overflow:hidden;
+
+    -webkit-transition: background-color .5s ease-in-out,
+	    width .25s ease-in-out;
+}
+.client-region-animwrapper.init {
+	background-color:#fafafa;
+	width:0;
+}
+.client-region-animwrapper.die {
+	width:0;
+    -webkit-transition: width .15s ease-in-out;
+}
