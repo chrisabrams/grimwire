@@ -67,19 +67,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		// form request body
 		request.headers['content-type'] = 'multipart/form-data';
 		request.body = {
-			'content-delimiter':'----------------',
 			parts: [
 				{ 'content-type':'text/uri-list', body:intent.action },
-				{ 'content-type':'application/json', body:this.contextLinks },
-				{ 'content-type':this.contextType, body:contextData }
+				{ 'content-type':'application/json', body:this.context.links },
+				{ 'content-type':this.context.type, body:contextData }
 			]
 		};
 
 		// add attachments
 		// :TODO:
 
-		this.__reviewRequest(request);
-		this.__contextualizeRequest(request);
+		this.__prepareRequest(request);
 
 		var self = this;
 		request.stream = false;
@@ -162,13 +160,13 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		e.stopPropagation();
 		this.element.classList.remove('requesthover');
 		this.element.classList.remove('intenthover');
-		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
 
 		// try to parse known data formats
 		var request = null;
-		if (has('application/request+json')) {
+		if (hasType('application/request+json')) {
 			request = JSON.parse(e.dataTransfer.getData('application/request+json'));
-		} else if (has('application/intent+json')) {
+		} else if (hasType('application/intent+json')) {
 			var data = e.dataTransfer.getData('text/uri-list');
 			if (data) {
 				request = { method:'get', url:data };
@@ -180,7 +178,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			return false;
 		}
 
-		if (has('application/intent+json')) {
+		if (hasType('application/intent+json')) {
 			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')), e.target);
 			return false;
 		}
@@ -188,16 +186,16 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleDragover = function(e) {
 		if (!e.dataTransfer.types) return;
-		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
-		if (has('application/request+json')) {
+		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+		if (hasType('application/request+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (has('text/uri-list')) {
+		} else if (hasType('text/uri-list')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (has('application/intent+json')) {
+		} else if (hasType('application/intent+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'move';
 			return false;
@@ -206,12 +204,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleDragenter = function(e) {
 		if (!e.dataTransfer.types) return;
-		var has = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
-		if (has('application/request+json')) {
+		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+		if (hasType('application/request+json')) {
 			this.element.classList.add('requesthover');
-		} else if (has('text/uri-list')) {
+		} else if (hasType('text/uri-list')) {
 			this.element.classList.add('requesthover');
-		} else if (has('application/intent+json')) {
+		} else if (hasType('application/intent+json')) {
 			this.element.classList.add('intenthover');
 		}
 	};
