@@ -1,8 +1,23 @@
 Grim = (typeof Grim == 'undefined') ? {} : Grim;
 (function(exports) {
 
-	// Definitions
-	// ===========
+	// Intent Registry
+	// ===============
+
+	var intents = {
+		registry:{}
+	};
+	intents.register = function(intentUrl, executorUrl, target) {
+		this.registry[intentUrl] = { url:executorUrl, target:target };
+	};
+	intents.unregister = function(intentUrl) {
+		delete this.registry[intentUrl];
+	};
+
+	exports.intents = intents;
+
+	// Intent Handling
+	// ===============
 	function extractIntent(elem) {
 		if (elem.tagName != 'INTENT') return {};
 
@@ -14,7 +29,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	}
 
 	
-	function handleDragstart(e) {
+	function handleIntentDragstart(e) {
 		var elem = e.target;
 		if (elem.tagName != 'INTENT') return;
 
@@ -23,13 +38,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		if (intent && intent.action) {
 			e.dataTransfer.effectAllowed = 'move';
 			e.dataTransfer.setData('application/intent+json', JSON.stringify(intent));
-		} else { 
+		} else {
 			e.dataTransfer.effectAllowed = 'none';
 		}
 	}
 
 	// Init
 	// ====
-	document.addEventListener('dragstart', handleDragstart);
+	document.addEventListener('dragstart', handleIntentDragstart);
+	intents.register('http://grimwire.com/intents/torch', 'httpl://app/null');
+	intents.register('http://grimwire.com/intents/render', 'httpl://app/echo', '-below');
 	
 })(Grim);

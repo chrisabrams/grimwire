@@ -40,20 +40,13 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		// find intent executor
 		var request = { url:false, method:'post', headers:{} };
-		// :TODO: intent mapping config
-		if (intent.action == 'http://grimwire.com/intents/edit') {
-			request.url = 'httpl://v1.pfraze.text.edit.app';
-			request.target = '-below';
-		} else if (intent.action == 'http://grimwire.com/intents/torch') {
-			request.url = 'httpl://app/null';
-		} else if (intent.action == 'http://grimwire.com/intents/render') {
-            request.url = 'httpl://app/echo';
-			request.target = '-below';
-        }
-		if (!request.url) {
+		var executor = Grim.intents.registry[intent.action];
+		if (!executor) {
 			console.log('No application available to execute', intent.action, intent);
 			return;
 		}
+		request.url = executor.url;
+		request.target = executor.target;
 
 		// collect our data
 		var contextData;
