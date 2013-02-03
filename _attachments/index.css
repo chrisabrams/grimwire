@@ -87,15 +87,15 @@ form {
 	position:absolute;
 	left:70px; top:25px;
 	height:100%;
-
-    -webkit-transition: box-shadow .25s ease-in-out;
-}
-#center:not(.requesthover) {
-	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 }
 #center > tbody > tr > td {
 	vertical-align:top;
 	width:530px;
+
+    -webkit-transition: box-shadow .25s ease-in-out;
+}
+#center > tbody > tr > td:not(.requesthover) {
+	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 }
 
 /* application clients */

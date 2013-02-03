@@ -47,6 +47,11 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		request.url = executor.url;
 		request.target = executor.target;
 
+		// are we an empty (and probably new) region?
+		if (!this.context.url) {
+			delete request.target; // put the response in our region
+		}
+
 		// collect our data
 		var contextData;
 		var form = CommonClient.findParentNode.byTag(e.target, 'FORM');
@@ -82,7 +87,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
-		if (requestTarget == this.element && !response.body && response.headers['content-type'] == 'text/html') {
+		var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
+		if (requestTarget == this.element && isEmpty) {
 			// destroy region if it's served blank html
 			this.terminate();
 			Environment.removeClientRegion(this);
@@ -108,7 +114,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		// targets starting with a dash are created relative to the client region
 		if (request.target.charAt(0) == '-') {
-			return this.__createRelativeRegion(e, request);
+			return this.__createRelativeRegion(request.target);
 		}
 
 		// targets not starting with a dash or underscore should be ids to other elements
@@ -116,7 +122,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		return document.getElementById(request.target) || this.element;
 	};
 
-	ClientRegion.prototype.__createRelativeRegion = function(e, request) {
+	ClientRegion.prototype.__createRelativeRegion = function(target, parentColumn) {
 		var animWrapperEl = document.createElement('div');
 		animWrapperEl.className = "client-region-animwrapper init";
 
@@ -125,8 +131,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		clientRegionEl.className = "client-region";
 		animWrapperEl.appendChild(clientRegionEl);
 
-		var column = this.parentColumn || document.querySelector('#center td');
-		switch (request.target) {
+		var column = this.parentColumn || parentColumn || document.querySelector('#center td');
+		switch (target) {
 			case '-above':
 				column.insertBefore(animWrapperEl, this.animWrapper);
 				break;
@@ -137,7 +143,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				column.appendChild(animWrapperEl);
 				break;
 			default:
-				console.log("Unrecognized link target: ", request.target, e);
+				console.log("Unrecognized link target: ", target);
 				column.appendChild(animWrapperEl);
 		}
         setTimeout(function() { animWrapperEl.classList.remove('init'); }, 0); // trigger transition
@@ -158,13 +164,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			el.classList.remove('requesthover');
 			el.classList.remove('intenthover');
 		});
-		
 
 		// try to parse known data formats
 		var request = null;
 		if (hasType('application/request+json')) {
 			request = JSON.parse(e.dataTransfer.getData('application/request+json'));
-		} else if (hasType('application/intent+json')) {
+		} else if (hasType('text/uri-list')) {
 			var data = e.dataTransfer.getData('text/uri-list');
 			if (data) {
 				request = { method:'get', url:data };
@@ -177,7 +182,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 
 		if (hasType('application/intent+json')) {
-			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')), e.target);
+			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')));
 			return false;
 		}
 	};

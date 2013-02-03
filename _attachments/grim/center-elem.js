@@ -7,16 +7,16 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	var centerElem = document.getElementById('center');
 	centerElem.addEventListener('drop', function(e) {
 
-		centerElem.classList.remove('requesthover');
-		centerElem.classList.remove('intenthover');
+		var highlightableElems = Array.prototype.slice.call(document.querySelectorAll('#center >tbody > tr > td'));
+		highlightableElems.forEach(function(el) {
+			el.classList.remove('requesthover');
+			el.classList.remove('intenthover');
+		});
 
-		var elem = document.createElement('div');
-		elem.id = Grim.genClientRegionId();
-		elem.className = "client-region";
-		centerElem.appendChild(elem);
+		if (e.target.tagName != 'TD') { return; }
 
-		var region = Environment.addClientRegion(new Grim.ClientRegion(elem.id));
-		region.__handleDrop(e);
+		var el = Grim.ClientRegion.prototype.__createRelativeRegion('-blank', e.target);
+		Environment.clientRegions[el.id].__handleDrop(e);
 	});
 	centerElem.addEventListener('dragover',  function(e) {
 		if (!e.dataTransfer.types) return;
@@ -36,24 +36,25 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	});
 	centerElem.addEventListener('dragenter', function(e) {
 		if (!e.dataTransfer.types) return;
-		if (e.target == centerElem) {
+		if (e.target.tagName == 'TD' && e.target.parentNode.parentNode.parentNode == centerElem) {
 			if (e.dataTransfer.types.indexOf('application/request+json') !== -1)
-				centerElem.classList.add('requesthover');
+				e.target.classList.add('requesthover');
 			else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1)
-				centerElem.classList.add('requesthover');
+				e.target.classList.add('requesthover');
 			else if (e.dataTransfer.types.indexOf('application/intent+json') !== -1)
-				centerElem.classList.add('intenthover');
+				e.target.classList.add('intenthover');
 		}
 	});
 	centerElem.addEventListener('dragleave', function(e) {
-		if (e.target == centerElem) { // dragleave fires when child elems are dragleft... and that's our time to shine
-			centerElem.classList.remove('requesthover');
-			centerElem.classList.remove('intenthover');
+		// dragleave fires when child elems are dragleft, so only unhover when a TD is left
+		if (e.target.tagName == 'TD' && e.target.parentNode.parentNode.parentNode == centerElem) {
+			e.target.classList.remove('requesthover');
+			e.target.classList.remove('intenthover');
 		}
 	});
-	centerElem.addEventListener('dragend', function(e) {
+	/*centerElem.addEventListener('dragend', function(e) {
 		centerElem.classList.remove('requesthover');
 		centerElem.classList.remove('intenthover');
-	});
+	});*/
 
 })(Grim);
