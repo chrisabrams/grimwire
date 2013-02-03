@@ -18,7 +18,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			this.element.addEventListener('dragover', this.__handleDragover.bind(this));
 			this.element.addEventListener('dragenter', this.__handleDragenter.bind(this));
 			this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
-			this.element.addEventListener('dragend', this.__handleDragend.bind(this));
 		}
 		this.element.addEventListener('intend', handleIntend.bind(this));
 	}
@@ -51,7 +50,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		// collect our data
 		var contextData;
 		var form = CommonClient.findParentNode.byTag(e.target, 'FORM');
-		if (form) {
+		if (form && form.dataset['intents'] != 'none') {
 			contextData = CommonClient.extractRequest(form, this.element).body; // :TODO: replace with extractPayload
 		} else {
 			contextData = this.element.innerHTML;
@@ -151,9 +150,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		e.preventDefault();
 		e.stopPropagation();
-		this.element.classList.remove('requesthover');
-		this.element.classList.remove('intenthover');
 		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
+
+		var highlightableElems = Array.prototype.slice.call(this.element.querySelectorAll('form'));
+		highlightableElems.push(this.element);
+		highlightableElems.forEach(function(el) {
+			el.classList.remove('requesthover');
+			el.classList.remove('intenthover');
+		});
+		
 
 		// try to parse known data formats
 		var request = null;
@@ -197,28 +202,47 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleDragenter = function(e) {
 		if (!e.dataTransfer.types) return;
+
+		var thisElem = this.element;
+		var formElem = CommonClient.findParentNode(e.target, function(elem) {
+			return (elem.tagName == 'FORM' && elem.dataset['intents'] != 'none') || elem == thisElem;
+		});
+
 		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
 		if (hasType('application/request+json')) {
 			this.element.classList.add('requesthover');
 		} else if (hasType('text/uri-list')) {
 			this.element.classList.add('requesthover');
 		} else if (hasType('application/intent+json')) {
+			if (formElem) formElem.classList.add('intenthover');
 			this.element.classList.add('intenthover');
 		}
 	};
 
 	ClientRegion.prototype.__handleDragleave = function(e) {
+		var rect;
+
+		// check if there's a form
+		var thisElem = this.element;
+		var formElem = CommonClient.findParentNode(e.target, function(elem) {
+			return elem.tagName == 'FORM' || elem == thisElem;
+		});
+
+		// do the form in addition to the containing node
+		if (formElem != this.element) {
+			// dragleave is fired on all children, so only pay attention if it dragleaves our region
+			rect = formElem.getBoundingClientRect();
+			if (e.clientX >= (rect.left + rect.width) || e.clientX <= rect.left || e.clientY >= (rect.top + rect.height) || e.clientY <= rect.top) {
+				formElem.classList.remove('intenthover');
+			}
+		}
+
 		// dragleave is fired on all children, so only pay attention if it dragleaves our region
-		var rect = this.element.getBoundingClientRect();
+		rect = this.element.getBoundingClientRect();
 		if (e.clientX >= (rect.left + rect.width) || e.clientX <= rect.left || e.clientY >= (rect.top + rect.height) || e.clientY <= rect.top) {
 			this.element.classList.remove('requesthover');
 			this.element.classList.remove('intenthover');
 		}
-	};
-
-	ClientRegion.prototype.__handleDragend = function(e) {
-		this.element.classList.remove('requesthover');
-		this.element.classList.remove('intenthover');
 	};
 
 	exports.ClientRegion = ClientRegion;

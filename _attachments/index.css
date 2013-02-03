@@ -4,6 +4,7 @@ body {
 a { color:#06c }
 form, .table { margin-bottom:0; }
 
+/* hover states */
 .requesthover {
 	border:1px solid #ccc !important;
 	box-shadow:inset 0 0 6px rgba(0,0,0,0.35);
@@ -13,6 +14,28 @@ form, .table { margin-bottom:0; }
 	box-shadow:0 0 5px rgba(82, 168, 236, 0.8);
 }
 
+/* form intent behaviors */
+form.intenthover {
+	border:none !important;
+	box-shadow:0 0 8px rgba(236, 174, 82, 0.8);
+}
+form {
+	-webkit-transition: box-shadow .25s ease-in-out;
+}
+
+/* intents */
+.intents i, .intent {
+    opacity:0.5;
+}
+.intents i.charged, .intent.charged {
+	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
+}
+.intents i:hover, .intent:hover {
+	opacity:1.0;
+	cursor: pointer;
+}
+
+/* active servers listing */
 #topside-bar { position:fixed; z-index:100; width:100%; }
 #topside-bar form { margin:0 }
 #topside-bar ul { margin:0; }
@@ -28,6 +51,7 @@ form, .table { margin-bottom:0; }
 #topside-bar .freeze { color:rgb(82, 168, 236); }
 #topside-bar .reset { color:rgb(30, 156, 35); }
 
+/* intent listing */
 #leftside-bar {
 	position:fixed;
 	top:26px;
@@ -58,17 +82,7 @@ form, .table { margin-bottom:0; }
 	color: #ddd;
 }
 
-.intents i, .intent {
-    opacity:0.5;
-}
-.intents i.charged, .intent.charged {
-	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
-}
-.intents i:hover, .intent:hover {
-	opacity:1.0;
-	cursor: pointer;
-}
-
+/* main application client space */
 #center {
 	position:absolute;
 	left:70px; top:25px;
@@ -84,6 +98,7 @@ form, .table { margin-bottom:0; }
 	width:530px;
 }
 
+/* application clients */
 .client-region {
 	vertical-align:top;
 	padding:0.75em;
