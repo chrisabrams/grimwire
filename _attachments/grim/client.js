@@ -53,12 +53,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 
 		// collect our data
-		var contextData;
+		var contextData, contextDataType;
 		var form = CommonClient.findParentNode.byTag(e.target, 'FORM');
 		if (form && form.dataset['intents'] != 'none') {
-			contextData = CommonClient.extractRequest(form, this.element).body; // :TODO: replace with extractPayload
+			var formRequest = CommonClient.extractRequest(form, this.element);
+			contextData = formRequest.body;
+			contextDataType = formRequest.headers['content-type'];
 		} else {
 			contextData = this.element.innerHTML;
+			contextDataType = this.context.type;
 		}
 
 		// form request body
@@ -67,7 +70,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			parts: [
 				{ 'content-type':'text/uri-list', body:intent.action },
 				{ 'content-type':'application/json', body:this.context.links },
-				{ 'content-type':this.context.type, body:contextData }
+				{ 'content-type':contextDataType, body:contextData }
 			]
 		};
 
@@ -80,27 +83,30 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		request.stream = false;
 		promise(Environment.dispatch(this, request))
 			.then(function(response) {
-				self.__updateContext(request, response);
 				self.__handleResponse(e, request, response);
 			});
 	}
 
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
-		var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
-		if (requestTarget == this.element && isEmpty) {
-			// destroy region if it's served blank html
-			this.terminate();
-			Environment.removeClientRegion(this);
+		if (requestTarget == this.element) {
+			var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
+			if (isEmpty) {
+				// destroy region if it's served blank html
+				this.terminate();
+				Environment.removeClientRegion(this);
 
-			// animate and remove nodes
-			var animWrapper = this.element.parentNode;
-			animWrapper.classList.add('die');
-			setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
-		} else {
-			CommonClient.handleResponse(requestTarget, this.element, response);
-			Environment.postProcessRegion(requestTarget);
+				// animate and remove nodes
+				var animWrapper = this.element.parentNode;
+				animWrapper.classList.add('die');
+				setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
+
+				return;
+			}
 		}
+		Environment.clientRegions[requestTarget.id].__updateContext(request, response);
+		CommonClient.handleResponse(requestTarget, this.element, response);
+		Environment.postProcessRegion(requestTarget);
 	};
 
 	ClientRegion.prototype.__chooseRequestTarget = function(e, request) {
@@ -152,7 +158,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	// transforms dropped 'link' objects into request events
-	ClientRegion.prototype.__handleDrop = function(e) {
+	ClientRegion.prototype.__handleDrop = function(e, dispatchEmitterOverride) {
 
 		e.preventDefault();
 		e.stopPropagation();
@@ -182,7 +188,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 
 		if (hasType('application/intent+json')) {
-			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')));
+			// :NOTE: must dispatch the intent off of the drop target (for forms)
+			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')), dispatchEmitterOverride || e.target);
 			return false;
 		}
 	};

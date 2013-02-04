@@ -18,9 +18,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				this.serversBroadcast.addStream(response);
 			}).bind(this))
 			.pm('/', /HEAD|GET/i, $getApps.bind(this, request, response))
-			.pmt('/', /POST/i, /json/i, $addApp.bind(this, request, response))
+			.pmt('/', /POST/i, /json|form\-data/i, $addApp.bind(this, request, response))
+			// .pm(RegExp('/[^/]+/?'), /HEAD|GET/i, $getApp.bind(this, request, response))
+			// .pm(RegExp('/[^/]+/?'), /DELETE/i, $killApp.bind(this, request, response))
+			.pmta(RegExp('/confirm-load/?','i'), /POST/i, /json|form\-data/i, /html/i, $confirmAddApp.bind(this, request, response))
 			.pa(RegExp('/null/?','i'), /html/i, $null.bind(this, request, response))
-            .pa(RegExp('/echo/?','i'), /html/i, $echo.bind(this, request, response))
+			.pa(RegExp('/echo/?','i'), /html/i, $echo.bind(this, request, response))
 			.error(response);
 	};
 
@@ -53,21 +56,57 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 	}
 
+	function extractAddParams(request) {
+		var params;
+		if (/multipart\/form-data/.test(request.headers['content-type'])) {
+			// an intent
+			var contextLinks = request.body.parts[1].body;
+			var contextData = request.body.parts[2].body;
+			var contextDataType = request.body.parts[2]['content-type'];
+
+			// pick the script origin from the best possible source
+			if (/javascript/.test(contextDataType)) {
+				// javascript context body
+				params = { script:contextData };
+			} else if (/uri-list/.test(contextDataType)) {
+				// uri context body
+				params = { scriptUrl:contextData };
+			} else if (/json|www-form-urlencoded/.test(contextDataType)) {
+				// form context body
+				if (contextData.text)
+					params = { script:contextData.text };
+				else if (contextData.script)
+					params = { script:contextData.script };
+				else if (contextData.scriptUrl)
+					params = { scriptUrl:contextData.scriptUrl };
+			} else {
+				// context link header
+				params = { scriptUrl : Link.lookupLink(contextLinks, 'http://grimwire.com/rels/src', 'application') };
+			}
+		} else {
+			// a json submit
+			params = request.body;
+		}
+		return params;
+	}
+
 	// POST /
 	function $addApp(request, response) {
 		var self = this;
 		var respond = Link.responder(response);
 		var router = Link.router(request);
+		var server;
 		var fail = function(message) {
 			if (server) server.terminate();
 			return respond.badRequest('text/plain').end(message);
 		};
 
-		if (!request.body.scriptUrl && !request.body.script) {
+		var params = extractAddParams(request);
+		if (!params.scriptUrl && !params.script) {
 			return fail('Must receive `scriptUrl` or `script');
 		}
 
-		var server = new Environment.WorkerServer(request.body);
+		server = new Environment.WorkerServer(params);
 		server.worker.onMessage('loaded', function(message) {
 			if (server.state === Environment.Server.DEAD) { throw "Received 'loaded' message from a dead worker"; }
 
@@ -92,7 +131,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			var domain = domains[4];
 
 			if (Environment.getServer(domain)) {
-				return fail('Domain \''+domain+'\' is already in use');
+				server.terminate();
+				return respond.conflict('text/plain').end('Domain \''+domain+'\' is already in use');
 			}
 
 			server.config.domains = domains;
@@ -104,8 +144,33 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			Environment.addServer(domain, server);
 
 			self.serversBroadcast.emit('update');
+			if (/html/.test(request.headers.accept))
+				return respond.pipe(Environment.dispatch(this, { method:'get', url:server.config.startUrl, headers:{ accept:'text/html' }}));
 			respond.ok('application/json').end(server.config);
 		});
+	}
+
+	// POST /confirmload
+	function $confirmAddApp(request, response) {
+		var params = extractAddParams(request);
+		if (!params.scriptUrl && !params.script) {
+			return Link.responder(response).badRequest('text/plain').end('Must receive `scriptUrl` or `script');
+		}
+
+		Link.responder(response).ok('text/html').end([
+			'<form action="httpl://app" method="post" enctype="application/json">',
+				'<p>Would you like to load this program into the session?</p>',
+				'<p>',
+					(params.scriptUrl) ?
+						'<input class="input-block-level" type="text" name="scriptUrl" value="'+params.scriptUrl+'" />' :
+						'<textarea class="input-block-level" name="script">'+params.script+'</textarea>',
+				'</p>',
+				'<p>',
+					'<a href="httpl://app/null" title="Cancel">No</a> ',
+					'<input class="btn" type="submit" value="Yes" title="Do It" style="float:right" />',
+				'</p>',
+			'</form>'
+		].join(''));
 	}
 
 	// /null html
@@ -113,15 +178,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		Link.responder(response).ok('text/html').end('');
 	}
 
-    // /echo html
-    function $echo(request, response) {
-        var content = request.body;
-        if (/post/i.test(request.method) && /multipart\/form\-data/.test(request.headers['content-type']))
-            content = content.parts[2].body;
-        if (typeof content === 'object')
-            content = content.text || JSON.stringify(content);
-        Link.responder(response).ok('text/html').end(content);
-    }
+	// /echo html
+	function $echo(request, response) {
+		var content = request.body;
+		if (/post/i.test(request.method) && /multipart\/form\-data/.test(request.headers['content-type']))
+			content = content.parts[2].body;
+		if (typeof content === 'object')
+			content = content.text || JSON.stringify(content);
+		Link.responder(response).ok('text/html').end(content);
+	}
 
 	// GET|HEAD /:app
 	function $getApp(request, respond, appName) {

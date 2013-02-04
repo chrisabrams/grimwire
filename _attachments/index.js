@@ -25,7 +25,7 @@ Environment.setDispatchHandler(function(origin, request) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post(err.response.status+' '+request.url);
 		}
-		console.log(err.message, request);
+		console.log(err.message, request, err.response);
 		return err;
 	});
 	return response;
@@ -50,8 +50,9 @@ Environment.addServer('app', new Grim.AppServer());
 Environment.addServer('scripts.env', new Grim.ScriptServer());
 
 // instantiate apps
-apps.post({ scriptUrl : '/grim/app/debug/targets.js' });
-apps.post({ scriptUrl : '/grim/app/debug/forms.js' });
+// apps.post({ scriptUrl : '/grim/app/debug/targets.js' });
+// apps.post({ scriptUrl : '/grim/app/debug/forms.js' });
+apps.post({ scriptUrl : '/grim/app/debug/index.js' });
 apps.post({ scriptUrl : '/grim/app/convert/markdown.js' });
 apps.post({ scriptUrl : '/grim/app/edit/text.js' });
 apps.post({ scriptUrl : '/grim/app/help/about.js' })

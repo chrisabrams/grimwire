@@ -47,6 +47,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// ====
 	document.addEventListener('dragstart', handleIntentDragstart);
 	intents.register('http://grimwire.com/intents/torch', 'httpl://app/null');
+	intents.register('http://grimwire.com/intents/load', 'httpl://app/confirm-load', '-below');
 	intents.register('http://grimwire.com/intents/render', 'httpl://app/echo', '-below');
 	
 })(Grim);

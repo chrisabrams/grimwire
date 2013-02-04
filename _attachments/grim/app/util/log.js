@@ -28,16 +28,17 @@ app.onHttpRequest(function(request, response) {
 	// collection
 	router.p('/', function() {
 		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'self current');
+		var headers = Link.headerer();
+		headers.addLink('/', 'self current');
+		headers.addLink('http://grimwire.com/grim/app/util/log.js', 'http://grimwire.com/rels/src', { title:'application' });
 
 		// list
 		router.ma('GET', /html/, function() {
-			respond.ok('html', headerer).end(renderHtml()); // respond with log html
+			respond.ok('html', headers).end(renderHtml()); // respond with log html
 		});
 		// subscribe to events
 		router.ma('GET', /event-stream/, function() {
-			respond.ok('event-stream', headerer);
+			respond.ok('event-stream', headers);
 			logBroadcast.addStream(response); // add the log updates listener
 		});
 		// add log entry

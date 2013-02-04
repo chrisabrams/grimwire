@@ -17,7 +17,9 @@ form, .table { margin-bottom:0; }
 /* form intent behaviors */
 form.intenthover {
 	border:none !important;
-	box-shadow:0 0 8px rgba(236, 174, 82, 0.8);
+	
+	box-shadow:0 0 8px rgba(0, 0, 0, 0.2);
+	background:#f0f0f0;
 }
 form {
 	-webkit-transition: box-shadow .25s ease-in-out;

@@ -1,12 +1,14 @@
 importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
 app.onHttpRequest(function(request, response) {
+	var headers = Link.headerer();
+	headers.addLink('http://grimwire.com/grim/app/edit/text.js', 'http://grimwire.com/rels/src', { title:'application' });
 	Link.router(request).mpa('get', '/', /html/, function() {
 		if (request.query.url) {
 			// edit
 			Link.navigator(request.query.url).getText()
 				.then(function(res) {
-					Link.responder(response).ok('html').end([
+					Link.responder(response).ok('html', headers).end([
 						'<form action="httpl://v1.pfraze.text.edit.app" method="post">',
 							'<input type="hidden" name="url" value="',request.query.url,'" />',
 							'<textarea class="input-block-level" rows="28" name="text">',
@@ -18,7 +20,7 @@ app.onHttpRequest(function(request, response) {
 				.except(Link.responder(response).cb('badGateway'));
 		} else {
 			// load
-			Link.responder(response).ok('html').end([
+			Link.responder(response).ok('html', headers).end([
 				'<form action="httpl://v1.pfraze.text.edit.app" method="get">',
 					'<input type="text" name="url" />',
 					'<input type="submit" name="Edit" />',
@@ -26,15 +28,16 @@ app.onHttpRequest(function(request, response) {
 			].join(''));
 		}
 	}).mpt('post', '/', /form\-data/, function() {
-		var content = (typeof request.body.parts[2].body != 'string') ?
-			JSON.stringify(request.body.parts[2].body) :
-			request.body.parts[2].body;
-		Link.responder(response).ok('html').end([
-            '<form>',
-			'<textarea class="input-block-level" rows="10" name="text">',
-				content.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-			'</textarea>',
-            '</form>'
+		var contextData = request.body.parts[2].body;
+		var content = (typeof contextData != 'string') ? //
+							JSON.stringify(contextData) :
+							contextData;
+		Link.responder(response).ok('html', headers).end([
+			'<form>', // intents can use the form
+				'<textarea class="input-block-level" rows="10" name="text">',
+					content.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+				'</textarea>',
+			'</form>'
 		].join(''));
 	}).error(response);
 });

@@ -16,7 +16,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		if (e.target.tagName != 'TD') { return; }
 
 		var el = Grim.ClientRegion.prototype.__createRelativeRegion('-blank', e.target);
-		Environment.clientRegions[el.id].__handleDrop(e);
+		Environment.clientRegions[el.id].__handleDrop(e, el);
 	});
 	centerElem.addEventListener('dragover',  function(e) {
 		if (!e.dataTransfer.types) return;
