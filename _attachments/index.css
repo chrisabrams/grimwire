@@ -79,8 +79,8 @@ form {
 	font-size:12px;
 	line-height: 10px;
 	padding-top: 1px;
-    text-align:center;
-    margin-left:-15px;
+	text-align:center;
+	margin-left:-15px;
 	color: #ddd;
 }
 
@@ -94,10 +94,9 @@ form {
 	vertical-align:top;
 	width:530px;
 
-    -webkit-transition: box-shadow .25s ease-in-out;
-}
-#center > tbody > tr > td:not(.requesthover) {
-	border:1px solid #fff; /* so we can add borders in other states and not change layout */
+	border:1px solid #f0f0f0;
+
+	-webkit-transition: box-shadow .25s ease-in-out;
 }
 
 /* application clients */
