@@ -21,7 +21,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			.pmt('/', /POST/i, /json|form\-data/i, $addApp.bind(this, request, response))
 			// .pm(RegExp('/[^/]+/?'), /HEAD|GET/i, $getApp.bind(this, request, response))
 			// .pm(RegExp('/[^/]+/?'), /DELETE/i, $killApp.bind(this, request, response))
-			.pmta(RegExp('/confirm-load/?','i'), /POST/i, /json|form\-data/i, /html/i, $confirmAddApp.bind(this, request, response))
+			.pmta(RegExp('/load-confirmer/?','i'), /POST/i, /json|form\-data/i, /html/i, $confirmAddApp.bind(this, request, response))
+			.pmta(RegExp('/inspector/?','i'), /POST/i, /form\-data/i, /html/i, $inspectApp.bind(this, request, response))
 			.pa(RegExp('/null/?','i'), /html/i, $null.bind(this, request, response))
 			.pa(RegExp('/echo/?','i'), /html/i, $echo.bind(this, request, response))
 			.error(response);
@@ -102,7 +103,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		};
 
 		var params = extractAddParams(request);
-		if (!params.scriptUrl && !params.script) {
+		if (!params || (!params.scriptUrl && !params.script)) {
 			return fail('Must receive `scriptUrl` or `script');
 		}
 
@@ -150,10 +151,10 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		});
 	}
 
-	// POST /confirmload
+	// POST /load-confirmer
 	function $confirmAddApp(request, response) {
 		var params = extractAddParams(request);
-		if (!params.scriptUrl && !params.script) {
+		if (!params || (!params.scriptUrl && !params.script)) {
 			return Link.responder(response).badRequest('text/plain').end('Must receive `scriptUrl` or `script');
 		}
 
@@ -170,6 +171,30 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 					'<input class="btn" type="submit" value="Yes" title="Do It" style="float:right" />',
 				'</p>',
 			'</form>'
+		].join(''));
+	}
+
+	// POST /inspector
+	function $inspectApp(request, response) {
+		var contextLinks = request.body.parts[1].body || [];
+
+		Link.responder(response).ok('text/html').end([
+			contextLinks.map(function(link) {
+				var KVs = [];
+				for (var k in link) {
+					if (k == 'rel') continue;
+					KVs.push('<tr><td width=50><span class="muted">'+k+'</span></td><td>'+link[k]+'</td></tr>');
+				}
+				return [
+				'<form>',
+					'<input type=hidden name=url value="',link.href,'" />',
+					'<h5>',link.rel,'</h5>',
+					'<table class="table table-condensed">',
+						KVs.join(''),
+					'</table>',
+				'</form>'
+				].join('');
+			}).join('')
 		].join(''));
 	}
 

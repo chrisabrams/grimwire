@@ -87,7 +87,7 @@ form {
 /* main application client space */
 #center {
 	position:absolute;
-	left:70px; top:25px;
+	left:70px; top:45px;
 	height:100%;
 }
 #center > tbody > tr > td {
