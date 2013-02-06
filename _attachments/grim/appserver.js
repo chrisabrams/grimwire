@@ -156,7 +156,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	function $confirmAddApp(request, response) {
 		var params = extractAddParams(request);
 		if (!params || (!params.url && !params.script)) {
-			return Link.responder(response).badRequest('text/plain').end('Must receive `url` or `script');
+			console.log('sending back error')
+			return Link.responder(response).badRequest('text/html').end('Must receive `url` or `script');
 		}
 
 		Link.responder(response).ok('text/html').end([

@@ -42,6 +42,16 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		(element || this.element).dispatchEvent(ie);
 	};
 
+	ClientRegion.prototype.terminate = function() {
+		Environment.ClientRegion.prototype.terminate.call(this);
+		Environment.removeClientRegion(this);
+
+		// animate and remove nodes
+		var animWrapper = this.element.parentNode;
+		animWrapper.classList.add('die');
+		setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
+	};
+
 	function handleIntend(e) {
 		e.preventDefault();
 		e.stopPropagation();
@@ -95,6 +105,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		promise(Environment.dispatch(this, request))
 			.then(function(response) {
 				self.__handleResponse(e, request, response);
+			})
+			.except(function(response) {
+				self.__handleError(e, request, response);
 			});
 	}
 
@@ -104,20 +117,19 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
 			if (isEmpty) {
 				// destroy region if it's served blank html
-				this.terminate();
-				Environment.removeClientRegion(this);
-
-				// animate and remove nodes
-				var animWrapper = this.element.parentNode;
-				animWrapper.classList.add('die');
-				setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
-
-				return;
+				return this.terminate();
 			}
 		}
 		Environment.clientRegions[requestTarget.id].__updateContext(request, response);
 		CommonClient.handleResponse(requestTarget, this.element, response);
 		Environment.postProcessRegion(requestTarget);
+	};
+
+	ClientRegion.prototype.__handleError = function(e, request, response) {
+		if (!this.context.url) {
+			// no content yet? just self-destruct
+			return this.terminate();
+		}
 	};
 
 	ClientRegion.prototype.__chooseRequestTarget = function(e, request) {
