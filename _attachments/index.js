@@ -12,6 +12,9 @@ Environment.setDispatchHandler(function(origin, request) {
 	// if (Environment.user && /https?/i.test(urld.protocol) && /linkapjs\.com$/i.test(urld.host)) {
 	//	request.headers = Link.headerer(request.headers).setAuth(Environment.user);
 	// }
+	var isClientRegion = (origin instanceof Grim.ClientRegion);
+	if (isClientRegion)
+		origin.startAnim('request');
 
 	// allow request
 	var response = Link.dispatch(request);
@@ -19,11 +22,24 @@ Environment.setDispatchHandler(function(origin, request) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post(res.status+' '+request.url);
 		}
+		if (isClientRegion)
+			origin.endAnim('request');
 		return res;
 	});
 	response.except(function (err) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post(err.response.status+' '+request.url);
+		}
+		if (isClientRegion) {
+			origin.endAnim('request');
+			// render the error interface
+			origin.dispatchRequest({
+				method:'post',
+				url:'httpl://app/err',
+				target:'-below',
+				headers:{ accept:'text/html', 'content-type':'application/json' },
+				body:{ request:request, response:err.response }
+			});
 		}
 		console.log(err.message, request, err.response);
 		return err;

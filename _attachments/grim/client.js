@@ -23,6 +23,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	}
 	ClientRegion.prototype = Object.create(Environment.ClientRegion.prototype);
 
+	ClientRegion.prototype.startAnim = function(anim) {
+		if (this.animWrapper && this.context.url) {
+			this.animWrapper.classList.add(anim);
+		}
+	};
+	ClientRegion.prototype.endAnim = function(anim) {
+		if (this.animWrapper && this.context.url) {
+			this.animWrapper.classList.remove(anim);
+		}
+	};
+
 	ClientRegion.prototype.dispatchIntent = function(intent, element) {
 		if (typeof intent === 'string') {
 			intent = { action:intent };

@@ -25,6 +25,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			.pmta(RegExp('/inspector/?','i'), /POST/i, /form\-data/i, /html/i, $inspectApp.bind(this, request, response))
 			.pa(RegExp('/null/?','i'), /html/i, $null.bind(this, request, response))
 			.pa(RegExp('/echo/?','i'), /html/i, $echo.bind(this, request, response))
+			.pmta(RegExp('/err/?','i'), /POST/i, /json/i, /html/i, $err.bind(this, request, response))
 			.error(response);
 	};
 
@@ -211,6 +212,23 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		if (typeof content === 'object')
 			content = content.text || JSON.stringify(content);
 		Link.responder(response).ok('text/html').end(content);
+	}
+
+	// POST /err html
+	function $err(request, response) {
+		var errRequest = request.body.request;
+		var errResponse = request.body.response;
+		Link.responder(response).ok('text/html').end([
+			'<form>',
+				'<input type="hidden" name="request" value="',JSON.stringify(errRequest).replace(/"/g,'&quot;'),'" />',
+				'<input type="hidden" name="response" value="',JSON.stringify(errResponse).replace(/"/g,'&quot;'),'" />',
+				'<div class="alert alert-error alert-block">',
+					'<a class="close" href="httpl://app/null">&times;</a>',
+					'<h4>',errResponse.status,' <small style="color:#b94a48">',errResponse.reason,'</small></h4>',
+					'<p>',errResponse.body,'</p>',
+				'</div>',
+			'</form>'
+		].join(''));
 	}
 
 	// GET|HEAD /:app

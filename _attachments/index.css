@@ -18,8 +18,8 @@ form, .table { margin-bottom:0; }
 form.intenthover {
 	border:none !important;
 	
-	box-shadow:0 0 8px rgba(0, 0, 0, 0.2);
-	background:#f0f0f0;
+	box-shadow:0 0 8px rgb(168, 168, 168);
+	background:rgb(243, 243, 243);
 }
 form {
 	-webkit-transition: box-shadow .25s ease-in-out;
@@ -94,7 +94,7 @@ form {
 	vertical-align:top;
 	width:530px;
 
-	border:1px solid #e0e0e0;
+	border:1px solid #f0f0f0;
 
 	-webkit-transition: box-shadow .25s ease-in-out;
 }
@@ -126,4 +126,7 @@ form {
 .client-region-animwrapper.die {
 	width:0;
     -webkit-transition: width .15s ease-in-out;
+}
+.client-region-animwrapper.request {
+	background-color:#06c;
 }
