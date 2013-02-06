@@ -71,18 +71,18 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				params = { script:contextData };
 			} else if (/uri-list/.test(contextDataType)) {
 				// uri context body
-				params = { scriptUrl:contextData };
+				params = { url:contextData };
 			} else if (/json|www-form-urlencoded/.test(contextDataType)) {
 				// form context body
 				if (contextData.text)
 					params = { script:contextData.text };
 				else if (contextData.script)
 					params = { script:contextData.script };
-				else if (contextData.scriptUrl)
-					params = { scriptUrl:contextData.scriptUrl };
+				else if (contextData.url)
+					params = { url:contextData.url };
 			} else {
 				// context link header
-				params = { scriptUrl : Link.lookupLink(contextLinks, 'http://grimwire.com/rels/src', 'application') };
+				params = { url : Link.lookupLink(contextLinks, 'http://grimwire.com/rels/src', 'application') };
 			}
 		} else {
 			// a json submit
@@ -103,8 +103,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		};
 
 		var params = extractAddParams(request);
-		if (!params || (!params.scriptUrl && !params.script)) {
-			return fail('Must receive `scriptUrl` or `script');
+		if (!params || (!params.url && !params.script)) {
+			return fail('Must receive `url` or `script');
 		}
 
 		server = new Environment.WorkerServer(params);
@@ -154,16 +154,16 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	// POST /load-confirmer
 	function $confirmAddApp(request, response) {
 		var params = extractAddParams(request);
-		if (!params || (!params.scriptUrl && !params.script)) {
-			return Link.responder(response).badRequest('text/plain').end('Must receive `scriptUrl` or `script');
+		if (!params || (!params.url && !params.script)) {
+			return Link.responder(response).badRequest('text/plain').end('Must receive `url` or `script');
 		}
 
 		Link.responder(response).ok('text/html').end([
 			'<form action="httpl://app" method="post" enctype="application/json">',
 				'<p>Would you like to load this program into the session?</p>',
 				'<p>',
-					(params.scriptUrl) ?
-						'<input class="input-block-level" type="text" name="scriptUrl" value="'+params.scriptUrl+'" />' :
+					(params.url) ?
+						'<input class="input-block-level" type="text" name="url" value="'+params.url+'" />' :
 						'<textarea class="input-block-level" name="script">'+params.script+'</textarea>',
 				'</p>',
 				'<p>',
