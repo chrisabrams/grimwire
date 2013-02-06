@@ -88,11 +88,10 @@ form {
 #center {
 	position:absolute;
 	left:70px; top:45px;
-	height:100%;
 }
 #center > tbody > tr > td {
 	vertical-align:top;
-	width:530px;
+	min-width:200px; max-width:800px;
 
 	border:1px solid #f0f0f0;
 
@@ -106,14 +105,9 @@ form {
 	margin:0.25em;
 	border:1px solid #fff; /* so we can add borders in other states and not change layout */
 
-	max-height:800px;
-	width:500px;
-	overflow:hidden;
-
 	-webkit-transition: box-shadow .25s ease-in-out;
 }
 .client-region-animwrapper {
-	width:530px;
 	overflow:hidden;
 
     -webkit-transition: background-color .5s ease-in-out,
@@ -121,7 +115,7 @@ form {
 }
 .client-region-animwrapper.init {
 	background-color:#fafafa;
-	width:0;
+	width:0; /* this is sadly broken, atm */
 }
 .client-region-animwrapper.die {
 	width:0;

@@ -47,9 +47,11 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		Environment.removeClientRegion(this);
 
 		// animate and remove nodes
-		var animWrapper = this.element.parentNode;
+		// :TODO: broken by change in how width is calculated -- hopefully returned later
+		/*var animWrapper = this.element.parentNode;
 		animWrapper.classList.add('die');
-		setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);
+		setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);*/
+		this.animWrapper.parentNode.removeChild(this.animWrapper);
 	};
 
 	function handleIntend(e) {

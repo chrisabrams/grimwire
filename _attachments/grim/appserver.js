@@ -108,6 +108,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			return fail('Must receive `url` or `script');
 		}
 
+		params.scriptUrl = params.url;
+		delete params.url;
+		
 		server = new Environment.WorkerServer(params);
 		server.worker.onMessage('loaded', function(message) {
 			if (server.state === Environment.Server.DEAD) { throw "Received 'loaded' message from a dead worker"; }
@@ -263,8 +266,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		}
 		return [
 		'<form action="httpl://app" data-output="true">',
-			'<intent action="http://grimwire.com/intents/fix" draggable="true"><i class="intent icon-tools" title="Fix"></i></intent>',
-			'<intent action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
+			// '<intent action="http://grimwire.com/intents/fix" draggable="true"><i class="intent icon-tools" title="Fix"></i></intent>',
+			// '<intent action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
 			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="intent icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills">',
 				'<li><img src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>',
