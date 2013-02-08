@@ -110,7 +110,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		params.scriptUrl = params.url;
 		delete params.url;
-		
+
 		server = new Environment.WorkerServer(params);
 		server.worker.onMessage('loaded', function(message) {
 			if (server.state === Environment.Server.DEAD) { throw "Received 'loaded' message from a dead worker"; }
@@ -222,6 +222,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	function $err(request, response) {
 		var errRequest = request.body.request;
 		var errResponse = request.body.response;
+		var body = errResponse.body;
+		if (body && typeof body == 'object') {
+			if (body.error) {
+				body = [
+					'<p>"',body.error.message,'"</p>',
+					'<p>',JSON.stringify(body.error.response, null, "\t").replace(/\\t/g,"&nbsp;&nbsp;"),'</p>'
+				].join('');
+			} else { body = JSON.stringify(body); }
+		}
 		Link.responder(response).ok('text/html').end([
 			'<form>',
 				'<input type="hidden" name="request" value="',JSON.stringify(errRequest).replace(/"/g,'&quot;'),'" />',
@@ -229,7 +238,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				'<div class="alert alert-error alert-block">',
 					'<a class="close" href="httpl://app/null">&times;</a>',
 					'<h4>',errResponse.status,' <small style="color:#b94a48">',errResponse.reason,'</small></h4>',
-					'<p>',errResponse.body,'</p>',
+					'<p>',body,'</p>',
 				'</div>',
 			'</form>'
 		].join(''));

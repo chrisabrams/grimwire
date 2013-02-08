@@ -64,6 +64,7 @@ var log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TODO: should be 
 // instantiate environment servers
 Environment.addServer('app', new Grim.AppServer());
 Environment.addServer('scripts.env', new Grim.ScriptServer());
+Environment.addServer('localstorage.env', new Grim.LocalStorageServer());
 
 // instantiate apps
 // apps.post({ url : '/grim/app/debug/targets.js' });
@@ -77,6 +78,7 @@ apps.post({ url : '/grim/app/help/about.js' })
 			Environment.clientRegions.firstapp.dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
 		}
 	});
+apps.post({ url : '/grim/app/util/form.js' })
 apps.post({ url : '/grim/app/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
