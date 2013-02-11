@@ -8,7 +8,7 @@ function respondInterface(prevRequestsRes, request, response) {
 	if (!(prevRequestsRes instanceof Error)) {
 		prevRequestsList = [
 			'<ul class="nav nav-tabs nav-stacked">',
-				prevRequestsRes.body.map(function(pr) {
+			prevRequestsRes.body.slice(-6).map(function(pr) {
 					var request = {
 						method  : pr.method,
 						url     : pr.url,
@@ -32,7 +32,7 @@ function respondInterface(prevRequestsRes, request, response) {
 	if (body == 'undefined') body = '';
 	Link.responder(response).ok('html').end([
 		'<style>#pfraze_form_util .control-label { width:50px; } #pfraze_form_util .controls { margin-left:60px; }</style>',
-		'<form method="post" action="httpl://v1.pfraze.form.util.app" enctype="application/json" class="form-horizontal" id="pfraze_form_util">',
+		'<form method="post" action="httpl://v1.pfraze.form.util.app" enctype="application/json" class="form-horizontal" id="pfraze_form_util" target="-below">',
 			'<div class="control-group">',
 				'<label for="pfraze_form_method" class="control-label">Method</label>',
 				'<div class="controls"><input type="text" name="method" id="pfraze_form_method" class="span2" value="',query.method,'" /></div>',
@@ -53,9 +53,19 @@ function respondInterface(prevRequestsRes, request, response) {
 	].join(''));
 }
 
+function headerPipe(headers) {
+    headers['content-type'] = 'text/html';
+    return headers;
+}
+function bodyPipe(body) {
+    if (typeof body == 'object') { return JSON.stringify(body); }
+    return body;
+}
+
 app.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
+            // :TODO: send a limit & offset param!!
 			prevRequestsCollection.getJson().then(respondInterface, request, response);
 		})
 		.mpta('post', '/', /json/, /html/, function() {
@@ -68,7 +78,7 @@ app.onHttpRequest(function(request, response) {
 				body    : body
 			};
 			prevRequestsCollection.post(pipeRequest,'application/json').except(console.log);
-			Link.responder(response).pipe(Link.dispatch(pipeRequest));
+			Link.responder(response).pipe(Link.dispatch(pipeRequest), headerPipe, bodyPipe);
 		})
 		.error(response);
 });

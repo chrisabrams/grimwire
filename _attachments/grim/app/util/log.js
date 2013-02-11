@@ -12,6 +12,7 @@ function renderHtml() {
 		.map(function(entry) { return '<tr><td style="'+style+'">'+entry.time.toTimeString().slice(0,8)+'</td><td>'+entry.msg+'</td></tr>'; })
 		.join('');
 	var html = [
+		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
 		'<form action="httpl://v1.pfraze.log.util.app" data-output="true" data-intents="none">',
 			'<table class="log-entries table table-condensed table-bordered">',
 				entriesHtml,
@@ -53,8 +54,8 @@ app.onHttpRequest(function(request, response) {
 	router.error(response);
 });
 app.postMessage('loaded', {
-	category : 'Util',
-	name     : 'Log',
 	author   : 'pfraze',
+	name     : 'Log',
+	category : 'Util',
 	version  : 'v1'
 });
