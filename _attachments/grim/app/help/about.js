@@ -1,8 +1,7 @@
 importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
 
-var introUrl = 'http://grimwire.com/grim/doc/intro.md';
-var bgUrl = 'http://grimwire.com/grim/doc/background.md';
+var docUrl = 'http://grimwire.com/grim/doc/';
 app.onHttpRequest(function(request, response) {
 	Link.router(request).mp('get', '/', function() {
 		var headers = Link.headerer();
@@ -14,9 +13,12 @@ app.onHttpRequest(function(request, response) {
 			'<a target=_top href=//twitter.github.com/bootstrap>bootstrap&nbsp;2.2.2</a>, ',
 			'and <a target=_top href=/local/>local&nbsp;0.2.0</a>.</p>',
 			'<ul>',
-            '<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',introUrl,'" target="-below">An Introduction</li>',
-            '<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',bgUrl,'" target="-below">Technical Background</li>',
-            '</ul>'
+				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'intro.md" target="-below">An Introduction</li>',
+				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'background.md" target="-below">Technical Background</li>',
+				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'overview.md" target="-below">Project Overview</li>',
+				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'architecture.md" target="-below">The HTTPLocal Architecture</li>',
+				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'plans.md" target="-below">Project Status and Plans</li>',
+			'</ul>'
 		].join(''));
 	}).error(response);
 });

@@ -1,11 +1,5 @@
 [
-	{
-		"from": "",
-		"to": "index.html",
-		"method": "GET"
-	},
-	{
-		"from": "*",
-		"to": "/*"
-	}
+	{ "from": "", "to": "index.html", "method": "GET" },
+	{ "from": "/_*", "to": "index.html" },
+	{ "from": "*", "to": "/*" }
 ]
