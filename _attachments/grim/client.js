@@ -43,6 +43,23 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	ClientRegion.prototype.terminate = function() {
+		// hide the interface and show a dismiss interface
+		this.element.style.display = 'none';
+		var alert = document.createElement('div');
+		alert.className = "alert alert-block";
+		alert.innerHTML = [
+			'<button type="button" class="close" data-dismiss="alert">×</button>',
+			'<strong>Closed ', this.context.url, '</strong> ',
+			'<a class="" href="#">Restore</a>'
+		].join('');
+		this.animWrapper.appendChild(alert);
+		alert.lastChild.addEventListener('click', __cancelTerminate.bind(this));
+
+		// start the terminate timer
+		this.terminateTimer = setTimeout(__finishTerminate.bind(this), 10000);
+	};
+
+	function __finishTerminate() {
 		Environment.ClientRegion.prototype.terminate.call(this);
 		Environment.removeClientRegion(this);
 
@@ -52,7 +69,16 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		animWrapper.classList.add('die');
 		setTimeout(function() { animWrapper.parentNode.removeChild(animWrapper); }, 200);*/
 		this.animWrapper.parentNode.removeChild(this.animWrapper);
-	};
+	}
+
+	function __cancelTerminate() {
+		if (this.terminateTimer) {
+			clearTimeout(this.terminateTimer);
+			this.animWrapper.removeChild(this.animWrapper.lastChild);
+			this.element.style.display = 'block';
+			delete this.terminateTimer;
+		}
+	}
 
 	function handleIntend(e) {
 		e.preventDefault();

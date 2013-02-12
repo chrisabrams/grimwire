@@ -53,6 +53,20 @@ Environment.setRegionPostProcessor(function(elem) {
 	$('.dropdown-toggle', elem).dropdown();
 });
 
+// top bar shadow-on-scroll
+(function() {
+	var topbarIsShadowed = false;
+	var $topbar = $('#topside-bar');
+	$(window).scroll(function() {
+		if (!topbarIsShadowed && window.scrollY > 10) {
+			$topbar.addClass('shadowed');
+			topbarIsShadowed = true;
+		} else if (topbarIsShadowed && window.scrollY < 10) {
+			$topbar.removeClass('shadowed');
+			topbarIsShadowed = false;
+		}
+	});
+})();
 
 // Init
 // ====

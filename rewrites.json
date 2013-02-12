@@ -1,5 +1,7 @@
 [
 	{ "from": "", "to": "index.html", "method": "GET" },
-	{ "from": "/_*", "to": "index.html" },
-	{ "from": "*", "to": "/*" }
+	{ "from": "index.html", "to": "index.html", "method": "GET" },
+	{ "from": "index.css", "to": "index.css", "method": "GET" },
+	{ "from": "index.js", "to": "index.js", "method": "GET" },
+	{ "from": "grim/*", "to": "grim/*", "method": "GET" }
 ]
