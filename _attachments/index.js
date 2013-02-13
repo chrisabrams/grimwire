@@ -51,6 +51,9 @@ Environment.setDispatchHandler(function(origin, request) {
 Environment.setRegionPostProcessor(function(elem) {
 	// addPersonaCtrls(elem);
 	$('.dropdown-toggle', elem).dropdown();
+	
+	// :DEBUG:
+	$('.persona', elem).css('cursor','pointer').click(function() { alert('Sorry, not yet implemented.'); });
 });
 
 // top bar shadow-on-scroll
