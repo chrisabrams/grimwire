@@ -4,6 +4,12 @@ body {
 a { color:#06c }
 form, .table { margin-bottom:0; }
 
+/* external links */
+a[href^="http://"], a[href^="https://"], a[href^="/"] {
+    background: url(/assets/icons/external_link.png) center right no-repeat;
+    padding-right: 13px;
+}
+
 /* hover states */
 .requesthover {
 	border:1px solid #ccc !important;
