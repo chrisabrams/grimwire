@@ -43,20 +43,24 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	};
 
 	ClientRegion.prototype.terminate = function() {
-		// hide the interface and show a dismiss interface
-		this.element.style.display = 'none';
-		var alert = document.createElement('div');
-		alert.className = "alert alert-block";
-		alert.innerHTML = [
-			'<button type="button" class="close" data-dismiss="alert">×</button>',
-			'<strong>Closed ', this.context.url, '</strong> ',
-			'<a class="" href="#">Restore</a>'
-		].join('');
-		this.animWrapper.appendChild(alert);
-		alert.lastChild.addEventListener('click', __cancelTerminate.bind(this));
+		if (this.context.url) {
+			// hide the interface and show a dismiss interface
+			this.element.style.display = 'none';
+			var alert = document.createElement('div');
+			alert.className = "alert alert-block";
+			alert.innerHTML = [
+				'<button type="button" class="close" data-dismiss="alert">×</button>',
+				'<strong>Closed ', this.context.url, '</strong> ',
+				'<a class="" href="#">Restore</a>'
+			].join('');
+			this.animWrapper.appendChild(alert);
+			alert.lastChild.addEventListener('click', __cancelTerminate.bind(this));
 
-		// start the terminate timer
-		this.terminateTimer = setTimeout(__finishTerminate.bind(this), 10000);
+			// start the terminate timer
+			this.terminateTimer = setTimeout(__finishTerminate.bind(this), 10000);
+		} else {
+			__finishTerminate.call(this);
+		}
 	};
 
 	function __finishTerminate() {
@@ -71,7 +75,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		this.animWrapper.parentNode.removeChild(this.animWrapper);
 	}
 
-	function __cancelTerminate() {
+	function __cancelTerminate(e) {
+		e.preventDefault();
 		if (this.terminateTimer) {
 			clearTimeout(this.terminateTimer);
 			this.animWrapper.removeChild(this.animWrapper.lastChild);
@@ -134,20 +139,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			.then(function(response) {
 				self.__handleResponse(e, request, response);
 			})
-			.except(function(response) {
-				self.__handleError(e, request, response);
+			.except(function(err) {
+				self.__handleError(e, request, err.response);
 			});
 	}
 
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
-		if (requestTarget == this.element) {
-			var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
-			if (isEmpty) {
-				// destroy region if it's served blank html
-				return this.terminate();
-			}
-		}
+		var isEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
+		if (isEmpty)
+			// destroy region if it's served blank html
+			return Environment.clientRegions[requestTarget.id].terminate();
 		Environment.clientRegions[requestTarget.id].__updateContext(request, response);
 		CommonClient.handleResponse(requestTarget, this.element, response);
 		Environment.postProcessRegion(requestTarget);
