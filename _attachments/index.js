@@ -106,7 +106,7 @@ apps.post({ url : '/grim/app/util/log.js' })
 	});
 
 // register intents
-Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.text.edit.app', '-below');
+Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.text.edit.app');
 
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
