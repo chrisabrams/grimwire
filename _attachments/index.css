@@ -13,6 +13,9 @@ a[href^="http://"], a[href^="https://"], a[href^="/"] {
 /* bootstrap alterations */
 .page-header { padding-bottom:0; margin:0; }
 
+/* tools */
+.nofloat { float:none !important; }
+
 /* hover states */
 .requesthover {
 	border:1px solid #ccc !important;

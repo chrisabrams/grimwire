@@ -56,6 +56,6 @@ function(head, req) {
 			}
 			html.push('</pre>');
 		}
-		send('<div class="span6">'+html.join('')+'<br/><br/></div>');
+		send('<div class="span6 nofloat">'+html.join('')+'<br/><br/></div>');
 	});
 }
