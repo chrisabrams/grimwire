@@ -10,6 +10,9 @@ a[href^="http://"], a[href^="https://"], a[href^="/"] {
     padding-right: 13px;
 }
 
+/* bootstrap alterations */
+.page-header { padding-bottom:0; margin:0; }
+
 /* hover states */
 .requesthover {
 	border:1px solid #ccc !important;

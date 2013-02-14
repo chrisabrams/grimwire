@@ -101,7 +101,7 @@ apps.post({ url : '/grim/app/util/log.js' })
 		if (res.status == 200) {
 			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffer on log.util.app
 			log.post('Log up.');
-			Environment.clientRegions.secondapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
+			Environment.clientRegions.thirdapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
 		}
 	});
 
@@ -111,4 +111,5 @@ Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.tex
 // load client regions
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
 Environment.addClientRegion(new Grim.ClientRegion('firstapp'));
-Environment.addClientRegion(new Grim.ClientRegion('secondapp'));
+Environment.addClientRegion(new Grim.ClientRegion('secondapp')).dispatchRequest('/users');
+Environment.addClientRegion(new Grim.ClientRegion('thirdapp'));
