@@ -32,7 +32,11 @@ function(head, req) {
 
 			html.push([
 				'<div class="page-header">',
-					'<h3><img src="/assets/icons/16x16/user_'+publish.avatar+'.png" /> '+(publish.name || row.id)+'</h3>',
+					'<h3>',
+						'<img src="/assets/icons/16x16/user_'+publish.avatar+'.png" /> ',
+						(publish.name || row.id),
+						' <small>', publish.description, '</small>',
+					'</h3>',
 				'</div>'
 			].join(''));
 
