@@ -15,6 +15,7 @@ a[href^="http://"], a[href^="https://"], a[href^="/"] {
 
 /* tools */
 .nofloat { float:none !important; }
+.nomargin { margin:0 !important; }
 
 /* hover states */
 .requesthover {

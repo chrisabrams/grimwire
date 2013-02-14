@@ -95,7 +95,7 @@ apps.post({ url : '/grim/app/help/about.js' })
 			Environment.clientRegions.firstapp.dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
 		}
 	});
-apps.post({ url : '/grim/app/util/form.js' })
+apps.post({ url : '/grim/app/util/form.js' });
 apps.post({ url : '/grim/app/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
