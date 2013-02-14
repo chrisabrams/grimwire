@@ -137,7 +137,10 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 			if (Environment.getServer(domain)) {
 				server.terminate();
-				return respond.conflict('text/plain').end('Domain \''+domain+'\' is already in use');
+				var s = Environment.getServer(domain);
+				return respond
+					.seeOther('text/plain', { location: s.config.startUrl })
+					.end('Domain \''+domain+'\' is already in use');
 			}
 
 			server.config.domains = domains;

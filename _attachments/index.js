@@ -33,13 +33,15 @@ Environment.setDispatchHandler(function(origin, request) {
 		if (isClientRegion) {
 			origin.endAnim('request');
 			// render the error interface
-			origin.dispatchRequest({
-				method:'post',
-				url:'httpl://app/err',
-				target:'-below',
-				headers:{ accept:'text/html', 'content-type':'application/json' },
-				body:{ request:request, response:err.response }
-			});
+			if (err.response.code >= 400) {
+				origin.dispatchRequest({
+					method:'post',
+					url:'httpl://app/err',
+					target:'-below',
+					headers:{ accept:'text/html', 'content-type':'application/json' },
+					body:{ request:request, response:err.response }
+				});
+			}
 		}
 		console.log(err.message, request, err.response);
 		return err;
