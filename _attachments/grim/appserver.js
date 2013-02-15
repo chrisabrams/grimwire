@@ -172,7 +172,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				'<p>',
 					(params.url) ?
 						'<input class="input-block-level" type="text" name="url" value="'+params.url+'" />' :
-						'<textarea class="input-block-level" name="script">'+params.script+'</textarea>',
+						'<textarea class="input-block-level" name="script">'+params.script.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</textarea>',
 				'</p>',
 				'<p>',
 					'<a href="httpl://app/null" title="Cancel">No</a> ',
