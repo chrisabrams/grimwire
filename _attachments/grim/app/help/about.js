@@ -16,8 +16,6 @@ app.onHttpRequest(function(request, response) {
 			'<ul>',
 				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'intro.md" target="-below">An Introduction</li>',
 				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'background.md" target="-below">Technical Background</li>',
-				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'overview.md" target="-below">Project Overview</li>',
-				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'architecture.md" target="-below">The HTTPLocal Architecture</li>',
 				'<li><a href="httpl://v1.pfraze.markdown.convert.app/?url=',docUrl,'plans.md" target="-below">Project Status and Plans</li>',
 			'</ul>',
 		'</div>'

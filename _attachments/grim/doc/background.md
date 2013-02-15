@@ -1,4 +1,8 @@
-### Technical Background
+<ul class="nav nav-pills">
+    <li class="active"><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/background.md">Technical Background</a></li>
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/overview.md">Project Overview</a></li>
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/architecture.md">Architecture and HTTPL</a></li>
+</ul>
 
 The Web uses a very simple program load model which is both a source of strength and weakness for web apps. <a href="http://www.cs.utexas.edu/~mwalfish/papers/zoog-hotnets11.pdf" target="_top">Some particular properties are collected in a paper by Microsoft and UTexas researchers</a> -- they list the positive traits as Isolation, Richness, On-demand, and Networked (IRON). Broadly speaking, they argue that without the IRON properties, the Web would be too dangerous or too unsophisticated to get any use of.
 

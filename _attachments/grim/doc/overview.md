@@ -1,4 +1,8 @@
-### Project Overview
+<ul class="nav nav-pills">
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/background.md">Technical Background</a></li>
+    <li class="active"><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/overview.md">Project Overview</a></li>
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/architecture.md">Architecture and HTTPL</a></li>
+</ul>
 
 The Web Workers `postMessage` API is no more limited than a stream socket. What's absent from it is a messaging protocol which can be addressed by name (rather than by object reference) and which has enough power to serve interfaces and export functionality. A few options were examined, including RPC (as demonstrated by <a href="https://github.com/lawnsea/TreeHouse" target="_top">TreeHouse</a>) but the final choice for Grimwire was an emulation of HTTP called <a href="http://grimwire.com/local" target="_top" title="Local">HTTPLocal</a>. This is the foundation to its client-side environment, which organizes applications into a URL namespace and forms the interface out of the resources they serve.
 

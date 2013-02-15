@@ -1,4 +1,8 @@
-### The HTTPLocal Architecture
+<ul class="nav nav-pills">
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/background.md">Technical Background</a></li>
+    <li><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/overview.md">Project Overview</a></li>
+    <li class="active"><a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/architecture.md">Architecture and HTTPL</a></li>
+</ul>
 
 HTTPLocal answers a number of questions for app coordination. For one, it establishes a program model-- the stateless server and its detached clients. Even though the Local servers are on the client-side, they are still, philosophically, web-servers; they never bind directly to the client. Thus, the DOM API's absence in Workers is not a problem. The model does require some additions to DOM behavior so that applications can behave richly, but this is easy to do through the environment document (it merely binds new behaviors across the page). Current behaviors include support for real-time UI updates, and, while it is limited compared to direct DOM access, it should cover a broad set of needs.
 
