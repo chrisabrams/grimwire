@@ -4,13 +4,14 @@ function(doc, req) {
 			headers: {
 				"Content-Type": "application/json",
 				'Link':[
-					'<grimwire.com>; rel="service"; title="grimwire"',
-					'<grimwire.com/users>; rel="collection up"; title="users"',
-					'<grimwire.com/users/{title}>; rel="item"',
-					'<grimwire.com/users/'+req.id+'>; rel="self"'
+					'<http://grimwire.com>; rel="service"; title="grimwire"',
+					'<http://grimwire.com/users>; rel="collection up"; title="users"',
+					'<http://grimwire.com/users/{title}>; rel="item"',
+					'<http://grimwire.com/users/'+req.id+'>; rel="self"'
 				].join(', ')
 			}
 		});
+		doc.publish.id = req.id;
 		send(toJSON(doc.publish));
 	});
 }

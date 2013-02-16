@@ -86,32 +86,31 @@ Environment.addServer('scripts.env', new Grim.ScriptServer());
 Environment.addServer('localstorage.env', new Grim.LocalStorageServer());
 
 // instantiate apps
-// apps.post({ url : '/grim/app/debug/targets.js' });
-// apps.post({ url : '/grim/app/debug/forms.js' });
 apps.post({ url : '/grim/app/debug/index.js' });
-apps.post({ url : '/grim/app/convert/markdown.js' });
 apps.post({ url : '/grim/app/edit/text.js' });
-apps.post({ url : '/grim/app/help/about.js' })
-	.then(function(res) {
-		if (res.status == 200) {
-			Environment.clientRegions.firstapp.dispatchRequest('httpl://v1.pfraze.about_grimwire.help.app');
-		}
-	});
 apps.post({ url : '/grim/app/util/form.js' });
 apps.post({ url : '/grim/app/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
 			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffer on log.util.app
 			log.post('Log up.');
-			Environment.clientRegions.thirdapp.dispatchRequest('httpl://v1.pfraze.log.util.app');
+			Environment.addClientRegion(new Grim.ClientRegion('thirdapp'))
+				.dispatchRequest('httpl://v1.pfraze.log.util.app');
 		}
 	});
+apps.post({ url : '/grim/app/convert/markdown.js' })
+	.then(function(res) {
+		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
+			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/about.md');
+	});
+apps.post({ url : '/grim/app/social/users.js' })
+	.then(function(res) {
+		Environment.addClientRegion(new Grim.ClientRegion('firstapp'))
+			.dispatchRequest('httpl://v1.pfraze.users.social.app/pfraze/apps');
+	});
 
-// register intents
+// register custom intents
 Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.text.edit.app');
 
-// load client regions
+// load apps top bar
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');
-Environment.addClientRegion(new Grim.ClientRegion('firstapp'));
-Environment.addClientRegion(new Grim.ClientRegion('secondapp')).dispatchRequest('/users');
-Environment.addClientRegion(new Grim.ClientRegion('thirdapp'));
