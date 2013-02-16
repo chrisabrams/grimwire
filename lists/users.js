@@ -33,7 +33,6 @@ function(head, req) {
 			html.push([
 				'<div class="page-header">',
 					'<h3>',
-						'<img src="/assets/icons/16x16/user_'+publish.avatar+'.png" /> ',
 						(publish.name || row.id),
 						' <small>', publish.description, '</small>',
 					'</h3>',
@@ -46,11 +45,14 @@ function(head, req) {
 				for (var i=0, ii=publish.applications.length; i<ii; i++) {
 					var app = publish.applications[i];
 					html.push([
-						'<img class="pull-left" media-object" src="',app.image,'">',
 						'<div class="media-body">',
 							'<form>',
 								'<input type="hidden" name="url" value="',app.url,'"/> ',
-								'<h4 class="media-heading">',app.title,' <small><a href="',app.url,'" target="-below">source</a></small></h4>',
+								'<h4 class="media-heading">',
+									((app.icon) ? '<img src="'+app.icon+'"> ' : ''),
+									app.title,
+									' <small><a href="',app.url,'" target="-below">source</a></small>',
+								'</h4>',
 								'<p>',app.description,'</p>',
 							'</form>',
 						'</div>'
