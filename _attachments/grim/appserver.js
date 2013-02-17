@@ -136,11 +136,14 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			var domain = domains[4];
 
 			if (Environment.getServer(domain)) {
-				server.terminate();
-				var s = Environment.getServer(domain);
-				return respond
-					.seeOther('text/plain', { location: s.config.startUrl })
-					.end('Domain \''+domain+'\' is already in use');
+				if (params.replace_existing) {
+					Environment.killServer(domain);
+				} else {
+					server.terminate();
+					return respond
+						.seeOther('text/plain', { location: Environment.getServer(domain).config.startUrl })
+						.end('Domain \''+domain+'\' is already in use');
+				}
 			}
 
 			server.config.domains = domains;
@@ -168,6 +171,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		Link.responder(response).ok('text/html').end([
 			'<form action="httpl://app" method="post" enctype="application/json">',
+				'<input type="hidden" name="replace_existing" value="1" />',
 				'<p>Would you like to load this program into the session?</p>',
 				'<p>',
 					(params.url) ?
