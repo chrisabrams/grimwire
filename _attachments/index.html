@@ -23,8 +23,8 @@
 		<!-- intents -->
 		<div id="leftside-bar">
 			<ul class="intents">
-				<li><intent action="http://grimwire.com/intents/load" draggable="true"><i class="icon-off" title="Load"></i></intent></li>
 				<li><intent action="http://grimwire.com/intents/torch" draggable="true"><i class="icon-fire" title="Torch"></i></intent></li>
+				<li><intent action="http://grimwire.com/intents/load" draggable="true"><i class="icon-off" title="Load"></i></intent></li>
 				<li><intent action="http://grimwire.com/intents/inspect" draggable="true"><i class="icon-search-1" title="Inspect"></i></intent></li>
 				<li class="divider">&mdash;</li>
 				<li><intent action="http://grimwire.com/intents/edit" draggable="true"><i class="icon-edit" title="Edit"></i></intent></li>
@@ -41,7 +41,10 @@
 		</table>
 
 		<!-- :DEBUG: build notice -->
-		<div style="position:fixed;bottom:0;right:0;background:red;color:white;padding:5px">Develop Build</div>
+		<div style="position:fixed;bottom:0;right:0;background:gray;color:white;padding:5px">
+			<small style="background:white;color:gray;padding:10px;">Not seeing anything? Try switching to Chrome.</small>
+			Develop Build
+		</div>
 
 		<!-- base libraries -->
 		<script src="/local/lib/link.js"></script>

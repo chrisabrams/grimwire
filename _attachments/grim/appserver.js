@@ -285,8 +285,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			// '<intent action="http://grimwire.com/intents/fix" draggable="true"><i class="intent icon-tools" title="Fix"></i></intent>',
 			// '<intent action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
 			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="intent icon-leaf-1"></i></a>',
-			'<ul class="nav nav-pills">',
-				'<li><img class="persona" src="https://developer.mozilla.org/files/3969/plain_sign_in_blue.png" /></li>',
+			'<ul class="nav nav-pills pull-right">',
 				html.join(''),
 			'</ul>',
 		'</form>'
