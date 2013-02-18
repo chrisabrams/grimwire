@@ -90,14 +90,15 @@ function userBody(request, matches) {
 					var msg = user.messages[j];
 					html.push([
 						'<h4>',msg.title,(msg.createdAt?' <small>'+msg.createdAt+'</small>':''),'</h4>',
-						'<p>',msg.body,'</p>'
+						'<p>',msg.body,'</p>',
+						'<blockquote><small>',user.id,'</small></blockquote>'
 					].join(''));
 				}
 			}
 			html.push('</div>');
 		}
 		html.push('</pre>');
-		return '<div class="span6 nofloat nomargin">'+html.join('')+'<br/><br/></div>';
+		return html.join('');
 	};
 }
 
