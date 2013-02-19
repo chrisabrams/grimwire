@@ -51,7 +51,7 @@ form {
 }
 
 /* active servers listing */
-#topside-bar { position:fixed; z-index:100; width:100%; background:#fff; }
+#topside-bar { position:fixed; z-index:100; width:100%; background:#fff; box-shadow: 1px 1px 4px rgba(0,0,0,0.15); border-bottom:1px solid #ccc; }
 #topside-bar form { margin:0 }
 #topside-bar ul { margin:0; left:auto; right:0; }
 #topside-bar li { line-height:12px; }
@@ -69,20 +69,22 @@ form {
 /* intent listing */
 #leftside-bar {
 	position: fixed;
-	top: 26px;
-	z-index: 100;
+	top: 0;
+	z-index: 120;
 
-	width: 55px;
+	width: 38px;
     height: 100%;
 
     padding-left: 13px;
     padding-top: 14px;
 
-    background: #fff;
+    background: rgb(70, 99, 129);
+    box-shadow: inset -4px 1px 8px rgba(0,0,0,0.5);
 }
 #leftside-bar ul.intents {
 	list-style: none;
 	margin-left: 0;
+	color: rgb(160, 195, 226);
 }
 #leftside-bar ul.intents li {
 	font-size: 28px;
@@ -92,15 +94,13 @@ form {
 	font-size: 12px;
 	line-height: 10px;
 	padding-top: 1px;
-	text-align: center;
-	margin-left: -15px;
-	color: #ddd;
+	visibility: hidden;
 }
 
 /* main application client space */
 #center {
 	position: absolute;
-	left:70px; top:45px;
+	left:70px; top:30px;
 	max-width: none;
 
 	border: 2px solid #ccc;
@@ -112,6 +112,7 @@ form {
 #center > tbody > tr > td {
 	min-width: 600px;
 	max-width: 800px;
+	vertical-align: top;
 
 	border: 1px solid #eee; /* so we can add borders in other states and not change layout */
 

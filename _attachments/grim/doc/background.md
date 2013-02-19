@@ -7,4 +7,4 @@
 
 <strong class="label">The Browser</strong> is bad at injecting its own software; Greasemonkey tends to only decorate UIs, and browser apps (which Chrome offers) live in isolation of each other, just like websites do. We now have Web Workers, <a href="http://stackoverflow.com/questions/12209657/how-can-i-sandbox-untrusted-user-submitted-javascript-content" target="_top"> which can safely sandbox a script</a>, but can't touch the DOM API. The other option&mdash;the iframe&mdash;is kept in the same thread as the parent document, making denial-of-service attacks on the processor possible. Neither option is structured for configurability.
 
-<a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/overview.md">&raquo; Project Overview</a>
+<a href="httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/overview.md">Project Overview &raquo;</a>
