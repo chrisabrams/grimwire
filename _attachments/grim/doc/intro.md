@@ -6,4 +6,4 @@
 
 <strong class="label">On the top</strong> are the active programs. <small class="muted">There's one for every Web Worker running.</small> See the apps I'm sharing, in the middle column? Try dragging the "Load" intent onto one of their descriptions.<small class="muted">The Load intent is the power-icon on the top left.</small>
 
-<strong class="label">You can find out</strong> about how this all works by <a href="http://grimwire.com/local/" target="_top">[reading the API documentation](http://grimwire.com/local/). Feel free to click around, but keep in mind that this is just a developer preview. The beta release will be announced when it's ready.
+<strong class="label">You can find out</strong> about how this all works by <a href="http://grimwire.com/local/" target="_top">reading the API documentation</a>. Feel free to click around, but keep in mind that this is just a developer preview. The beta release will be announced when it's ready.
