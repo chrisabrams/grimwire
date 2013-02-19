@@ -1,5 +1,6 @@
 body {
 	padding-bottom: 50px;
+	background: #eee;
 }
 a { color:rgb(20, 110, 201) }
 form, .table { margin-bottom:0; }
@@ -8,6 +9,15 @@ form, .table { margin-bottom:0; }
 a[target="_top"] {
     background: url(/assets/icons/external_link.png) center right no-repeat;
     padding-right: 13px;
+}
+
+/* scrollbars */
+#center ::-webkit-scrollbar {
+    width: 5px;
+}
+#center ::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border: 1px solid #ccc;
 }
 
 /* bootstrap alterations */
@@ -55,7 +65,7 @@ form {
 
 /* intents */
 .intents i, .intent {
-    opacity: 0.5;
+    opacity: 0.65;
 }
 .intents i.charged, .intent.charged {
 	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
@@ -66,7 +76,15 @@ form {
 }
 
 /* active servers listing */
-#topside-bar { position:fixed; z-index:100; width:100%; background:#fff; box-shadow: 1px 1px 4px rgba(0,0,0,0.15); border-bottom:1px solid #ccc; }
+#topside-bar {
+	position: fixed;
+	z-index: 100;
+	width: 100%;
+
+	background: #fff;
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+	border-bottom: 1px solid #ccc;
+}
 #topside-bar form { margin:0 }
 #topside-bar ul { margin:0; left:auto; right:0; }
 #topside-bar li { line-height:12px; }
@@ -104,7 +122,7 @@ form {
 #leftside-bar ul.intents {
 	list-style: none;
 	margin-left: 0;
-	color: rgb(184, 211, 235);
+	color: rgb(174, 211, 243);
 }
 #leftside-bar ul.intents li {
 	font-size: 28px;
@@ -149,7 +167,7 @@ form {
 }
 
 #center .column {
-	height: 97%;
+	height: 100%;
 	overflow-y: scroll;
 }
 
