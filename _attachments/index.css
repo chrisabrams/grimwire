@@ -79,12 +79,11 @@ form {
 #topside-bar form > intent, #topside-bar form > a { float:right; padding:5px; font-size:28px; }
 #topside-mask {
 	position: fixed;
-	width: 65px;
-	height: 50px;
+	width: 75px;
+	height: 29px;
 	background: white;
-	z-index: 110;
+	z-index: 115;
 }
-
 
 
 /* intent listing */
@@ -97,7 +96,7 @@ form {
     height: 100%;
 
     padding-left: 13px;
-    padding-top: 14px;
+    padding-top: 35px;
 
     background: rgb(70, 99, 129);
     box-shadow: inset -4px 1px 8px rgba(0,0,0,0.5);
@@ -117,15 +116,24 @@ form {
 	padding-top: 1px;
 	visibility: hidden;
 }
+#leftside-mask {
+	position: fixed;
+	width: 65px;
+	height: 100%;
+	z-index: 110;
+
+	background: white;
+	box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+	border-right: 1px solid #ccc;
+}
 
 /* main application client space */
 #center {
 	position: absolute;
 	left:65px; top:30px;
 	max-width: none;
+	height: 100%;
 
-	border: 2px solid #ccc;
-	box-shadow: inset 1px 1px 4px rgba(0,0,0,0.05);
 	background: #eee;
 
 	-webkit-transition: box-shadow .25s ease-in-out;
