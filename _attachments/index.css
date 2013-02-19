@@ -62,9 +62,15 @@ form {
 	margin-bottom: 2px;
 }
 #topside-bar form > intent, #topside-bar form > a { float:right; padding:5px; font-size:28px; }
-#topside-bar .torch { color:rgb(218, 0, 0); }
-#topside-bar .freeze { color:rgb(82, 168, 236); }
-#topside-bar .reset { color:rgb(30, 156, 35); }
+#topside-mask {
+	position: fixed;
+	width: 65px;
+	height: 50px;
+	background: white;
+	z-index: 110;
+}
+
+
 
 /* intent listing */
 #leftside-bar {
@@ -84,7 +90,7 @@ form {
 #leftside-bar ul.intents {
 	list-style: none;
 	margin-left: 0;
-	color: rgb(160, 195, 226);
+	color: rgb(184, 211, 235);
 }
 #leftside-bar ul.intents li {
 	font-size: 28px;
@@ -100,7 +106,7 @@ form {
 /* main application client space */
 #center {
 	position: absolute;
-	left:70px; top:30px;
+	left:65px; top:30px;
 	max-width: none;
 
 	border: 2px solid #ccc;
