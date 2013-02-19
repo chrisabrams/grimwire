@@ -10,7 +10,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	function ClientRegion(id, options) {
 		Environment.ClientRegion.call(this, id);
 		this.animWrapper = this.element.parentNode;
-		this.parentColumn = CommonClient.findParentNode.byTag(this.element, 'TD');
+		this.parentColumn = CommonClient.findParentNode.byClass(this.element, 'column');
 
 		options = options || {};
 		if (options.droptarget !== false) {
@@ -190,7 +190,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		clientRegionEl.className = "client-region";
 		animWrapperEl.appendChild(clientRegionEl);
 
-		var column = this.parentColumn || parentColumn || document.querySelector('#center td');
+		var column = this.parentColumn || parentColumn || document.querySelector('#center .column');
 		switch (target) {
 			case '-above':
 				column.insertBefore(animWrapperEl, this.animWrapper);
