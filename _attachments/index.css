@@ -1,5 +1,5 @@
 body {
-	padding-bottom:50px;
+	padding-bottom: 50px;
 }
 a { color:#06c }
 form, .table { margin-bottom:0; }
@@ -14,25 +14,25 @@ a[target="_top"] {
 .page-header { padding-bottom:0; margin:0; }
 
 /* tools */
-.nofloat { float:none !important; }
-.nomargin { margin:0 !important; }
+.nofloat { float: none !important; }
+.nomargin { margin: 0 !important; }
 
 /* hover states */
 .requesthover {
-	border:1px solid #ccc !important;
-	box-shadow:inset 0 0 6px rgba(0,0,0,0.35);
+	border: 1px solid #ccc !important;
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.35) !important;
 }
 .intenthover {
-	border:1px solid rgb(118, 189, 255) !important;
-	box-shadow:0 0 5px rgba(82, 168, 236, 0.8);
+	border: 1px solid rgb(118, 189, 255) !important;
+	box-shadow: 0 0 5px rgba(82, 168, 236, 0.8) !important;
 }
 
 /* form intent behaviors */
 form.intenthover {
-	border:none !important;
+	border: none !important;
 	
-	box-shadow:0 0 8px rgb(168, 168, 168);
-	background:rgb(243, 243, 243);
+	box-shadow: 0 0 8px rgb(168, 168, 168);
+	background: rgb(243, 243, 243);
 }
 form {
 	-webkit-transition: box-shadow .25s ease-in-out;
@@ -40,19 +40,18 @@ form {
 
 /* intents */
 .intents i, .intent {
-    opacity:0.5;
+    opacity: 0.5;
 }
 .intents i.charged, .intent.charged {
 	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
 }
 .intents i:hover, .intent:hover {
-	opacity:1.0;
+	opacity: 1.0;
 	cursor: pointer;
 }
 
 /* active servers listing */
 #topside-bar { position:fixed; z-index:100; width:100%; background:#fff; }
-#topside-bar.shadowed { box-shadow:0px 1px 4px rgba(0,0,0,0.15); }
 #topside-bar form { margin:0 }
 #topside-bar ul { margin:0; left:auto; right:0; }
 #topside-bar li { line-height:12px; }
@@ -69,72 +68,84 @@ form {
 
 /* intent listing */
 #leftside-bar {
-	position:fixed;
-	top:26px;
-	z-index:100;
+	position: fixed;
+	top: 26px;
+	z-index: 100;
 
-	width:55px;
-    height:100%;
+	width: 55px;
+    height: 100%;
 
-    padding-left:13px;
-    padding-top:14px;
+    padding-left: 13px;
+    padding-top: 14px;
 
-    background:#fff;
+    background: #fff;
 }
 #leftside-bar ul.intents {
-	list-style:none;
-	margin-left:0;
+	list-style: none;
+	margin-left: 0;
 }
 #leftside-bar ul.intents li {
-	font-size:28px;
-	line-height:40px;
+	font-size: 28px;
+	line-height: 40px;
 }
 #leftside-bar ul.intents .divider {
-	font-size:12px;
+	font-size: 12px;
 	line-height: 10px;
 	padding-top: 1px;
-	text-align:center;
-	margin-left:-15px;
+	text-align: center;
+	margin-left: -15px;
 	color: #ddd;
 }
 
 /* main application client space */
 #center {
-	position:absolute;
+	position: absolute;
 	left:70px; top:45px;
+	max-width: none;
+
+	box-shadow: inset 1px 1px 4px rgba(0,0,0,0.15);
+	background: #eee;
+	
+	-webkit-transition: box-shadow .25s ease-in-out;
 }
 #center > tbody > tr > td {
-	min-width:600px;
-	max-width:800px;
+	min-width: 600px;
+	max-width: 800px;
 
-	border:1px solid #f0f0f0;
+	border: 1px solid #eee; /* so we can add borders in other states and not change layout */
 
 	-webkit-transition: box-shadow .25s ease-in-out;
 }
 
 /* application clients */
 .client-region {
-	vertical-align:top;
-	padding:0.75em;
-	margin:0.25em;
-	border:1px solid #fff; /* so we can add borders in other states and not change layout */
+	vertical-align :top;
+	padding: 0.75em;
+	margin: 0.25em;
+
+	/*border: 1px solid #fff;  so we can add borders in other states and not change layout */
 
 	-webkit-transition: box-shadow .25s ease-in-out;
+
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+	border: 1px solid #ccc;
+	background: white;
 }
 .client-region-animwrapper {
-	overflow:hidden;
+	overflow: hidden;
+	margin: 0.5em 0.25em;
 
     -webkit-transition: background-color .5s ease-in-out,
 	    width .25s ease-in-out;
 }
 .client-region-animwrapper.init {
-	background-color:#fafafa;
-	width:0; /* this is sadly broken, atm */
+	background-color: #fafafa;
+	width: 0; /* this is sadly broken, atm */
 }
 .client-region-animwrapper.die {
-	width:0;
+	width: 0;
     -webkit-transition: width .15s ease-in-out;
 }
 .client-region-animwrapper.request {
-	background-color:rgb(245, 245, 245);
+	background-color: rgb(245, 245, 245);
 }
