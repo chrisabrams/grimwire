@@ -146,9 +146,8 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
-		var statusRange = function(r) { return (response.status >= r*100 && response.status < (r*100+99)); };
 		var responseIsEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
-		if (responseIsEmpty && (response.status == 200 || (!statusRange(3) && !this.context.url)))
+		if (responseIsEmpty && (response.status == 200 || response.status >= 400))
 			// destroy region if it's served blank html
 			return Environment.clientRegions[requestTarget.id].terminate();
 		Environment.clientRegions[requestTarget.id].__updateContext(request, response);
