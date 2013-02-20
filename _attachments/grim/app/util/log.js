@@ -9,7 +9,7 @@ function renderHtml() {
 	var style = 'width:60px; text-align:center; background:#eee; color:#808080';
 	var entriesHtml = log
 		.slice(-10)
-		.map(function(entry) { return '<tr><td style="'+style+'">'+entry.time.toTimeString().slice(0,8)+'</td><td>'+entry.msg+'</td></tr>'; })
+		.map(function(entry) { return '<tr'+((entry.type)?' class="'+entry.type+'"':'')+'><td style="'+style+'">'+entry.time.toTimeString().slice(0,8)+'</td><td>'+entry.msg+'</td></tr>'; })
 		.join('');
 	var html = [
 		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
@@ -45,6 +45,13 @@ app.onHttpRequest(function(request, response) {
 		// add log entry
 		router.mt('POST', /html|plain/, function() {
 			log.push({ msg:request.body, time:(new Date()) }); // store the entry
+			console.log(request.body);
+			logBroadcast.emit('update'); // tell our listeners about the change
+			respond.ok().end();
+		});
+		// add log entry
+		router.mt('POST', /json/, function() {
+			log.push({ msg:request.body.message, type:request.body.type, time:(new Date()) }); // store the entry
 			console.log(request.body);
 			logBroadcast.emit('update'); // tell our listeners about the change
 			respond.ok().end();

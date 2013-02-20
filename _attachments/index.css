@@ -113,8 +113,7 @@ form {
 	width: 38px;
     height: 100%;
 
-    padding-left: 13px;
-    padding-top: 35px;
+    padding: 35px 7px 0;
 
     background: rgb(70, 99, 129);
     box-shadow: inset -4px 1px 8px rgba(0,0,0,0.5);
@@ -126,11 +125,11 @@ form {
 }
 #leftside-bar ul.intents li {
 	font-size: 28px;
-	line-height: 40px;
+	line-height: 43px;
 }
 #leftside-bar ul.intents .divider {
 	font-size: 12px;
-	line-height: 10px;
+	line-height: 20px;
 	padding-top: 1px;
 	visibility: hidden;
 }
@@ -187,10 +186,13 @@ form {
 }
 .client-region-animwrapper {
 	overflow: hidden;
-	margin: 0.5em 0.25em;
+	margin: 0.5em 0.25em 0.5em 0;
 
     -webkit-transition: background-color .5s ease-in-out,
 	    width .25s ease-in-out;
+}
+td:first-child .client-region-animwrapper {
+	margin: 0.5em 0.25em;
 }
 .client-region-animwrapper.init {
 	background-color: #fafafa;
