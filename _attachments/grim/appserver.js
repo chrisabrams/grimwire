@@ -18,7 +18,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				this.serversBroadcast.addStream(response);
 			}).bind(this))
 			.pm('/', /HEAD|GET/i, $getApps.bind(this, request, response))
-			.pmt('/', /POST/i, /json|form\-data/i, $addApp.bind(this, request, response))
+			.pmt('/', /POST/i, /json|form\-data|text/i, $addApp.bind(this, request, response))
 			// .pm(RegExp('/[^/]+/?'), /HEAD|GET/i, $getApp.bind(this, request, response))
 			// .pm(RegExp('/[^/]+/?'), /DELETE/i, $killApp.bind(this, request, response))
 			.pmta(RegExp('/load-confirmer/?','i'), /POST/i, /json|form\-data/i, /html/i, $confirmAddApp.bind(this, request, response))
@@ -81,13 +81,17 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 					params = { script:contextData.script };
 				else if (contextData.url)
 					params = { url:contextData.url };
+			} else if (typeof contextData == 'string') {
+				params = { script:contextData };
 			} else {
 				// context link header
 				params = { url : Link.lookupLink(contextLinks, 'http://grimwire.com/rels/src', 'application') };
 			}
 		} else {
-			// a json submit
-			params = request.body;
+			if (typeof request.body == 'string')
+				params = { script:request.body };
+			else
+				params = request.body;
 		}
 		return params;
 	}
