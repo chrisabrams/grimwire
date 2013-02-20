@@ -111,7 +111,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		params.scriptUrl = params.url;
 		delete params.url;
 
-		server = new Environment.WorkerServer(params);
+		server = new Environment.WorkerServer(params, function(result) {
+			respond.unprocessableEntity().end();
+		});
 		server.worker.onMessage('loaded', function(message) {
 			if (server.state === Environment.Server.DEAD) { throw "Received 'loaded' message from a dead worker"; }
 
@@ -165,7 +167,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	function $confirmAddApp(request, response) {
 		var params = extractAddParams(request);
 		if (!params || (!params.url && !params.script)) {
-			console.log('sending back error')
 			return Link.responder(response).badRequest('text/html').end('Must receive `url` or `script');
 		}
 
