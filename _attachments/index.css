@@ -158,16 +158,16 @@ form {
 #center > tbody > tr > td {
 	min-width: 600px;
 	max-width: 800px;
-	vertical-align: top;
-
-	border: 1px solid #eee; /* so we can add borders in other states and not change layout */
-
-	-webkit-transition: box-shadow .25s ease-in-out;
+	vertical-align: top;	
 }
 
 #center .column {
 	height: 100%;
 	overflow-y: scroll;
+
+	border: 1px solid #eee; /* so we can add borders in other states and not change layout */
+
+	-webkit-transition: box-shadow .25s ease-in-out;
 }
 
 /* application clients */
@@ -188,8 +188,8 @@ form {
 	overflow: hidden;
 	margin: 0.5em 0.25em 0.5em 0;
 
-    -webkit-transition: background-color .5s ease-in-out,
-	    width .25s ease-in-out;
+/*    -webkit-transition: background-color .5s ease-in-out,
+	    width .25s ease-in-out;*/
 }
 td:first-child .client-region-animwrapper {
 	margin: 0.5em 0.25em;
