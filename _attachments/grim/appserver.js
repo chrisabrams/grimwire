@@ -177,7 +177,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		Link.responder(response).ok('text/html').end([
 			'<form action="httpl://app" method="post" enctype="application/json">',
 				'<input type="hidden" name="replace_existing" value="1" />',
-				'<p>Would you like to load this program into the session?</p>',
+				'<legend>Would you like to load this program into the session?</legend>',
 				'<p>',
 					(params.url) ?
 						'<input class="input-block-level" type="text" name="url" value="'+params.url+'" />' :
