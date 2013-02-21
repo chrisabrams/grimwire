@@ -23,14 +23,14 @@ function threadsBody(request) {
 	return function(threads) {
 		var html = [];
 
-		html.push('<p><span class="muted">FFS</span> <a target="-below" href="httpl://v1.pfraze.ffs.forum.app/new" title="Create New Thread">New Thread</a></p>');
+		html.push('<p><span class="muted">FFS</span> <a href="httpl://v1.pfraze.ffs.forum.app/new" title="Create New Thread">New Thread</a></p>');
 		html.push('<table class="table">');
 		for (var i=0, ii=threads.rows.length; i < ii; i++) {
 			var post = threads.rows[i];
 			html.push([
 				'<tr><td>',
 					'<strong>',optAuthor(post.author),'</strong> ',
-					'<a target="-below" href="',domain,'/',post._id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
+					'<a href="',domain,'/',post._id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
 					'<br/>',
 					'<small>',formatDateArr(post.created_at),'</small>',
 				'</td></tr>'
@@ -98,7 +98,7 @@ function threadBody(request, threadId) {
 			html.push('<p>'+initial_post.content+'</p>');
 			html.push('<blockquote><small>');
 			html.push(optAuthor(initial_post.author)+', '+formatDateArr(initial_post.created_at));
-			html.push(' <a href="'+replyLink(initial_post)+'" title="reply" target="-below">reply</a>');
+			html.push(' <a href="'+replyLink(initial_post)+'" title="reply">reply</a>');
 			html.push('</small></blockquote>');
 		}
 
@@ -113,7 +113,7 @@ function threadBody(request, threadId) {
 			html.push('<p>'+post.content+'</p>');
 			html.push('<blockquote><small>');
 			html.push(optAuthor(post.author)+', '+formatDateArr(post.created_at));
-			html.push(' <a href="'+replyLink(post)+'" title="reply" target="-below">reply</a>');
+			html.push(' <a href="'+replyLink(post)+'" title="reply">reply</a>');
 			html.push('</small></blockquote>');
 			html.push('</div>');
 			html.push('</div>');
