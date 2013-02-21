@@ -20,7 +20,7 @@ Environment.setDispatchHandler(function(origin, request) {
 	var response = Link.dispatch(request);
 	response.then(function (res) {
 		if (/log\.util\.app/.test(request.url) === false) {
-			log.post('<span class="label label-success">'+res.status+'</span> '+request.url);
+			log.post('<span class="label label-success">'+res.status+'</span> '+request.method.toUpperCase()+' '+request.url);
 		}
 		if (isClientRegion)
 			origin.endAnim('request');
@@ -30,7 +30,7 @@ Environment.setDispatchHandler(function(origin, request) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			var reason = err.response.reason || '&lsaquo;no reason given&rsaquo;';
 			log.post({
-				message:'<span class="label label-important">'+err.response.status+'</span> '+request.url+
+				message:'<span class="label label-important">'+err.response.status+'</span> '+request.method.toUpperCase()+' '+request.url+
 						'<br/><strong>'+reason+'</strong>',
 				type:'error'
 			});
