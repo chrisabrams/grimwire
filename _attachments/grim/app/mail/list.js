@@ -15,10 +15,11 @@ app.onHttpRequest(function(request, response) {
 			Link.responder(response).ok('html', stdHeaders).end([
 				'<legend>Subscribe to "',list,'"</legend>',
 				'<form class="form-inline" action="httpl://v1.pfraze.list.mail.app/" method="POST">',
-					'<input type="text" name="email" class="span6" />',
+					'<input type="text" name="email" class="span6" placeholder="Email" />',
 					'<input type="hidden" name="',list,'" />',
 					'<input class="btn" type="submit" />',
-				'</form>'
+				'</form><br/>',
+				'<p>You will only be sent emails about Grimwire, and your address will not be shared. An unsubscribe link will be included in the footer of the emails. If you have any problems, contact me at <a href="mailto:pfrazee@gmail.com">pfrazee@gmail.com</a>.</p>'
 			].join(''));
 		})
 		.mpta('post', '/', /form/, /html/, function() {
