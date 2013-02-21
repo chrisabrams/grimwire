@@ -26,15 +26,23 @@ app.onHttpRequest(function(request, response) {
 				Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
 			} else {
 				Link.responder(response).ok('html', stdHeaders).end([
-					'Markdown Converter, powered by marked.js (link :TODO:)',
-					'interface :TODO:'
+                    '<form action="httpl://v1.pfraze.markdown.convert.app/" method="POST">',
+					'<legend>Markdown Converter</legend>',
+                    '<p class="muted">powered by marked.js (by Christopher Jeffrey)</p>',
+					'<p><textarea name="text" class="input-block-level" rows="10"></textarea></p>',
+                    '<p><input type="submit" class="btn" draggable="true" /></p>',
+                    '</form>'
 				].join(''));
 			}
 		})
+        .mpta('post', '/', /form|json/, /html/, function() {
+            if (!request.body.text)
+                Link.responder(response).unprocessableEntity('html', stdHeaders).end('`text` is required');
+            else
+                Link.responder(response).ok('html', stdHeaders).end(marked(request.body.text));
+        })
 		.mpta('post', '/', /markdown/, /html/, function() {
-			Link.responder(response).ok('html', stdHeaders).end([
-				'accept markdown string :TODO:'
-			].join(''));
+			Link.responder(response).ok('html', stdHeaders).end(marked(request.body));
 		})
 		.error(response);
 });
