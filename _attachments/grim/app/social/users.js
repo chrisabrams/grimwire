@@ -16,11 +16,20 @@ function usersHeader(headers) {
 function usersBody(request) {
 	return function(users) {
 		var html = [];
+        html.push('<h4>Grimwire.com Users</h4>');
+        html.push('<table class="table">');
 		for (var i=0, ii=users.rows.length; i < ii; i++) {
 			var row = users.rows[i];
-			html.push('<a href="'+domain+row.id+'/apps">'+row.id+'</a>');
+			html.push('<tr>');
+            html.push('<td><img src="'+row.profile.gravatar+'" height="22" width="22" /></td>');
+            html.push('<td><a href="'+domain+row.id+'/apps">'+row.id+'</a></td>');
+            html.push('<td>'+row.description+'</td>');
+            html.push('<td>'+row.profile.name.replace(/ /g, '&nbsp;')+'</td>');
+            html.push('<td>'+row.profile.description+'</td>');
+            html.push('</tr>');
 		}
-		return '<div class="span6 nofloat nomargin">'+html.join('')+'<br/><br/></div>';
+        html.push('</table>');
+		return html.join('');
 	};
 }
 
