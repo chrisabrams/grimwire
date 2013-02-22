@@ -2,6 +2,13 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 (function(exports) {
 	var __id = 0;
 	exports.genClientRegionId = function() { return 'client-region-'+__id++; };
+	function hasType(e, t) {
+		if (e.dataTransfer.types.indexOf)
+			return e.dataTransfer.types.indexOf(t) !== -1;
+		if (e.dataTransfer.types.contains)
+			return e.dataTransfer.types.contains(t);
+		throw "Unable to check type on data transfer object";
+	}
 
 	// ClientRegion
 	// ============
@@ -215,7 +222,6 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		e.preventDefault();
 		e.stopPropagation();
-		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
 
 		var highlightableElems = Array.prototype.slice.call(this.element.querySelectorAll('form'));
 		highlightableElems.push(this.element);
@@ -226,9 +232,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		// try to parse known data formats
 		var request = null;
-		if (hasType('application/request+json')) {
+		if (hasType(e, 'application/request+json')) {
 			request = JSON.parse(e.dataTransfer.getData('application/request+json'));
-		} else if (hasType('text/uri-list')) {
+		} else if (hasType(e, 'text/uri-list')) {
 			var data = e.dataTransfer.getData('text/uri-list');
 			if (data) {
 				request = { method:'get', url:data };
@@ -240,7 +246,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			return false;
 		}
 
-		if (hasType('application/intent+json')) {
+		if (hasType(e, 'application/intent+json')) {
 			// :NOTE: must dispatch the intent off of the drop target (for forms)
 			this.dispatchIntent(JSON.parse(e.dataTransfer.getData('application/intent+json')), dispatchEmitterOverride || e.target);
 			return false;
@@ -249,16 +255,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 	ClientRegion.prototype.__handleDragover = function(e) {
 		if (!e.dataTransfer.types) return;
-		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
-		if (hasType('application/request+json')) {
+		if (hasType(e, 'application/request+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (hasType('text/uri-list')) {
+		} else if (hasType(e, 'text/uri-list')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (hasType('application/intent+json')) {
+		} else if (hasType(e, 'application/intent+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'move';
 			return false;
@@ -273,12 +278,12 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			return (elem.tagName == 'FORM' && elem.dataset['intents'] != 'none') || elem == thisElem;
 		});
 
-		var hasType = function(t) { return e.dataTransfer.types.indexOf(t) !== -1; };
-		if (hasType('application/request+json')) {
+		
+		if (hasType(e, 'application/request+json')) {
 			this.element.classList.add('requesthover');
-		} else if (hasType('text/uri-list')) {
+		} else if (hasType(e, 'text/uri-list')) {
 			this.element.classList.add('requesthover');
-		} else if (hasType('application/intent+json')) {
+		} else if (hasType(e, 'application/intent+json')) {
 			if (formElem) formElem.classList.add('intenthover');
 			this.element.classList.add('intenthover');
 		}
