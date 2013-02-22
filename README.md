@@ -1,6 +1,6 @@
 # Grimwire: an operating system in the browser
 
-*Grimwire is not ready for general use, so no instructions have been provided for setup. A beta will be released soon.*
+*Grimwire is not ready for deployment, so setup instructions are not yet provided. The beta will be released soon.*
 
 ## Background
 
