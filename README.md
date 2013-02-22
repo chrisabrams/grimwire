@@ -1,4 +1,4 @@
-# Grimwire: an operating system in the browser
+# Grimwire: a desktop environment in the browser
 
 *Grimwire is not ready for deployment, so setup instructions are not yet provided. The beta will be released soon.*
 
@@ -18,7 +18,7 @@ Grimwire is a general-purpose deployment of Local. Its target is to be an easily
  - App capabilities control for executing untrusted software
  - In-browser development tools with services for storing and serving scripts
  - A well-documented API for modding and extending the UI
- - Composable tools built around Local's messaging system
+ - A powerful, composable interface built around Local's messaging system
 
 ## License
 
