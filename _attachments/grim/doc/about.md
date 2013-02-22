@@ -1,4 +1,4 @@
-<h1>Grimwire <small>v0.0.0</small></h1>
+<h1>Grimwire <small>v0.1.0</small></h1>
 Welcome to Grimwire, the in-browser desktop environment and social computing network.
 Powered by <a target="_top" href="http://couchdb.apache.org">couchdb&nbsp;1.4</a>,
 <a target="_top" href="http://twitter.github.com/bootstrap">bootstrap&nbsp;2.2.2</a>
