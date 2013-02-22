@@ -1,5 +1,12 @@
 Grim = (typeof Grim == 'undefined') ? {} : Grim;
 (function(exports) {
+	function hasType(e, t) {
+		if (e.dataTransfer.types.indexOf)
+			return e.dataTransfer.types.indexOf(t) !== -1;
+		if (e.dataTransfer.types.contains)
+			return e.dataTransfer.types.contains(t);
+		throw "Unable to check type on data transfer object";
+	}
 
 	// Center Space
 	// ============
@@ -20,15 +27,15 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	});
 	centerElem.addEventListener('dragover',  function(e) {
 		if (!e.dataTransfer.types) return;
-		if (e.dataTransfer.types.indexOf('application/request+json') !== -1) {
+		if (hasType(e, 'application/request+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1) {
+		} else if (hasType(e, 'text/uri-list')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'link';
 			return false;
-		} else if (e.dataTransfer.types.indexOf('application/intent+json') !== -1) {
+		} else if (hasType(e, 'application/intent+json')) {
 			e.preventDefault();
 			e.dataTransfer.dropEffect = 'move';
 			return false;
@@ -36,18 +43,18 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	});
 	centerElem.addEventListener('dragenter', function(e) {
 		if (!e.dataTransfer.types) return;
-		if (e.target.classList.contains('column') && e.target.parentNode.parentNode.parentNode.parentNode == centerElem) {
-			if (e.dataTransfer.types.indexOf('application/request+json') !== -1)
+		if (e.target.classList && e.target.classList.contains('column') && e.target.parentNode.parentNode.parentNode.parentNode == centerElem) {
+			if (hasType(e, 'application/request+json'))
 				e.target.classList.add('requesthover');
-			else if (e.dataTransfer.types.indexOf('text/uri-list') !== -1)
+			else if (hasType(e, 'text/uri-list'))
 				e.target.classList.add('requesthover');
-			else if (e.dataTransfer.types.indexOf('application/intent+json') !== -1)
+			else if (hasType(e, 'application/intent+json'))
 				e.target.classList.add('intenthover');
 		}
 	});
 	centerElem.addEventListener('dragleave', function(e) {
 		// dragleave fires when child elems are dragleft, so only unhover when a TD is left
-		if (e.target.classList.contains('column') && e.target.parentNode.parentNode.parentNode.parentNode == centerElem) {
+		if (e.target.classList && e.target.classList.contains('column') && e.target.parentNode.parentNode.parentNode.parentNode == centerElem) {
 			e.target.classList.remove('requesthover');
 			e.target.classList.remove('intenthover');
 		}
