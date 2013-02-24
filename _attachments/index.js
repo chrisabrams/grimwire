@@ -1,4 +1,7 @@
 
+if (!window.chrome)
+    $('#chromenotice').show();
+
 // Env Behaviors
 // =============
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
