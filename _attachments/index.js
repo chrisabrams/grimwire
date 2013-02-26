@@ -1,7 +1,4 @@
 
-if (!window.chrome)
-    $('#chromenotice').show();
-
 // Env Behaviors
 // =============
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
@@ -94,6 +91,7 @@ Environment.addServer('localstorage.env', new Grim.LocalStorageServer());
 apps.post({ url : '/grim/app/debug/index.js' });
 apps.post({ url : '/grim/app/edit/text.js' });
 apps.post({ url : '/grim/app/util/form.js' });
+apps.post({ url : '/grim/app/util/keyp.js' });
 apps.post({ url : '/grim/app/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
