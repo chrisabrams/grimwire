@@ -106,11 +106,11 @@ apps.post({ url : '/grim/app/convert/markdown.js' })
 		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
 			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/about.md');
 	});
-apps.post({ url : '/grim/app/social/users.js' })
-	.then(function(res) {
-		Environment.addClientRegion(new Grim.ClientRegion('firstapp'))
-			.dispatchRequest('httpl://v1.pfraze.users.social.app/pfraze/apps');
-	});
+// apps.post({ url : '/grim/app/social/users.js' })
+// 	.then(function(res) {
+// 		Environment.addClientRegion(new Grim.ClientRegion('firstapp'))
+// 			.dispatchRequest('httpl://v1.pfraze.users.social.app/pfraze/apps');
+// 	});
 
 // register custom intents
 Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.text.edit.app');

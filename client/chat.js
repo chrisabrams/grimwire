@@ -1,6 +1,5 @@
 // Kai Chat Surface (Grimwire)
 // ===========================
-
 if (!Worker)
     document.getElementById('workers-notice').style.display = 'block';
 

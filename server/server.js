@@ -11,13 +11,27 @@ function rawBody(req, res, next) { // thanks to JP Richardson
 	req.on('end', next);
 }
 
+function setCORSHeaders(req, res, next) {
+	// this function open-sourced by Goodybag, Inc
+	res.setHeader('Access-Control-Allow-Origin', req.headers['origin'] || '*');
+	res.setHeader('Access-Control-Allow-Credentials', true);
+	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, PUT, PATCH, POST, DELETE');
+	res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers']);
+	res.setHeader('Access-Control-Expose-Headers', req.headers['access-control-request-headers']);
+
+	// intercept OPTIONS method, this needs to respond with a zero length response (pre-flight for CORS).
+	if (req.method === 'OPTIONS') return res.send(200);
+	next();
+}
+
 var app = module.exports = express();
 app.configure(function(){
 	// app.use(rawBody);
+	app.use(setCORSHeaders);
 	app.use(express.bodyParser());
 	app.use(express.methodOverride());
 	app.use(app.router);
-	app.use(express.static(__dirname + '/client'));
+	app.use(express.static(__dirname + '/../client'));
 });
 
 app.configure('development', function(){
