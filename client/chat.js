@@ -12,7 +12,7 @@ var Regions = {
 };
 var DataProviders = {
 	session: Link.navigator('httpl://session'),
-	msgs: Link.navigator('/messages')
+	msgs: Link.navigator('/').service('chat').collection('messages')
 };
 var UiProviders = {
 	chatout: Link.navigator('httpl://chatout.ui'),
@@ -20,7 +20,7 @@ var UiProviders = {
 	users: Link.navigator('httpl://users.ui')
 };
 var Streams = {
-	msgs: Link.subscribe('/messages')
+	msgs: Link.subscribe('/services/chat/messages') // :TODO: replace with navigation
 };
 
 
