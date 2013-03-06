@@ -142,7 +142,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 		var self = this;
 		request.stream = false;
-		promise(Environment.dispatch(this, request))
+		promise(Link.dispatch(request, this))
 			.then(function(response) {
 				self.__handleResponse(e, request, response);
 			})

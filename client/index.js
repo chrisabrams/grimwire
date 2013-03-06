@@ -4,7 +4,7 @@
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
 
 // request wrapper
-Environment.setDispatchHandler(function(origin, request) {
+Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	// make any connectivity / permissions decisions here
 	// var urld = Link.parseUri(request);
 
@@ -17,7 +17,7 @@ Environment.setDispatchHandler(function(origin, request) {
 		origin.startAnim('request');
 
 	// allow request
-	var response = Link.dispatch(request);
+	var response = dispatch(request);
 	response.then(function (res) {
 		if (/log\.util\.app/.test(request.url) === false) {
 			log.post('<span class="label label-success">'+res.status+'</span> '+request.method.toUpperCase()+' '+request.url);

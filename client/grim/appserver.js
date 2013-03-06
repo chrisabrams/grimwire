@@ -162,7 +162,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 
 			self.serversBroadcast.emit('update');
 			if (/html/.test(request.headers.accept))
-				return respond.pipe(Environment.dispatch(this, { method:'get', url:server.config.startUrl, headers:{ accept:'text/html' }}));
+				return respond.pipe(Link.dispatch({ method:'get', url:server.config.startUrl, headers:{ accept:'text/html' }}, this));
 			respond.ok('application/json').end(server.config);
 		});
 	}

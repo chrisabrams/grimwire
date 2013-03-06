@@ -26,8 +26,8 @@ var Streams = {
 
 // setup environment
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
-Environment.setDispatchHandler(function(origin, request) {
-	var response = Link.dispatch(request);
+Environment.setDispatchWrapper(function(request, origin, dispatch) {
+	var response = dispatch(request);
 	response.then(console.log.bind(console), request);
 	response.except(console.log.bind(console), request);
 	return response;

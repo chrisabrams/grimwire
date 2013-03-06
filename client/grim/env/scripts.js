@@ -179,7 +179,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				// load a new server in-place with the given source
 				Environment.addServer(domain, new Environment.WorkerServer({ script:request.body.source }));
 				// respond by piping a request to the new server
-				respond.pipe(Environment.dispatch(this, { method:'get', url:'httpl://'+domain, headers:{ accept:'text/html' }}));
+				respond.pipe(Link.dispatch({ method:'get', url:'httpl://'+domain, headers:{ accept:'text/html' }}, this));
 			} else {
 				// can't live-update environment servers (...yet?)
 				respond.respond([400, 'only worker servers can be live-updated']).end();
