@@ -33,6 +33,9 @@ app.onHttpRequest(function(request, response) {
 		headers.addLink('/', 'self current');
 		headers.addLink('http://grimwire.com/grim/app/util/log.js', 'http://grimwire.com/rels/src', { title:'application' });
 
+		router.m('HEAD', function() {
+			respond.ok('html', headers).end(renderHtml()); // respond with log html
+		});
 		// list
 		router.ma('GET', /html/, function() {
 			respond.ok('html', headers).end(renderHtml()); // respond with log html
