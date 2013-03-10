@@ -4,7 +4,7 @@ importScripts('linkjs-ext/router.js');
 // our domain
 var domain = 'httpl://v1.pfraze.users.social.app/';
 // users provider
-var usersCollection = Link.navigator('/users');
+var usersCollection = Link.navigator('/services/users');
 
 function usersHeader(headers) {
 	var stdHeaders = Link.headerer();
