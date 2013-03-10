@@ -46,13 +46,13 @@ var pfraze = {
 	"description": "admin",
 	"applications": [
 		{
-			"url": "http://grimwire.com/grim/app/mail/list.js",
+			"url": "/grim/app/mail/list.js",
 			"icon": "http://grimwire.com/assets/icons/16x16/inbox_document.png",
 			"title": "mail/list.js",
 			"description": "Subscribe to email updates about Grimwire."
 		},
 		{
-			"url": "http://grimwire.com/grim/app/forum/ffs.js",
+			"url": "/grim/app/forum/ffs.js",
 			"icon": "http://grimwire.com/assets/icons/16x16/comment_white.png",
 			"title": "forum/ffs.js",
 			"description": "Anonymous, plain-text forum."

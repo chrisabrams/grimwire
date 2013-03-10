@@ -4,7 +4,7 @@ importScripts('linkjs-ext/router.js');
 // list
 var list = 'grimwire-updates';
 // subscription storage
-var subscriptionsCollection = Link.navigator('/email/subscriptions');
+var listMembersCollection = Link.navigator('/').service('email').collection('lists').item(list).collection('members');
 // we use the same headers every time
 var stdHeaders = Link.headerer();
 stdHeaders.addLink('http://grimwire.com/grim/app/mail/list.js', 'http://grimwire.com/rels/src', { title:'application' });
@@ -23,7 +23,7 @@ app.onHttpRequest(function(request, response) {
 			].join(''));
 		})
 		.mpta('post', '/', /form/, /html/, function() {
-			subscriptionsCollection.post({ list:list, email:request.body.email })
+			listMembersCollection.post({ email:request.body.email })
 				.then(function() {
 					Link.responder(response).ok('html', stdHeaders).end([
 						'You have been subscribed to "'+list+'." ~pfraze'

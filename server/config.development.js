@@ -2,6 +2,7 @@ module.exports = {
 	services: {
 		helloworld: {},
 		chat: {},
-		users: {}
+		users: {},
+		email: {}
 	}
 };
