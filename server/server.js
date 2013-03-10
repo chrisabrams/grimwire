@@ -23,6 +23,7 @@ server.configure(function(){
 		for (var serviceName in server.config.services) {
 			if (!server.config.services.hasOwnProperty(serviceName)) { continue; }
 			var serviceConfig = server.config.services[serviceName];
+			console.log('loading %s service', serviceName);
 			server.use(
 				'/services/'+serviceName,
 				require('./' + path.join('services', serviceName, 'server.js'))(server, serviceConfig)
