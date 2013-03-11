@@ -104,7 +104,7 @@ apps.post({ url: '/grim/app/util/log.js' })
 apps.post({ url: '/grim/app/convert/markdown.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
-			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=http://grimwire.com/grim/doc/about.md');
+			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=/grim/doc/about.md');
 	});
 apps.post({ url: '/grim/app/social/users.js' })
 	.then(function(res) {
