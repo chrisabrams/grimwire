@@ -32,7 +32,7 @@ function threadsBody(request) {
 					'<strong>',optAuthor(post.author),'</strong> ',
 					'<a href="',domain,'/',post.id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
 					'<br/>',
-					'<small>',formatDateArr(post.created_at),'</small>',
+					'<small>',formatDate(post.created_at),'</small>',
 				'</td></tr>'
 			].join(''));
 		}
@@ -94,7 +94,7 @@ function threadBody(request, threadId) {
 			html.push('<h3 class="media-heading">'+optTitle(thread.initial_post.title)+'</h3>');
 			html.push('<p>'+thread.initial_post.content+'</p>');
 			html.push('<blockquote><small>');
-			html.push(optAuthor(thread.initial_post.author)+', '+formatDateArr(thread.initial_post.created_at));
+			html.push(optAuthor(thread.initial_post.author)+', '+formatDate(thread.initial_post.created_at));
 			html.push(' <a href="'+replyLink(thread.initial_post)+'" title="reply">reply</a>');
 			html.push('</small></blockquote>');
 		}
@@ -109,7 +109,7 @@ function threadBody(request, threadId) {
 			html.push('<p class="media-heading"><strong>'+optTitle(post.title)+'</strong></p>');
 			html.push('<p>'+post.content+'</p>');
 			html.push('<blockquote><small>');
-			html.push(optAuthor(post.author)+', '+formatDateArr(post.created_at));
+			html.push(optAuthor(post.author)+', '+formatDate(post.created_at));
 			html.push(' <a href="'+replyLink(post)+'" title="reply">reply</a>');
 			html.push('</small></blockquote>');
 			html.push('</div>');
@@ -170,8 +170,10 @@ app.postMessage('loaded', {
 function pad0(i) {
 	return (i < 10) ? '0'+i : i;
 }
-function formatDateArr(d) {
-	return [d[0],'/',pad0(d[1]+1),'/',pad0(d[2]),' ',pad0(d[3]),':',pad0(d[4]), ':',pad0(d[5])].join('');
+function formatDate(d) {
+	d = new Date(d);
+	return [d.getFullYear(),'/',pad0(d.getMonth()+1),'/',pad0(d.getDate()),' ',
+			pad0(d.getHours()),':',pad0(d.getMinutes()), ':',pad0(d.getSeconds())].join('');
 }
 function opt(v, fallback) {
 	return (v) ? v : fallback;
