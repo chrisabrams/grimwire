@@ -3,6 +3,7 @@ module.exports = {
 		helloworld: {},
 		chat: {},
 		users: {},
-		email: {}
+		email: {},
+		ffs: {}
 	}
 };

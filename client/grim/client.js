@@ -154,7 +154,9 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	ClientRegion.prototype.__handleResponse = function(e, request, response) {
 		var requestTarget = this.__chooseRequestTarget(e, request);
 
-		var responseIsEmpty = (!response.body || (typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
+		var responseIsEmpty = (response.body === null ||
+								typeof response.body == 'undefined' ||
+								(typeof response.body == 'string' && /^[\s\t\r\n]*$/.test(response.body)));
 		if (responseIsEmpty && (response.status == 200 || response.status >= 400))
 			// destroy region if it's served blank html
 			return Environment.clientRegions[requestTarget.id].terminate();

@@ -4,11 +4,11 @@ importScripts('linkjs-ext/router.js');
 // config
 app.config.threads_page_size = app.config.threads_page_size || 5;
 app.config.thread_posts_page_size = app.config.thread_posts_page_size || 5;
-app.config.icons_baseurl = app.config.icons_baseurl || 'http://grimwire.com/assets/icons/16x16/';
+app.config.icons_baseurl = app.config.icons_baseurl || ('http://'+app.config.environmentHost+'/assets/icons/16x16/');
 // our domain
 var domain = 'httpl://v1.pfraze.ffs.forum.app';
 // ffs provider
-var ffsService = Link.navigator('/ffs');
+var ffsService = Link.navigator('/').service('ffs');
 // common headers
 var stdHeaders = Link.headerer();
 stdHeaders.addLink('http://grimwire.com/grim/app/forum/ffs.js', 'http://grimwire.com/rels/src', { title:'application' });
@@ -30,7 +30,7 @@ function threadsBody(request) {
 			html.push([
 				'<tr><td>',
 					'<strong>',optAuthor(post.author),'</strong> ',
-					'<a href="',domain,'/',post._id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
+					'<a href="',domain,'/',post.id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
 					'<br/>',
 					'<small>',formatDateArr(post.created_at),'</small>',
 				'</td></tr>'
@@ -88,24 +88,21 @@ function threadBody(request, threadId) {
 		var skip = parseInt(request.query.skip, 10) || 0;
 		var end = skip + app.config.thread_posts_page_size;
 
-		var initial_post = thread.rows[0];
-		var posts = thread.rows.slice(1);
-
 		html.push('<div class="media">');
 		html.push('<div class="media-body">');
-		if (initial_post) {
-			html.push('<h3 class="media-heading">'+optTitle(initial_post.title)+'</h3>');
-			html.push('<p>'+initial_post.content+'</p>');
+		if (thread.initial_post) {
+			html.push('<h3 class="media-heading">'+optTitle(thread.initial_post.title)+'</h3>');
+			html.push('<p>'+thread.initial_post.content+'</p>');
 			html.push('<blockquote><small>');
-			html.push(optAuthor(initial_post.author)+', '+formatDateArr(initial_post.created_at));
-			html.push(' <a href="'+replyLink(initial_post)+'" title="reply">reply</a>');
+			html.push(optAuthor(thread.initial_post.author)+', '+formatDateArr(thread.initial_post.created_at));
+			html.push(' <a href="'+replyLink(thread.initial_post)+'" title="reply">reply</a>');
 			html.push('</small></blockquote>');
 		}
 
-		for (var i=skip, ii=posts.length; i < ii && i < end; i++) {
-			var post = posts[i];
+		for (var i=skip, ii=thread.replies.length; i < ii && i < end; i++) {
+			var post = thread.replies[i];
 			html.push('<div class="media">');
-			html.push('<a class="pull-left" href="'+domain+'/'+post._id+'">');
+			html.push('<a class="pull-left" href="'+domain+'/'+post.id+'">');
 			html.push('<img class="media-object" src="'+app.config.icons_baseurl+opt(post.icon,'document_quote')+'.png">');
 			html.push('</a>');
 			html.push('<div class="media-body">');
@@ -122,7 +119,7 @@ function threadBody(request, threadId) {
 		html.push('</div>');
 
 		var isFirst = (!skip);
-		var isLast = (end >= posts.length);
+		var isLast = (end >= thread.replies.length);
 		html.push(paginator(isFirst, isLast, domain+'/'+threadId, (skip-app.config.thread_posts_page_size), (skip+app.config.thread_posts_page_size)));
 
 		return html.join('');
@@ -143,9 +140,10 @@ app.onHttpRequest(function(request, response) {
 		.mpta('post', RegExp('^/new/?$','i'), /json/, /html/, function() {
 			var post = request.body;
 			post.type = "post";
-			ffsService.post(post, 'application/json')
+			ffsService.collection('threads').post(post, 'application/json')
 				.then(function(res) {
 					var id = res.body;
+					console.log(res.body, id);
 					Link.responder(response).seeOther(null, { location:domain+'/'+(post.thread || id) }).end();
 				})
 				.except(function(res) {
@@ -195,5 +193,5 @@ function paginator(isFirst, isLast, url, prev, next) {
 	].join('');
 }
 function replyLink(post) {
-	return domain+'/new?reply_to='+post._id+'&thread='+(post.thread||post._id)+'&topic='+encodeURIComponent(post.title);
+	return domain+'/new?reply_to='+post.id+'&thread='+(post.thread||post.id)+'&topic='+encodeURIComponent(post.title);
 }

@@ -3,3 +3,4 @@ client/assets
 server/node_modules
 server/npm-debug.log
 server/email_lists.json
+server/ffs_threads.json

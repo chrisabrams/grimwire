@@ -70,6 +70,13 @@ module.exports = function createServer(main_server, config) {
 				console.log('Warning: Failed to write email_lists.json', err);
 		});
 	}
+
+	// read lists now
+	require('fs').readFile('./email_lists.json', 'utf8', function(err, data) {
+		if (err)
+			return console.log('Warning: Failed to read email_lists.json', err);
+		lists = JSON.parse(data);
+	});
  
  	// Routes
  	// ======
