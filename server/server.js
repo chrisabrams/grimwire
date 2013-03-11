@@ -44,6 +44,6 @@ function addStaticLinkHeaders(req, res, next) {
 	next();
 }
 
-server.listen(8000);
+server.listen(server.config.port);
 console.log(server.settings.env, 'mode');
-console.log('listening on port 8000');
+console.log('listening on port %d', server.config.port);
