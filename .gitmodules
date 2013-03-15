@@ -1,3 +1,6 @@
 [submodule "local"]
 	path = client/local
 	url = git@github.com:pfraze/local.git
+[submodule "client/hypersurface/threejs"]
+	path = client/hypersurface/threejs
+	url = https://github.com/mrdoob/three.js.git

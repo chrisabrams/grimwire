@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Grimwire - HyperSurface environment</title>
+		<meta charset="UTF-8"></meta>
+
+		<!-- security policies -->
+		<meta http-equiv="X-WebKit-CSP" content="script-src 'self'"></meta>
+
+		<!-- styling -->
+		<link rel="stylesheet" href="/hypersurface.css" />
+		<link rel="icon" type="image/vnd.microsoft.icon" href="/assets/icons/16x16/global_telecom.png" />
+	</head>
+	
+	<body>
+		<div id="scene">
+			<cube id="test-structure" hsml-style='{"materialColor":"#194DFF"}'>
+				
+			</cube>
+		</div>
+
+		<!-- base libraries -->
+		<script src="/local/lib/link.js"></script>
+		<script src="/local/lib/common-client.js"></script>
+		<script src="/local/lib/myhouse.js"></script>
+		<script src="/local/lib/environment.js"></script>
+
+		<!-- extension libraries -->
+		<script src="/local/lib/linkjs-ext/responder.js"></script>
+		<script src="/local/lib/linkjs-ext/router.js"></script>
+		<script src="/local/lib/linkjs-ext/broadcaster.js"></script>
+
+		<!-- 3rd-party dependencies -->
+		<script src="/hypersurface/threejs/build/three.js"></script>		
+
+		<!-- environment -->
+		<script src="/hypersurface/structure.js"></script>
+		<script src="/hypersurface/renderer.js"></script>
+		<script src="/hypersurface.js"></script>
+	</body>
+</html>

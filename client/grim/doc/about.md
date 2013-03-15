@@ -2,7 +2,7 @@
 Welcome to Grimwire, the web desktop environment and social computing network.
 Powered by <a target="_top" href="http://nodejs.org">nodejs 0.8</a>,
 <a target="_top" href="http://twitter.github.com/bootstrap">bootstrap&nbsp;2.2.2</a>
-and <a target="_top" href="/local/">local&nbsp;0.2.1</a>.
+and <a target="_top" href="/local/">local&nbsp;0.2.2</a>.
 
  - <a href="httpl://v1.pfraze.markdown.convert.app/?url=/grim/doc/intro.md" target="-below">An Introduction</a>
  - <a href="httpl://v1.pfraze.markdown.convert.app/?url=/grim/doc/background.md" target="-below">Technical Background</a>
