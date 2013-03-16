@@ -32,3 +32,12 @@ Environment.setRegionPostProcessor(function(elem) {
 
 var testStructure = new HyperSurface.Structure('test-structure');
 Environment.addClientRegion(testStructure);
+
+// :DEBUG:
+var primitives = document.querySelectorAll('#scene > *');
+for (var i=0; i < primitives.length; i++) {
+	if (primitives[i].id)
+		continue;
+	var scene = HyperSurface.buildSceneFromDoc(primitives[i]);
+	HyperSurface.Renderer.scene.add(scene);
+}

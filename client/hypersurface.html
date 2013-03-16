@@ -12,10 +12,18 @@
 		<link rel="icon" type="image/vnd.microsoft.icon" href="/assets/icons/16x16/global_telecom.png" />
 	</head>
 	
-	<body>
-		<div id="scene">
-			<cube id="test-structure" hsml-style='{"materialColor":"#194DFF"}'>
-				
+	<body style="background:#3A89C9;margin:0;overflow:hidden">
+		<div id="scene" style="display:none">
+			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20}'></plane>
+			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionX":1,"directionY":0}'></plane>
+			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionY":1}'></plane>
+			<cube id="test-structure">
+				<surface orient="front" hsml-style='{"materialColor":"#F26C4F"}'>
+					<div><h1>Hello World</h2></div>
+				</surface>
+				<surface orient="back" hsml-style='{"materialColor":"#F26C4F"}'>
+					<h1>Goodbye World</h2>
+				</surface>
 			</cube>
 		</div>
 
@@ -31,7 +39,20 @@
 		<script src="/local/lib/linkjs-ext/broadcaster.js"></script>
 
 		<!-- 3rd-party dependencies -->
-		<script src="/hypersurface/threejs/build/three.js"></script>		
+		<script src="/hypersurface/threejs/build/three.js"></script>
+		<script src="/hypersurface/threejs/examples/js/libs/stats.min.js"></script>
+
+		<!-- load the font files -->
+		<script src="/hypersurface/threejs/examples/fonts/gentilis_bold.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/gentilis_regular.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/optimer_bold.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/optimer_regular.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/helvetiker_bold.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/helvetiker_regular.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_regular.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_bold.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_regular.typeface.js"></script>
+		<script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_bold.typeface.js"></script>
 
 		<!-- environment -->
 		<script src="/hypersurface/structure.js"></script>

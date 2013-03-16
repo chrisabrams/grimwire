@@ -2,6 +2,8 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 (function(exports) {
 	var __id = 0;
 	exports.genStructureId = function() { return 'structure-'+__id++; };
+	var checkerCanvas;
+	var htmlGeometries = ['DIV','P','H1','H2','H3','H4','H5','H6'];
 
 	// Structure
 	// =========
@@ -102,10 +104,11 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			this.scene = newScene;
 	};
 
-	function buildSceneFromDoc(elem) {
+	function buildSceneFromDoc(elem, parentScene) {
 		// prepare styles
 		// :DEBUG: hypersurface styles are stored as JSON in the "hsml-style" attribute
-		var styles = setStyleFallbacks(elem, JSON.parse(elem.getAttribute('hsml-style') || '{}'));
+		var stylesText = (elem instanceof Text) ? '{}' : elem.getAttribute('hsml-style');
+		var styles = setStyleFallbacks(elem, JSON.parse(stylesText || '{}'));
 		normalizeStyleUnits(elem, styles);
 
 		// build geometry
@@ -118,79 +121,110 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			geometry = new THREE.CylinderGeometry(+styles.radiusTop.v, +styles.radiusBottom.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v, false);
 		else if (elem.tagName == 'SPHERE')
 			geometry = new THREE.SphereGeometry(+styles.radius.v, +styles.segmentsX.v, +styles.segmentsY.v, false);
+		else if (elem.tagName == 'SURFACE')
+			geometry = createSurface(elem, styles, parentScene);
+		else if (htmlGeometries.indexOf(elem.tagName) !== -1)
+			geometry = createSurfaceChildElem(elem, styles, parentScene);
+		else if (elem instanceof Text)
+			geometry = createSurfaceTextElem(elem, styles, parentScene);
 		else {
 			console.log('FAILED to create unrecognized scene primitive', elem.tagName, elem);
 			return null;
+		}
+		if (!geometry)
+			return null;
+
+		if (parentScene) {
+			var m = new THREE.Matrix4();
+			m.lookAt(new THREE.Vector3(styles.directionX.v, styles.directionY.v, styles.directionZ.v), new THREE.Vector3(0,0,0), parentScene.up);
+			var contactOffset = new THREE.Vector3(styles.contactOffsetX.v, styles.contactOffsetY.v, styles.contactOffsetZ.v);
+			contactOffset.applyMatrix4(m);
+			styles.positionX.v += contactOffset.x;
+			styles.positionY.v += contactOffset.y;
+			styles.positionZ.v += contactOffset.z;
 		}
 
 		// build material
 		var material = new THREE.MeshBasicMaterial({
 			color:              +styles.materialColor.v,
+			opacity:            +styles.materialOpacity.v,
+			transparent:       (+styles.materialOpacity.v < 1),
+			blending:           (styles.materialBlending.v[0].toUpperCase() + styles.materialBlending.v.slice(1) + 'Blending'),
+			side:               THREE[(styles.materialSide.v[0].toUpperCase() + styles.materialSide.v.slice(1) + 'Side')] || 'FrontSide',
+
 			wireframe:           styles.wireframe.v,
 			wireframeLinewidth: +styles.wireframeLinewidth.v,
 			wireframeLinecap:    styles.wireframeLinecap.v,
 			wireframeLinejoin:   styles.wireframeLinejoin.v
 		});
-		
 
 		// build scene
 		var scene = new THREE.Mesh(geometry, material);
-		// :TODO: embed state
-
 		scene.position = new THREE.Vector3(+styles.positionX.v, +styles.positionY.v, +styles.positionZ.v);
 		scene.scale = new THREE.Vector3(+styles.scaleX.v, +styles.scaleY.v, +styles.scaleZ.v);
 		var d = (new THREE.Vector3(+styles.directionX.v, +styles.directionY.v, +styles.directionZ.v)).add(scene.position);
 		scene.lookAt(d);
-		// based on Object3d.lookat
-		// var m1 = new THREE.Matrix4();
-		// var d = new THREE.Vector3(styles.directionX.v, styles.directionY.v, styles.directionZ.v);
-		// m1.lookAt(new THREE.Vector3(0,0,0), d, scene.up);
-		// if (scene.useQuaternion === true) { scene.quaternion.setFromRotationMatrix(m1); }
-		// else { scene.rotation.setEulerFromRotationMatrix(m1, scene.eulerOrder); }
 
+		// render children
+		for (var i=0, ii=elem.childNodes.length; i < ii; i++) {
+			var childScene = buildSceneFromDoc(elem.childNodes[i], scene);
+			scene.add(childScene);
+		}
+		
 		return scene;
 	}
 
 	function setStyleFallbacks(elem, styles) {
+		var isPlane = (elem.tagName == 'SURFACE' || elem.tagName == 'PLANE' || htmlGeometries.indexOf(elem.tagName) !== -1);
+
 		// dimensions
 		switch (elem.tagName) {
-			case 'CUBE':
-				styles.depth = fallback(styles.depth, '1m');
-			case 'PLANE':
-				styles.width = fallback(styles.width, '1m');
-				styles.height = fallback(styles.height, '1m');
-				break;
+		case 'CUBE':
+			styles.depth = fallback(styles.depth, '1m');
+		case 'PLANE':
+		case 'SURFACE':
+			styles.width = fallback(styles.width, '1m');
+			styles.height = fallback(styles.height, '1m');
+			break;
 
-			case 'CYLINDER':
-				styles.radiusTop = fallback(styles.radiusTop, styles.radius, '1m');
-				styles.radiusBottom = fallback(styles.radiusBottom, styles.radius, '1m');
-				styles.height = fallback(styles.height, '1m');
-				break;
+		case 'CYLINDER':
+			styles.radiusTop = fallback(styles.radiusTop, styles.radius, '1m');
+			styles.radiusBottom = fallback(styles.radiusBottom, styles.radius, '1m');
+			styles.height = fallback(styles.height, '1m');
+			break;
 
-			case 'SPHERE':
-				styles.radius = fallback(styles.radius, '1m');
-				break;
+		case 'SPHERE':
+			styles.radius = fallback(styles.radius, '1m');
+			break;
 		}
 
 		// segments
 		// :TODO: move to node attributes?
 		switch (elem.tagName) {
-			case 'CUBE':
-				styles.segmentsZ = fallback(styles.segmentsZ, 1);
-			case 'PLANE':
-				styles.segmentsX = fallback(styles.segmentsX, 1);
-				styles.segmentsY = fallback(styles.segmentsY, 1);
-				break;
+		case 'CUBE':
+			styles.segmentsZ = fallback(styles.segmentsZ, 1);
+		case 'PLANE':
+		case 'SURFACE':
+			styles.segmentsX = fallback(styles.segmentsX, 1);
+			styles.segmentsY = fallback(styles.segmentsY, 1);
+			break;
 
-			case 'CYLINDER':
-				styles.segmentsX = fallback(styles.segmentsX, 8);
-				styles.segmentsY = fallback(styles.segmentsY, 1);
-				break;
+		case 'CYLINDER':
+			styles.segmentsX = fallback(styles.segmentsX, 8);
+			styles.segmentsY = fallback(styles.segmentsY, 1);
+			break;
 
-			case 'SPHERE':
-				styles.segmentsX = fallback(styles.segmentsX, 8);
-				styles.segmentsY = fallback(styles.segmentsY, 6);
-				break;
+		case 'SPHERE':
+			styles.segmentsX = fallback(styles.segmentsX, 8);
+			styles.segmentsY = fallback(styles.segmentsY, 6);
+			break;
+		}
+
+		if (htmlGeometries.indexOf(elem.tagName) !== -1 || elem instanceof Text) {
+			styles.width = fallback(styles.width, '1m');
+			styles.height = fallback(styles.height, '1m');
+			styles.segmentsX = fallback(styles.segmentsX, 1);
+			styles.segmentsY = fallback(styles.segmentsY, 1);
 		}
 
 		// position/direction/scale
@@ -204,8 +238,16 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		styles.scaleY = fallback(styles.scaleY, styles.scale, 1);
 		styles.scaleZ = fallback(styles.scaleZ, styles.scale, 1);
 
+		// contact
+		styles.contactOffsetX = fallback(styles.contactOffsetX, 0);
+		styles.contactOffsetY = fallback(styles.contactOffsetY, 0);
+		styles.contactOffsetZ = fallback(styles.contactOffsetZ, 0.1);
+
 		// material
-		styles.materialColor = fallback(styles.materialColor, 0xFFBB00);
+		styles.materialColor = fallback(styles.materialColor, 0x9CC4E4);
+		styles.materialOpacity = fallback(styles.materialOpacity, 1);
+		styles.materialBlending = fallback(styles.materialBlending, 'no');
+		styles.materialSide = fallback(styles.materialSide, isPlane ? 'double' : 'front');
 
 		// wireframe
 		styles.wireframe          = fallback(styles.wireframe,           false);
@@ -256,5 +298,99 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		return { type:null, v:style };
 	}
 
+	function createSurface(elem, styles, parentScene) {
+		var mesh;
+		var orient = elem.getAttribute('orient');
+		switch (elem.parentNode.tagName) {
+		case 'CUBE':
+			mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v);
+			var x = parentScene.position.x + (parentScene.geometry.width / 2);
+			var y = parentScene.position.y + (parentScene.geometry.height / 2);
+			var z = parentScene.position.z + (parentScene.geometry.depth / 2);
+			switch (orient) {
+			case 'back':
+				styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v = -1;
+				styles.positionX.v  =  0; styles.positionY.v  =  0; styles.positionZ.v  = -z;
+				break;
+			case 'left':
+				styles.directionX.v = -1; styles.directionY.v =  0; styles.directionZ.v =  0;
+				styles.positionX.v  = -x; styles.positionY.v  =  0; styles.positionZ.v  =  0;
+				break;
+			case 'right':
+				styles.directionX.v =  1; styles.directionY.v =  0; styles.directionZ.v =  0;
+				styles.positionX.v  =  x; styles.positionY.v  =  0; styles.positionZ.v  =  0;
+				break;
+			case 'top':
+				styles.directionX.v =  0; styles.directionY.v =  1; styles.directionZ.v =  0;
+				styles.positionX.v  =  0; styles.positionY.v  =  y; styles.positionZ.v  =  0;
+				break;
+			case 'bottom':
+				styles.directionX.v =  0; styles.directionY.v = -1; styles.directionZ.v =  0;
+				styles.positionX.v  =  0; styles.positionY.v  = -y; styles.positionZ.v  =  0;
+				break;
+			case 'front':
+			default:
+				styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
+				styles.positionX.v  =  0; styles.positionY.v  =  0; styles.positionZ.v  =  z;
+				break;
+			}
+			break;
+
+		case 'CYLINDER':
+			orient = orient || 'side';
+			// :TODO:
+			// mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v)
+			break;
+
+		case 'SPHERE':
+			// :TODO:
+			// mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v)
+			break;
+		default:
+
+		case 'PLANE':
+			orient = orient || 'front';
+			mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v);
+			switch (orient) {
+			case 'back':
+				styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v = -1;
+				break;
+			case 'front':
+			default:
+				styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
+				break;
+			}
+			break;
+		}
+
+		return mesh;
+	}
+
+	function createSurfaceChildElem(elem, styles, parentScene) {
+		var mesh;
+		mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v);
+		styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
+		return mesh;
+	}
+
+	function createSurfaceTextElem(elem, styles, parentScene) {
+		var mesh;
+		if (!elem.textContent || /^[\s\t\r\n]*$/.test(elem.textContent)) return null;
+		mesh = new THREE.TextGeometry(elem.textContent, { size:0.05, height:0.01 });
+		styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
+		styles.materialColor = '#000000';
+		return mesh;
+	}
+
+	checkerCanvas = document.createElement( "canvas" );
+	context = checkerCanvas.getContext( "2d" );
+	checkerCanvas.width = checkerCanvas.height = 128;
+	context.fillStyle = "#444";
+	context.fillRect( 0, 0, 128, 128 );
+	context.fillStyle = "#fff";
+	context.fillRect( 0, 0, 64, 64);
+	context.fillRect( 64, 64, 64, 64 );
+
 	exports.Structure = Structure;
+	exports.buildSceneFromDoc = buildSceneFromDoc;
 })(HyperSurface);
