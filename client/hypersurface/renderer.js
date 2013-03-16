@@ -33,6 +33,7 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 		// initialize scene
 		exports.scene = scene = new THREE.Scene();
 		exports.camera = camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+		camera.position.z = 1.75;
 
 		// kick off rendering
 		tick();
@@ -49,7 +50,7 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 	function tickUI() {
 		var timer = Date.now() * 0.0005;
 		camera.position.x = Math.cos( timer ) * 2;
-		camera.position.y = Math.sin( timer ) * 2;
+		camera.position.y = Math.sin( timer );
 		camera.position.z = Math.sin( timer ) * 2;
 		camera.lookAt(scene.position);
 	}

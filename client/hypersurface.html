@@ -12,12 +12,13 @@
 		<link rel="icon" type="image/vnd.microsoft.icon" href="/assets/icons/16x16/global_telecom.png" />
 	</head>
 	
-	<body style="background:#3A89C9;margin:0;overflow:hidden">
+	<body style="margin:0;overflow:hidden">
 		<div id="scene" style="display:none">
-			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20}'></plane>
-			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionX":1,"directionY":0}'></plane>
-			<plane hsml-style='{"materialColor":"#E9F2F9","materialOpacity":0.25,"materialBlending":"multiply","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionY":1}'></plane>
-			<cube id="test-structure">
+			<plane hsml-style='{"materialColor":"#E9F2F9","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20}'></plane>
+			<plane hsml-style='{"materialColor":"#E9F2F9","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionX":1,"directionY":0}'></plane>
+			<plane hsml-style='{"materialColor":"#E9F2F9","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionY":1}'></plane>
+
+			<cube id="test-structure" hsml-style='{"wireframe":"true"}'>
 				<surface orient="front" hsml-style='{"materialColor":"#F26C4F"}'>
 					<div><h1>Hello World</h2></div>
 				</surface>
@@ -41,8 +42,9 @@
 		<!-- 3rd-party dependencies -->
 		<script src="/hypersurface/threejs/build/three.js"></script>
 		<script src="/hypersurface/threejs/examples/js/libs/stats.min.js"></script>
+		<script src="/hypersurface/rasterizeHTML/dist/rasterizeHTML.allinone.js"></script>
 
-		<!-- load the font files -->
+		<!-- font files -->
 		<script src="/hypersurface/threejs/examples/fonts/gentilis_bold.typeface.js"></script>
 		<script src="/hypersurface/threejs/examples/fonts/gentilis_regular.typeface.js"></script>
 		<script src="/hypersurface/threejs/examples/fonts/optimer_bold.typeface.js"></script>

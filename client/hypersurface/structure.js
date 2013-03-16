@@ -150,13 +150,28 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			opacity:            +styles.materialOpacity.v,
 			transparent:       (+styles.materialOpacity.v < 1),
 			blending:           (styles.materialBlending.v[0].toUpperCase() + styles.materialBlending.v.slice(1) + 'Blending'),
-			side:               THREE[(styles.materialSide.v[0].toUpperCase() + styles.materialSide.v.slice(1) + 'Side')] || 'FrontSide',
+			side:                THREE[(styles.materialSide.v[0].toUpperCase() + styles.materialSide.v.slice(1) + 'Side')] || 'FrontSide',
 
 			wireframe:           styles.wireframe.v,
 			wireframeLinewidth: +styles.wireframeLinewidth.v,
 			wireframeLinecap:    styles.wireframeLinecap.v,
 			wireframeLinejoin:   styles.wireframeLinejoin.v
 		});
+
+		if (elem.tagName == 'SURFACE') {
+			var canvas = document.createElement('canvas');
+			canvas.width = 256; canvas.height = 256;
+			material.map = new THREE.Texture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.LinearFilter, THREE.LinearFilter);
+			rasterizeHTML.drawHTML(elem.innerHTML, function(image) {
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(image,0,0);
+				// material.map.image = image;
+				material.map.needsUpdate = true;
+				material.transparent = true;
+				material.blending = 'MultiplyBlending';
+			});
+			document.body.appendChild(canvas);
+		}
 
 		// build scene
 		var scene = new THREE.Mesh(geometry, material);
@@ -166,9 +181,11 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		scene.lookAt(d);
 
 		// render children
-		for (var i=0, ii=elem.childNodes.length; i < ii; i++) {
-			var childScene = buildSceneFromDoc(elem.childNodes[i], scene);
-			scene.add(childScene);
+		if (elem.tagName != 'SURFACE') { // :TEMP: surfaces need not apply
+			for (var i=0, ii=elem.childNodes.length; i < ii; i++) {
+				var childScene = buildSceneFromDoc(elem.childNodes[i], scene);
+				scene.add(childScene);
+			}
 		}
 		
 		return scene;
