@@ -11,9 +11,12 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 	var scene, camera;
 	var statsFPS, statsMS;
 
+    // :DEBUG:
+    var cameraDistance = 2;
+
 	exports.init = function() {
 		// initialize WebGL canvas
-		renderer = new THREE.WebGLRenderer();
+		exports.renderer = renderer = new THREE.WebGLRenderer();
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(renderer.domElement);
 		window.addEventListener('resize', onWindowResize, false);
@@ -33,7 +36,7 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 		// initialize scene
 		exports.scene = scene = new THREE.Scene();
 		exports.camera = camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-		camera.position.z = 1.75;
+		camera.position.z = cameraDistance;
 
 		// kick off rendering
 		tick();
@@ -42,16 +45,19 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 	function tick() {
 		tickUI();
 		tickPhysics();
+
 		renderer.render(scene, camera);
+
 		requestAnimationFrame(tick);
-		statsFPS.update(); statsMS.update();
+		statsFPS.update();
+		statsMS.update();
 	}
 
 	function tickUI() {
 		var timer = Date.now() * 0.0005;
-		camera.position.x = Math.cos( timer ) * 2;
+		camera.position.x = Math.cos( timer ) * cameraDistance;
 		camera.position.y = Math.sin( timer );
-		camera.position.z = Math.sin( timer ) * 2;
+		camera.position.z = Math.sin( timer ) * cameraDistance;
 		camera.lookAt(scene.position);
 	}
 
@@ -64,7 +70,7 @@ HyperSurface.Renderer = (typeof HyperSurface.Renderer == 'undefined') ? {} : Hyp
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
 
-		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
 	
 

@@ -18,12 +18,18 @@
 			<plane hsml-style='{"materialColor":"#E9F2F9","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionX":1,"directionY":0}'></plane>
 			<plane hsml-style='{"materialColor":"#E9F2F9","wireframe":"true","width":"20m","height":"20m","segmentsX":20,"segmentsY":20,"directionY":1}'></plane>
 
-			<cube id="test-structure" hsml-style='{"wireframe":"true"}'>
+			<cube id="test-structure" hsml-style='{"materialOpacity":0.9}'> <!--"wireframe":"true"-->
 				<surface orient="front" hsml-style='{"materialColor":"#F26C4F"}'>
-					<div><h1>Hello World</h2></div>
+					<h1>Hello World</h1>
+					<p><a href="http://google.com">Link</a> and some more text.</p>
+					<p><input type="text" /></p>
+					<div style="background:#ccc">
+						<p>A very long line of text which is designed to overflow the boundaries of the surface and test what results.</p>
+						<textarea></textarea>
+					</div>
 				</surface>
 				<surface orient="back" hsml-style='{"materialColor":"#F26C4F"}'>
-					<h1>Goodbye World</h2>
+					<h1>Goodbye World</h1>
 				</surface>
 			</cube>
 		</div>
@@ -42,23 +48,26 @@
 		<!-- 3rd-party dependencies -->
 		<script src="/hypersurface/threejs/build/three.js"></script>
 		<script src="/hypersurface/threejs/examples/js/libs/stats.min.js"></script>
-		<script src="/hypersurface/rasterizeHTML/dist/rasterizeHTML.allinone.js"></script>
+		<!-- script src="/hypersurface/threejs/examples/js/loaders/SceneLoader2.js"></script -->
+		<!--script src="/hypersurface/threejs/examples/js/exporters/GeometryExporter.js"></script-->
+		<script src="/hypersurface/threejs/examples/js/exporters/SceneExporter.js"></script>
 
 		<!-- font files -->
-		<script src="/hypersurface/threejs/examples/fonts/gentilis_bold.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/gentilis_regular.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/optimer_bold.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/optimer_regular.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/helvetiker_bold.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/helvetiker_regular.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_regular.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_bold.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_regular.typeface.js"></script>
-		<script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_bold.typeface.js"></script>
+		<!--script src="/hypersurface/threejs/examples/fonts/gentilis_bold.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/gentilis_regular.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/optimer_bold.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/optimer_regular.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/helvetiker_bold.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/helvetiker_regular.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_regular.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/droid/droid_sans_bold.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_regular.typeface.js"></script-->
+		<!--script src="/hypersurface/threejs/examples/fonts/droid/droid_serif_bold.typeface.js"></script-->
 
 		<!-- environment -->
 		<script src="/hypersurface/structure.js"></script>
 		<script src="/hypersurface/renderer.js"></script>
+        <script src="/hypersurface/parser.js"></script>
 		<script src="/hypersurface.js"></script>
 	</body>
 </html>

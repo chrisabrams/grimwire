@@ -107,8 +107,7 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 	function buildSceneFromDoc(elem, parentScene) {
 		// prepare styles
 		// :DEBUG: hypersurface styles are stored as JSON in the "hsml-style" attribute
-		var stylesText = (elem instanceof Text) ? '{}' : elem.getAttribute('hsml-style');
-		var styles = setStyleFallbacks(elem, JSON.parse(stylesText || '{}'));
+		var styles = setStyleFallbacks(elem, JSON.parse(elem.getAttribute('hsml-style') || '{}'));
 		normalizeStyleUnits(elem, styles);
 
 		// build geometry
@@ -123,10 +122,6 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			geometry = new THREE.SphereGeometry(+styles.radius.v, +styles.segmentsX.v, +styles.segmentsY.v, false);
 		else if (elem.tagName == 'SURFACE')
 			geometry = createSurface(elem, styles, parentScene);
-		else if (htmlGeometries.indexOf(elem.tagName) !== -1)
-			geometry = createSurfaceChildElem(elem, styles, parentScene);
-		else if (elem instanceof Text)
-			geometry = createSurfaceTextElem(elem, styles, parentScene);
 		else {
 			console.log('FAILED to create unrecognized scene primitive', elem.tagName, elem);
 			return null;
@@ -160,17 +155,17 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 
 		if (elem.tagName == 'SURFACE') {
 			var canvas = document.createElement('canvas');
-			canvas.width = 256; canvas.height = 256;
+			canvas.width = 512; canvas.height = 512;
+			document.body.appendChild(canvas);
+			
 			material.map = new THREE.Texture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.LinearFilter, THREE.LinearFilter);
-			rasterizeHTML.drawHTML(elem.innerHTML, function(image) {
+			rasterizeHTML.drawHTML(elem.innerHTML, { width:512, height:512 }, function(image) {
 				var ctx = canvas.getContext('2d');
-				ctx.drawImage(image,0,0);
-				// material.map.image = image;
+				ctx.drawImage(image, 0, 0);
 				material.map.needsUpdate = true;
 				material.transparent = true;
 				material.blending = 'MultiplyBlending';
 			});
-			document.body.appendChild(canvas);
 		}
 
 		// build scene
@@ -181,18 +176,16 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		scene.lookAt(d);
 
 		// render children
-		if (elem.tagName != 'SURFACE') { // :TEMP: surfaces need not apply
-			for (var i=0, ii=elem.childNodes.length; i < ii; i++) {
-				var childScene = buildSceneFromDoc(elem.childNodes[i], scene);
-				scene.add(childScene);
-			}
+		for (var i=0, ii=elem.children.length; i < ii; i++) {
+			var childScene = buildSceneFromDoc(elem.children[i], scene);
+			scene.add(childScene);
 		}
 		
 		return scene;
 	}
 
 	function setStyleFallbacks(elem, styles) {
-		var isPlane = (elem.tagName == 'SURFACE' || elem.tagName == 'PLANE' || htmlGeometries.indexOf(elem.tagName) !== -1);
+		var isPlane = (elem.tagName == 'SURFACE' || elem.tagName == 'PLANE');
 
 		// dimensions
 		switch (elem.tagName) {
@@ -235,13 +228,6 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			styles.segmentsX = fallback(styles.segmentsX, 8);
 			styles.segmentsY = fallback(styles.segmentsY, 6);
 			break;
-		}
-
-		if (htmlGeometries.indexOf(elem.tagName) !== -1 || elem instanceof Text) {
-			styles.width = fallback(styles.width, '1m');
-			styles.height = fallback(styles.height, '1m');
-			styles.segmentsX = fallback(styles.segmentsX, 1);
-			styles.segmentsY = fallback(styles.segmentsY, 1);
 		}
 
 		// position/direction/scale
@@ -380,22 +366,6 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			break;
 		}
 
-		return mesh;
-	}
-
-	function createSurfaceChildElem(elem, styles, parentScene) {
-		var mesh;
-		mesh = new THREE.PlaneGeometry(+styles.width.v, +styles.height.v, +styles.segmentsX.v, +styles.segmentsY.v);
-		styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
-		return mesh;
-	}
-
-	function createSurfaceTextElem(elem, styles, parentScene) {
-		var mesh;
-		if (!elem.textContent || /^[\s\t\r\n]*$/.test(elem.textContent)) return null;
-		mesh = new THREE.TextGeometry(elem.textContent, { size:0.05, height:0.01 });
-		styles.directionX.v =  0; styles.directionY.v =  0; styles.directionZ.v =  1;
-		styles.materialColor = '#000000';
 		return mesh;
 	}
 
