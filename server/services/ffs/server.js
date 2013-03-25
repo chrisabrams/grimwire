@@ -108,6 +108,7 @@ module.exports = function createServer(main_server, config) {
 		if (err)
 			return console.log('Warning: Failed to read ffs_threads.json', err);
 		threads = JSON.parse(data);
+        numThreads = threads.length;
 	});
  
 	// Routes
