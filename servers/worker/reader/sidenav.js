@@ -1,11 +1,13 @@
 // SidenavServer
 // ============
 // serves HTML for navigation
+importScripts('lib/local/linkjs-ext/broadcaster.js');
+importScripts('lib/local/linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
 
 function SidenavServer(configService) {
-	Environment.Server.call(this);
 	this.sidenavBroadcast = Link.broadcaster();
-	this.serversConfigItem = configService.collection('values').item('servers');
+	this.serversConfigItem = Link.navigator('httpl://config.env').collection('values').item('servers');
 
 	var self = this;
 	this.serversConfigItem.resolve()
@@ -16,7 +18,7 @@ function SidenavServer(configService) {
 			});
 		});
 }
-SidenavServer.prototype = Object.create(Environment.Server.prototype);
+SidenavServer.prototype = Object.create(local.Server.prototype);
 
 // request router
 SidenavServer.prototype.handleHttpRequest = function(request, response) {
@@ -78,3 +80,5 @@ SidenavServer.prototype.getEventStream = function(request, response) {
 	Link.responder(response).ok('event-stream');
 	this.sidenavBroadcast.addStream(response);
 };
+
+local.setServer(SidenavServer);

@@ -49,7 +49,8 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 				});
 			}
 		}
-		console.log(err.message, request, err.response);
+		console.error(err.message + ':');
+		console.log(request, err.response);
 		return err;
 	});
 	return response;

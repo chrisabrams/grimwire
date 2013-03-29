@@ -1,3 +1,9 @@
+var defaultAppConfig = {
+	"feed.ui"    : "servers/worker/reader/feed.js",
+	"sidenav.ui" : "servers/worker/reader/sidenav.js",
+	"rss.proxy"  : "servers/worker/reader/rssproxy.js"
+};
+
 // request wrapper
 Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
@@ -28,7 +34,6 @@ var configService = Link.navigator('httpl://config.env');
 Environment.addServer('localstorage.env', new LocalStorageServer());
 Environment.addServer('config.env', new ConfigServer());
 Environment.addServer('servers.env', new ReflectorServer(configService));
-Environment.addServer('sidenav.env', new SidenavServer(configService));
 
 // setup base config
 configService.collection('validators').post({
@@ -41,7 +46,7 @@ configService.collection('validators').post({
 configService.collection('schemas').item('servers').put({
 	feed    : { type:'url', label:'Feed', fallback:'httpl://feed.ui' },
 	storage : { type:'url', label:'Storage', fallback:'httpl://localstorage.env' },
-	apps    : { type:'string', label:'Apps', fallback:'{"feed.ui":"/servers/worker/reader/feed.js","rss.proxy":"/servers/worker/reader/rssproxy.js"}', control:'textarea', readonly:true }
+	apps    : { type:'string', label:'Apps', fallback:JSON.stringify(defaultAppConfig), control:'textarea', readonly:true }
 }, 'application/json');
 
 // load client regions
@@ -59,12 +64,12 @@ configService.collection('values').item('servers').getJson()
 			apps = JSON.parse(res.body.apps);
 		} catch(e) {
 			console.log('Failed to read apps config:',e);
-			apps = {"feed.usr":"/servers/worker/reader/feed.js", "rss.proxy":"/servers/worker/reader/rssproxy.js"};
+			apps = defaultAppConfig;
 		}
 		for (var domain in apps)
 			Environment.addServer(domain, new Environment.WorkerServer({ scriptUrl:appUrl(apps[domain]) }));
 		// load feed
-		sidenavRegion.dispatchRequest('httpl://sidenav.env');
+		sidenavRegion.dispatchRequest('httpl://sidenav.ui');
 		contentRegion.dispatchRequest(res.body.feed);
 	});
 
