@@ -7,7 +7,7 @@ form, .table { margin-bottom:0; }
 
 /* external links */
 a[target="_top"] {
-    background: url(/assets/icons/external_link.png) center right no-repeat;
+    background: url(assets/icons/external_link.png) center right no-repeat;
     padding-right: 13px;
 }
 

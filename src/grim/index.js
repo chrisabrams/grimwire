@@ -103,7 +103,7 @@ apps.post({ url: 'servers/worker/util/log.js' })
 apps.post({ url: 'servers/worker/convert/markdown.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
-			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=/doc/about.md');
+			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=doc/about.md');
 	});
 apps.post({ url: 'servers/worker/social/users.js' })
 	.then(function(res) {

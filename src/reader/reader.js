@@ -77,7 +77,7 @@ function updateSidenavHighlight(url) {
 
 var windowLocationDirname = window.location.pathname.split('/');
 windowLocationDirname[windowLocationDirname.length - 1] = '';
-windowLocationDirname = windowLocationDirname.join('/')
+windowLocationDirname = windowLocationDirname.join('/');
 function appUrl(path) {
 	if (Link.parseUri(path).protocol)
 		return path;
