@@ -4,3 +4,4 @@ a[target="_top"], a[target="_blank"] {
   background: url(external_link.png) center right no-repeat;
   padding-right: 13px;
 }
+#content:empty { background: center 200px no-repeat url(src/local/assets/ajax_spinner.gif); min-height: 300px; }
