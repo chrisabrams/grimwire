@@ -1,0 +1,63 @@
+a { color:rgb(20, 110, 201) }
+a[target="_top"] {
+	background: url(/external_link.png) center right no-repeat;
+	padding-right: 13px;
+}
+form {
+	margin: 0;
+}
+
+#dashboard {
+	position: fixed;
+	top: 0; left: 0;
+	width: 15%;
+}
+#input {
+	position: fixed;
+	bottom: 0; left: 15%;
+	width: 66%;
+}
+#input textarea {
+	width: 100%;
+	border-color: #666;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+#output {
+	width: 70%;
+	margin: 0 auto;
+	padding-bottom: 200px;
+}
+#users-list {
+	position: fixed;
+	top: 0; right: 0;
+	width: 15%;
+}
+
+#output > div {
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	padding: 5px 10px;
+	margin-bottom: 2px;
+	/*box-shadow: 0 1px 4px rgba(0,0,0,0.1);*/
+}
+.region-head {
+	font-size: 10px;
+	color: gray;
+}
+#output .region-userbroadcast .region-head,
+#output .region-broadcast .region-head {
+	line-height: 10px;
+}
+#output .region-userbroadcast .region-body,
+#output .region-broadcast .region-body {
+	font-family: 'Source Code Pro', sans-serif;
+}
+#output > .region-broadcast {
+	border-color: gray;
+	box-shadow: inset 0 0 5px rgba(113, 119, 122, 0.3);
+}
+#output > .region-userbroadcast {
+	border-color: rgb(37, 149, 202);
+	box-shadow: inset 0 0 5px rgba(34, 169, 233, 0.1);
+} 

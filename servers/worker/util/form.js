@@ -1,5 +1,5 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 var prevRequestsCollection = Link.navigator('httpl://localstorage.env').collection('pfraze_form_util');
 
@@ -62,7 +62,7 @@ function bodyPipe(body) {
     return body;
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
             // :TODO: send a limit & offset param!!
@@ -82,7 +82,7 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	author   : 'pfraze',
 	name     : 'Form',
 	category : 'Util',

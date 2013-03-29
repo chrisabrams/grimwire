@@ -1,10 +1,10 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 // config
-app.config.threads_page_size = app.config.threads_page_size || 5;
-app.config.thread_posts_page_size = app.config.thread_posts_page_size || 5;
-app.config.icons_baseurl = app.config.icons_baseurl || ('http://'+app.config.environmentHost+'/assets/icons/16x16/');
+local.config.threads_page_size = local.config.threads_page_size || 5;
+local.config.thread_posts_page_size = local.config.thread_posts_page_size || 5;
+local.config.icons_baseurl = local.config.icons_baseurl || ('http://'+local.config.environmentHost+'/assets/icons/16x16/');
 // our domain
 var domain = 'httpl://v1.pfraze.ffs.forum.app';
 // ffs provider
@@ -40,8 +40,8 @@ function threadsBody(request) {
 
 		var skip = parseInt(request.query.skip, 10) || 0;
 		var isFirst = (!skip);
-		var isLast = ((skip+app.config.threads_page_size) >= threads.total_rows);
-		html.push(paginator(isFirst, isLast, domain, (skip-app.config.threads_page_size), (skip+app.config.threads_page_size)));
+		var isLast = ((skip+local.config.threads_page_size) >= threads.total_rows);
+		html.push(paginator(isFirst, isLast, domain, (skip-local.config.threads_page_size), (skip+local.config.threads_page_size)));
 
 		return html.join('');
 	};
@@ -86,7 +86,7 @@ function threadBody(request, threadId) {
 		var html = [];
 
 		var skip = parseInt(request.query.skip, 10) || 0;
-		var end = skip + app.config.thread_posts_page_size;
+		var end = skip + local.config.thread_posts_page_size;
 
 		html.push('<div class="media">');
 		html.push('<div class="media-body">');
@@ -103,7 +103,7 @@ function threadBody(request, threadId) {
 			var post = thread.replies[i];
 			html.push('<div class="media">');
 			html.push('<a class="pull-left" href="'+domain+'/'+post.id+'">');
-			html.push('<img class="media-object" src="'+app.config.icons_baseurl+opt(post.icon,'document_quote')+'.png">');
+			html.push('<img class="media-object" src="'+local.config.icons_baseurl+opt(post.icon,'document_quote')+'.png">');
 			html.push('</a>');
 			html.push('<div class="media-body">');
 			html.push('<p class="media-heading"><strong>'+optTitle(post.title)+'</strong></p>');
@@ -120,17 +120,17 @@ function threadBody(request, threadId) {
 
 		var isFirst = (!skip);
 		var isLast = (end >= thread.replies.length);
-		html.push(paginator(isFirst, isLast, domain+'/'+threadId, (skip-app.config.thread_posts_page_size), (skip+app.config.thread_posts_page_size)));
+		html.push(paginator(isFirst, isLast, domain+'/'+threadId, (skip-local.config.thread_posts_page_size), (skip+local.config.thread_posts_page_size)));
 
 		return html.join('');
 	};
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			var skip = parseInt(request.query.skip, 10) || 0;
-			var limit = app.config.threads_page_size;
+			var limit = local.config.threads_page_size;
 			var threadsRequest = ffsService.collection('threads', { limit:limit, skip:skip, descending:true }).getJson();
 			Link.responder(response).pipe(threadsRequest, threadsHeader, threadsBody(request));
 		})
@@ -154,13 +154,13 @@ app.onHttpRequest(function(request, response) {
 		.mpa('get', RegExp('^/([^/]*)/?$','i'), /html/, function(match) {
 			var key = match.path[1];
 			var skip = parseInt(request.query.skip, 10) || 0;
-			var limit = app.config.thread_posts_page_size;
+			var limit = local.config.thread_posts_page_size;
 			var threadRequest = ffsService.collection('threads').item(key).getJson();
 			Link.responder(response).pipe(threadRequest, threadHeader, threadBody(request, key));
 		})
 		.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Forum',
 	name     : 'FFS',
 	author   : 'pfraze',

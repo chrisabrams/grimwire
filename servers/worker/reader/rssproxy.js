@@ -1,4 +1,4 @@
-importScripts('linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/responder.js');
 
 // we use yahoo pipes to deal with single-origin policy
 // http://www.badlydrawntoy.com/2008/07/08/yahoo-pipes-and-jquery-same-origin-policy/
@@ -30,7 +30,7 @@ function normalizeSchema(res) {
   res.body = { items:res.body.value.items };
   return res;
 }
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.responder(response).pipe(getFeed(request.query.url, 'json').then(normalizeSchema));
 });
-app.postMessage('loaded');
+local.postMessage('loaded');

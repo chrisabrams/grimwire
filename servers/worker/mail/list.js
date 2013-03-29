@@ -1,5 +1,5 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 // list
 var list = 'grimwire-updates';
@@ -9,7 +9,7 @@ var listMembersCollection = Link.navigator('/').service('email').collection('lis
 var stdHeaders = Link.headerer();
 stdHeaders.addLink('http://grimwire.com/grim/app/mail/list.js', 'http://grimwire.com/rels/src', { title:'application' });
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			Link.responder(response).ok('html', stdHeaders).end([
@@ -35,7 +35,7 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Mail',
 	name     : 'List',
 	author   : 'pfraze',

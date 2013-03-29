@@ -1,10 +1,10 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 // our domain
 var domain = 'httpl://v1.pfraze.users.social.app/';
 // users provider
-var usersCollection = Link.navigator('/services/users');
+var usersCollection = Link.navigator('/users');
 
 function usersHeader(headers) {
 	var stdHeaders = Link.headerer();
@@ -69,13 +69,13 @@ function userBody(request, matches) {
 					html.push([
 						'<div class="media-body">',
 							'<form>',
-								'<input type="hidden" name="url" value="',app.url,'"/> ',
+								'<input type="hidden" name="url" value="',local.url,'"/> ',
 								'<h4 class="media-heading">',
-									((app.icon) ? '<img src="'+app.icon+'"> ' : ''),
-									app.title,
-									' <small><a href="',app.url,'" target="-below">source</a></small>',
+									((local.icon) ? '<img src="'+local.icon+'"> ' : ''),
+									local.title,
+									' <small><a href="',local.url,'" target="-below">source</a></small>',
 								'</h4>',
-								'<p>',app.description,'</p>',
+								'<p>',local.description,'</p>',
 							'</form>',
 						'</div>'
 					].join(''));
@@ -111,7 +111,7 @@ function userBody(request, matches) {
 	};
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			Link.responder(response).pipe(usersCollection.getJson(), usersHeader, usersBody(request));
@@ -122,7 +122,7 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Social',
 	name     : 'Users',
 	author   : 'pfraze',

@@ -1,7 +1,7 @@
 
 // Env Behaviors
 // =============
-Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
+Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 
 // request wrapper
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
@@ -85,14 +85,13 @@ var log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TODO: should be 
 // instantiate environment servers
 Environment.addServer('app', new Grim.AppServer());
 Environment.addServer('scripts.env', new Grim.ScriptServer());
-Environment.addServer('localstorage.env', new Grim.LocalStorageServer());
 
 // instantiate apps
-apps.post({ url: '/grim/app/debug/index.js' });
-apps.post({ url: '/grim/app/edit/text.js' });
-apps.post({ url: '/grim/app/util/form.js' });
-apps.post({ url: '/grim/app/util/keyp.js' });
-apps.post({ url: '/grim/app/util/log.js' })
+apps.post({ url: 'servers/worker/debug/index.js' });
+apps.post({ url: 'servers/worker/edit/text.js' });
+apps.post({ url: 'servers/worker/util/form.js' });
+apps.post({ url: 'servers/worker/util/keyp.js' });
+apps.post({ url: 'servers/worker/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
 			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffer on log.util.app
@@ -101,12 +100,12 @@ apps.post({ url: '/grim/app/util/log.js' })
 				.dispatchRequest('httpl://v1.pfraze.log.util.app');
 		}
 	});
-apps.post({ url: '/grim/app/convert/markdown.js' })
+apps.post({ url: 'servers/worker/convert/markdown.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
-			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=/grim/doc/about.md');
+			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=/doc/about.md');
 	});
-apps.post({ url: '/grim/app/social/users.js' })
+apps.post({ url: 'servers/worker/social/users.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('firstapp'))
 			.dispatchRequest('httpl://v1.pfraze.users.social.app/pfraze/apps');

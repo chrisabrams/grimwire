@@ -1,5 +1,5 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 function renderNavTab(page, tab, label) {
 	return [
@@ -48,7 +48,7 @@ function renderPage(page) {
 	}
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request).mpa('get', '/', /html/, function() {
 		Link.responder(response).ok('html').end([
 			'<p><span class="label">Grimwire Debug Apps</span></p>',
@@ -68,7 +68,7 @@ app.onHttpRequest(function(request, response) {
 		].join(''));
 	}).error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Debug',
 	name     : 'Index',
 	author   : 'pfraze',

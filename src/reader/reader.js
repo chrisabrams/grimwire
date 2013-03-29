@@ -1,5 +1,5 @@
 // request wrapper
-Environment.config.workerBootstrapUrl = 'local/lib/worker_bootstrap.js';
+Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	// update sidenav highlight
 	if (origin instanceof Environment.ClientRegion && origin.element.id == 'sidenav')
@@ -41,7 +41,7 @@ configService.collection('validators').post({
 configService.collection('schemas').item('servers').put({
 	feed    : { type:'url', label:'Feed', fallback:'httpl://feed.ui' },
 	storage : { type:'url', label:'Storage', fallback:'httpl://localstorage.env' },
-	apps    : { type:'string', label:'Apps', fallback:'{"feed.ui":"apps/usr/feed.js","rss.proxy":"apps/usr/rssproxy.js"}', control:'textarea', readonly:true }
+	apps    : { type:'string', label:'Apps', fallback:'{"feed.ui":"/servers/worker/reader/feed.js","rss.proxy":"/servers/worker/reader/rssproxy.js"}', control:'textarea', readonly:true }
 }, 'application/json');
 
 // load client regions
@@ -59,7 +59,7 @@ configService.collection('values').item('servers').getJson()
 			apps = JSON.parse(res.body.apps);
 		} catch(e) {
 			console.log('Failed to read apps config:',e);
-			apps = {"feed.usr":"apps/usr/feed.js", "rss.proxy":"apps/usr/rssproxy.js"};
+			apps = {"feed.usr":"/servers/worker/reader/feed.js", "rss.proxy":"/servers/worker/reader/rssproxy.js"};
 		}
 		for (var domain in apps)
 			Environment.addServer(domain, new Environment.WorkerServer({ scriptUrl:appUrl(apps[domain]) }));
@@ -75,8 +75,11 @@ function updateSidenavHighlight(url) {
 	try { document.querySelector('#sidenav a[href="'+url+'"]').parentNode.classList.add('active'); } catch (e) {}
 }
 
+var windowLocationDirname = window.location.pathname.split('/');
+windowLocationDirname[windowLocationDirname.length - 1] = '';
+windowLocationDirname = windowLocationDirname.join('/')
 function appUrl(path) {
 	if (Link.parseUri(path).protocol)
 		return path;
-	return window.location.origin + window.location.pathname + path;
+	return window.location.origin + windowLocationDirname + path;
 }

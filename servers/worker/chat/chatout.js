@@ -5,7 +5,7 @@
 importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			Link.responder(response).ok('html').end('');
@@ -15,4 +15,4 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded');
+local.postMessage('loaded');

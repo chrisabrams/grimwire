@@ -6,12 +6,12 @@ importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
 
 var urls = {
-	app: 'httpl://'+app.config.domain,
-	formatter: 'httpl://'+app.config.domain+'/formatter',
-	profile: 'httpl://'+app.config.domain+'/profile'
+	app: 'httpl://'+local.config.domain,
+	formatter: 'httpl://'+local.config.domain+'/formatter',
+	profile: 'httpl://'+local.config.domain+'/profile'
 };
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.p('/', function() {
 			var headers = Link.headerer();
@@ -66,7 +66,7 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded');
+local.postMessage('loaded');
 
 // thanks to Sam Hasler and Peter Mortensen
 // http://stackoverflow.com/a/37687

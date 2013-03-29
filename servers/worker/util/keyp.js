@@ -3,9 +3,9 @@
  * takes an object from another source and extracts a given path
  ***/
 
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
-app.onHttpRequest(function(request, response) {
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
+local.onHttpRequest(function(request, response) {
 	Link.router(request).mp('get', '/', function() {
 		var path = (request.query.path || '').split(request.query.separator || '.');
 		var proxyRequest = Link.dispatch({
@@ -26,7 +26,7 @@ app.onHttpRequest(function(request, response) {
 		);
 	}).error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Util',
 	name     : 'Keyp',
 	author   : 'pfraze',

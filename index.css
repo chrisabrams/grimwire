@@ -1,0 +1,208 @@
+body {
+	padding-bottom: 50px;
+	background: #eee;
+}
+a { color:rgb(20, 110, 201) }
+form, .table { margin-bottom:0; }
+
+/* external links */
+a[target="_top"] {
+    background: url(/assets/icons/external_link.png) center right no-repeat;
+    padding-right: 13px;
+}
+
+/* scrollbars */
+#center ::-webkit-scrollbar {
+    width: 5px;
+}
+#center ::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border: 1px solid #ccc;
+}
+
+/* bootstrap alterations */
+.page-header { padding-bottom:0; margin:0; }
+.nav-pills > .active > a {
+	/* borrowed from .dropdown-menu li > a:hover */
+	background-color: #0081c2;
+	background-image: -moz-linear-gradient(top, #0088cc, #0077b3);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0077b3));
+	background-image: -webkit-linear-gradient(top, #0088cc, #0077b3);
+	background-image: -o-linear-gradient(top, #0088cc, #0077b3);
+	background-image: linear-gradient(to bottom, #0088cc, #0077b3);
+	background-repeat: repeat-x;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0077b3', GradientType=0);
+}
+.label a {
+	color: white;
+	border-bottom: 1px dotted white;
+}
+
+/* tools */
+.nofloat { float: none !important; }
+.nomargin { margin: 0 !important; }
+
+/* hover states */
+.requesthover {
+	border: 1px solid #ccc !important;
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.35) !important;
+}
+.intenthover {
+	border: 1px solid rgb(118, 189, 255) !important;
+	box-shadow: 0 0 5px rgba(82, 168, 236, 0.8) !important;
+}
+
+/* form intent behaviors */
+form.intenthover {
+	border: none !important;
+	
+	box-shadow: 0 0 8px rgb(168, 168, 168);
+	background: rgb(243, 243, 243);
+}
+form {
+	-webkit-transition: box-shadow .25s ease-in-out;
+}
+
+/* intents */
+.intents i, .intent {
+    opacity: 0.65;
+}
+.intents i.charged, .intent.charged {
+	text-shadow: 0 0 15px rgb(204, 122, 0), 0 0 6px rgb(226, 136, 0), 0 0 2px rgb(170, 88, 0), 0 0 1px #666;
+}
+.intents i:hover, .intent:hover {
+	opacity: 1.0;
+	cursor: pointer;
+}
+
+/* active servers listing */
+#topside-bar {
+	position: fixed;
+	z-index: 100;
+	width: 100%;
+	height: 30px;
+
+	background: #fff;
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+	border-bottom: 1px solid #ccc;
+}
+#topside-bar form { margin:0 }
+#topside-bar ul { margin:0; left:auto; right:0; }
+#topside-bar li { line-height:12px; }
+#topside-bar li > a {
+	padding-top: 5px;
+	padding-bottom: 7px;
+	margin-top: 1px;
+	margin-bottom: 2px;
+}
+#topside-bar form > intent, #topside-bar form > a { float:right; padding:5px; font-size:28px; }
+#topside-mask {
+	position: fixed;
+	width: 75px;
+	height: 29px;
+	background: white;
+	z-index: 115;
+}
+
+
+/* intent listing */
+#leftside-bar {
+	position: fixed;
+	top: 0;
+	z-index: 120;
+
+	width: 38px;
+    height: 100%;
+
+    padding: 35px 7px 0;
+
+    background: rgb(70, 99, 129);
+    box-shadow: inset -4px 1px 8px rgba(0,0,0,0.5);
+}
+#leftside-bar ul.intents {
+	list-style: none;
+	margin-left: 0;
+	color: rgb(174, 211, 243);
+}
+#leftside-bar ul.intents li {
+	font-size: 28px;
+	line-height: 43px;
+}
+#leftside-bar ul.intents .divider {
+	font-size: 12px;
+	line-height: 20px;
+	padding-top: 1px;
+	visibility: hidden;
+}
+#leftside-mask {
+	position: fixed;
+	width: 65px;
+	height: 100%;
+	z-index: 110;
+
+	background: white;
+	box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+	border-right: 1px solid #ccc;
+}
+
+/* main application client space */
+#center {
+	position: absolute;
+	left:65px; top:30px;
+	max-width: none;
+	height: 95%;
+
+	background: #eee;
+
+	-webkit-transition: box-shadow .25s ease-in-out;
+}
+#center > tbody > tr > td {
+	min-width: 600px;
+	max-width: 800px;
+	vertical-align: top;	
+}
+
+#center .column {
+	height: 100%;
+	overflow-y: scroll;
+
+	border: 1px solid #eee; /* so we can add borders in other states and not change layout */
+
+	-webkit-transition: box-shadow .25s ease-in-out;
+}
+
+/* application clients */
+.client-region {
+	vertical-align :top;
+	padding: 0.75em;
+	margin: 0.25em;
+
+	/*border: 1px solid #fff;  so we can add borders in other states and not change layout */
+
+	-webkit-transition: box-shadow .25s ease-in-out;
+
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+	border: 1px solid #ccc;
+	background: white;
+}
+.client-region-animwrapper {
+	overflow: hidden;
+	margin: 0.5em 0.25em 0.5em 0;
+
+/*    -webkit-transition: background-color .5s ease-in-out,
+	    width .25s ease-in-out;*/
+}
+td:first-child .client-region-animwrapper {
+	margin: 0.5em 0.25em;
+}
+.client-region-animwrapper.init {
+	background-color: #fafafa;
+	width: 0; /* this is sadly broken, atm */
+}
+.client-region-animwrapper.die {
+	width: 0;
+    -webkit-transition: width .15s ease-in-out;
+}
+.client-region-animwrapper.request {
+	background-color: rgb(245, 245, 245);
+}

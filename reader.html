@@ -7,8 +7,8 @@
 		<meta http-equiv="X-WebKit-CSP" content="frame-src 'none'; object-src 'none'; script-src 'self'"></meta>
 
 		<!-- styling -->
-		<link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
-		<link rel="stylesheet" href="index.css" />
+		<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.css" />
+		<link rel="stylesheet" href="reader.css" />
 	</head>
 	
 	<body>
@@ -25,22 +25,14 @@
 			</div>
 		</div>
 
-		<!-- base libraries -->
-		<script src="local/lib/link.js"></script>
-		<script src="local/lib/common-client.js"></script>
-		<script src="local/lib/myhouse.js"></script>
-		<script src="local/lib/environment.js"></script>
-
-		<!-- extension libraries -->
-		<script src="local/lib/linkjs-ext/responder.js"></script>
-		<script src="local/lib/linkjs-ext/router.js"></script>
-		<script src="local/lib/linkjs-ext/broadcaster.js"></script>
+		<!-- libs -->
+		<script src="lib/local/local.min.js"></script>
 
 		<!-- environment -->
-		<script src="local/apps/env/localstorage.js"></script>
-		<script src="apps/env/reflector.js"></script>
-		<script src="apps/env/config.js"></script>
-		<script src="apps/env/sidenav.js"></script>
-		<script src="index.js"></script>
+		<script src="src/local/servers/env/localstorage.js"></script>
+		<script src="servers/env/reflector.js"></script>
+		<script src="servers/env/config.js"></script>
+		<script src="servers/env/sidenav.js"></script>
+		<script src="src/reader/reader.js"></script>
 	</body>
 </html>

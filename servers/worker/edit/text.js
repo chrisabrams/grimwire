@@ -1,6 +1,6 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
-app.onHttpRequest(function(request, response) {
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
+local.onHttpRequest(function(request, response) {
 	var headers = Link.headerer();
 	headers.addLink('http://grimwire.com/grim/app/edit/text.js', 'http://grimwire.com/rels/src', { title:'application' });
 	Link.router(request).mpa('get', '/', /html/, function() {
@@ -32,7 +32,7 @@ app.onHttpRequest(function(request, response) {
 		].join(''));
 	}).error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Edit',
 	name     : 'Text',
 	author   : 'pfraze',

@@ -1,5 +1,5 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
 
 // setup config
 var defaultSources = [
@@ -84,7 +84,7 @@ function buildListInterface(items) {
 	].join('');
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	var router = Link.router(request);
 	router.pma('/', /GET/i, /html/, function() {
 		getAllFeeds()
@@ -116,4 +116,4 @@ app.onHttpRequest(function(request, response) {
 			});
 	}).error(response);
 });
-app.postMessage('loaded');
+local.postMessage('loaded');

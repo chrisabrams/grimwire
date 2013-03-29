@@ -1,6 +1,6 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
-importScripts('/grim/app/convert/lib/marked.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
+importScripts('servers/worker/convert/lib/marked.js');
 
 // we use the same headers every time
 var stdHeaders = Link.headerer();
@@ -14,7 +14,7 @@ function headerRewrite(headers) {
 }
 function bodyRewrite(md) { return (md) ? marked(md) : ''; }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			if (request.query.url) {
@@ -46,7 +46,7 @@ app.onHttpRequest(function(request, response) {
 		})
 		.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	category : 'Convert',
 	name     : 'Markdown',
 	author   : 'pfraze',

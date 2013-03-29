@@ -1,6 +1,6 @@
-importScripts('linkjs-ext/responder.js');
-importScripts('linkjs-ext/router.js');
-importScripts('linkjs-ext/broadcaster.js');
+importScripts('lib/local/linkjs-ext/responder.js');
+importScripts('lib/local/linkjs-ext/router.js');
+importScripts('lib/local/linkjs-ext/broadcaster.js');
 
 var log = [];
 var logBroadcast = Link.broadcaster();
@@ -22,7 +22,7 @@ function renderHtml() {
 	return html;
 }
 
-app.onHttpRequest(function(request, response) {
+local.onHttpRequest(function(request, response) {
 	var router = Link.router(request);
 	var respond = Link.responder(response);
 
@@ -64,7 +64,7 @@ app.onHttpRequest(function(request, response) {
 	});
 	router.error(response);
 });
-app.postMessage('loaded', {
+local.postMessage('loaded', {
 	author   : 'pfraze',
 	name     : 'Log',
 	category : 'Util',
