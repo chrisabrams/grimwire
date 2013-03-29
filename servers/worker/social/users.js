@@ -1,10 +1,8 @@
 importScripts('lib/local/linkjs-ext/responder.js');
 importScripts('lib/local/linkjs-ext/router.js');
 
-// our domain
-var domain = 'httpl://v1.pfraze.users.social.app/';
 // users provider
-var usersCollection = Link.navigator('/users');
+var debugUserItem = Link.navigator('debug/pfraze.json');
 
 function usersHeader(headers) {
 	var stdHeaders = Link.headerer();
@@ -22,7 +20,7 @@ function usersBody(request) {
 			var row = users.rows[i];
 			html.push('<tr>');
             html.push('<td><img src="'+row.profile.gravatar+'" height="22" width="22" /></td>');
-            html.push('<td><a href="'+domain+row.id+'/apps">'+row.id+'</a></td>');
+            html.push('<td><a href="/'+row.id+'/apps">'+row.id+'</a></td>');
             html.push('<td>'+row.description+'</td>');
             html.push('<td>'+row.profile.name.replace(/ /g, '&nbsp;')+'</td>');
             html.push('<td>'+row.profile.description+'</td>');
@@ -58,9 +56,9 @@ function userBody(request, matches) {
 			html.push('<div class="media">');
 			html.push([
 				'<ul class="nav nav-tabs">',
-					'<li', (section=='apps')?' class="active"':'', '><a href="',domain,user.id,'/apps">Apps</a></li>',
-					'<li', (section=='profile')?' class="active"':'', '><a href="',domain,user.id,'/profile">Profile</a></li>',
-					'<li', (section=='messages')?' class="active"':'', '><a href="',domain,user.id,'/messages">Messages</a></li>',
+					'<li', (section=='apps')?' class="active"':'', '><a href="/',user.id,'/apps">Apps</a></li>',
+					'<li', (section=='profile')?' class="active"':'', '><a href="/',user.id,'/profile">Profile</a></li>',
+					'<li', (section=='messages')?' class="active"':'', '><a href="/',user.id,'/messages">Messages</a></li>',
 				'</ul>'
 			].join(''));
 			if (section == 'apps') {
@@ -69,13 +67,13 @@ function userBody(request, matches) {
 					html.push([
 						'<div class="media-body">',
 							'<form>',
-								'<input type="hidden" name="url" value="',local.url,'"/> ',
+								'<input type="hidden" name="url" value="',app.url,'"/> ',
 								'<h4 class="media-heading">',
-									((local.icon) ? '<img src="'+local.icon+'"> ' : ''),
-									local.title,
-									' <small><a href="',local.url,'" target="-below">source</a></small>',
+									((app.icon) ? '<img src="'+app.icon+'"> ' : ''),
+									app.title,
+									' <small><a href="',app.url,'" target="-below">source</a></small>',
 								'</h4>',
-								'<p>',local.description,'</p>',
+								'<p>',app.description,'</p>',
 							'</form>',
 						'</div>'
 					].join(''));
@@ -114,19 +112,14 @@ function userBody(request, matches) {
 local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
-			Link.responder(response).pipe(usersCollection.getJson(), usersHeader, usersBody(request));
+			Link.responder(response).seeOther(null, { location:'httpl://'+local.config.domain+'/pfraze/apps' }).end(); // :TEMP:
+			// Link.responder(response).pipe(usersCollection.getJson(), usersHeader, usersBody(request));
 		})
 		.mpa('get', RegExp('/([^/]+)/(apps|profile|messages)/?','i'), /html/, function(matches) {
-			var userRequest = usersCollection.item(matches.path[1]).getJson();
-			Link.responder(response).pipe(userRequest, userHeader, userBody(request, matches));
+			// var userRequest = usersCollection.item(matches.path[1]).getJson();
+			Link.responder(response).pipe(debugUserItem.getJson(), userHeader, userBody(request, matches));
 		})
 		.error(response);
-});
-local.postMessage('loaded', {
-	category : 'Social',
-	name     : 'Users',
-	author   : 'pfraze',
-	version  : 'v1'
 });
 
 function ucwords (str) {

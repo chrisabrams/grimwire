@@ -26,12 +26,6 @@ local.onHttpRequest(function(request, response) {
 		);
 	}).error(response);
 });
-local.postMessage('loaded', {
-	category : 'Util',
-	name     : 'Keyp',
-	author   : 'pfraze',
-	version  : 'v1'
-});
 function followPath(path, object) {
 	if (path.length === 0) return object;
 	return (object) ? followPath(path.slice(1), object[path[0]]) : {};

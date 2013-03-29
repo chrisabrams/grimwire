@@ -9,4 +9,3 @@ local.onHttpRequest(function(request, response) {
     Link.responder(response).ok('html').end('users list');
   }).error(response);
 });
-local.postMessage('loaded');

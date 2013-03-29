@@ -33,4 +33,3 @@ function normalizeSchema(res) {
 local.onHttpRequest(function(request, response) {
 	Link.responder(response).pipe(getFeed(request.query.url, 'json').then(normalizeSchema));
 });
-local.postMessage('loaded');

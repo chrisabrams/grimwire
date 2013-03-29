@@ -15,7 +15,7 @@ function respondInterface(prevRequestsRes, request, response) {
 						headers : { 'content-type':'applicaton/json', accept:'html' },
 						body    : pr.body
 					};
-					var href = 'httpl://v1.pfraze.form.util.app/?'+Link.contentTypes.serialize(request, 'application/x-www-form-urlencoded');
+					var href = '/?'+Link.contentTypes.serialize(request, 'application/x-www-form-urlencoded');
 					return [
 						'<li style="white-space:nowrap;overflow:hidden;max-width: 460px;">',
 							'<a href="',href,'" title="',href,'">',
@@ -32,7 +32,7 @@ function respondInterface(prevRequestsRes, request, response) {
 	if (body == 'undefined') body = '';
 	Link.responder(response).ok('html').end([
 		'<style>#pfraze_form_util .control-label { width:50px; } #pfraze_form_util .controls { margin-left:60px; }</style>',
-		'<form method="post" action="httpl://v1.pfraze.form.util.app" enctype="application/json" class="form-horizontal" id="pfraze_form_util" target="-below">',
+		'<form method="post" action="/" enctype="application/json" class="form-horizontal" id="pfraze_form_util" target="-below">',
 			'<div class="control-group">',
 				'<label for="pfraze_form_method" class="control-label">Method</label>',
 				'<div class="controls"><input type="text" name="method" id="pfraze_form_method" class="span2" value="',query.method,'" /></div>',
@@ -81,10 +81,4 @@ local.onHttpRequest(function(request, response) {
 			Link.responder(response).pipe(Link.dispatch(pipeRequest), headerPipe, bodyPipe);
 		})
 		.error(response);
-});
-local.postMessage('loaded', {
-	author   : 'pfraze',
-	name     : 'Form',
-	category : 'Util',
-	version  : 'v1'
 });

@@ -19,7 +19,8 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	// allow request
 	var response = dispatch(request);
 	response.then(function (res) {
-		if (/log\.util\.app/.test(request.url) === false) {
+		if (/log-js\.util/.test(request.url) === false) {
+			console.log(request, res);
 			log.post('<span class="label label-success">'+res.status+'</span> '+request.method.toUpperCase()+' '+request.url);
 		}
 		if (isClientRegion)
@@ -27,7 +28,7 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 		return res;
 	});
 	response.except(function (err) {
-		if (/log\.util\.app/.test(request.url) === false) {
+		if (/log-js\.util/.test(request.url) === false) {
 			var reason = err.response.reason || '&lsaquo;no reason given&rsaquo;';
 			log.post({
 				message:'<span class="label label-important">'+err.response.status+'</span> '+request.method.toUpperCase()+' '+request.url+
@@ -80,7 +81,7 @@ Environment.setRegionPostProcessor(function(elem) {
 
 // global navigators
 var apps = Link.navigator('httpl://app');
-var log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TODO: should be log.util.app
+var log = Link.navigator('httpl://log-js.util.worker.servers');
 
 // instantiate environment servers
 Environment.addServer('app', new Grim.AppServer());
@@ -94,25 +95,25 @@ apps.post({ url: 'servers/worker/util/keyp.js' });
 apps.post({ url: 'servers/worker/util/log.js' })
 	.then(function(res) {
 		if (res.status == 200) {
-			log = Link.navigator('httpl://v1.pfraze.log.util.app'); // :TEMPORARY: remove once there's a request buffer on log.util.app
+			log = Link.navigator('httpl://log-js.util.worker.servers'); // :TEMPORARY: remove once there's a request buffer on log.util.app
 			log.post('Log up.');
 			Environment.addClientRegion(new Grim.ClientRegion('thirdapp'))
-				.dispatchRequest('httpl://v1.pfraze.log.util.app');
+				.dispatchRequest('httpl://log-js.util.worker.servers');
 		}
 	});
 apps.post({ url: 'servers/worker/convert/markdown.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('secondapp'))
-			.dispatchRequest('httpl://v1.pfraze.markdown.convert.app/?url=doc/about.md');
+			.dispatchRequest('httpl://markdown-js.convert.worker.servers?url=doc/about.md');
 	});
 apps.post({ url: 'servers/worker/social/users.js' })
 	.then(function(res) {
 		Environment.addClientRegion(new Grim.ClientRegion('firstapp'))
-			.dispatchRequest('httpl://v1.pfraze.users.social.app/pfraze/apps');
+			.dispatchRequest('httpl://users-js.social.worker.servers/pfraze/apps');
 	});
 
 // register custom intents
-Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://v1.pfraze.text.edit.app');
+Grim.intents.register('http://grimwire.com/intents/edit', 'httpl://text-js.edit.worker.servers');
 
 // load apps top bar
 Environment.addClientRegion(new Grim.ClientRegion('topside-bar', {droptarget:false})).dispatchRequest('httpl://app');

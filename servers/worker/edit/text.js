@@ -10,7 +10,7 @@ local.onHttpRequest(function(request, response) {
 		}
 		p.then(function(res) {
 			Link.responder(response).ok('html', headers).end([
-				'<form action="httpl://v1.pfraze.text.edit.app" method="post">',
+				'<form action="httpl://',local.config.domain,'" method="post">',
 					'<input type="hidden" name="url" value="',request.query.url,'" />',
 					'<textarea class="input-block-level" rows="15" name="text">',
 						res.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
@@ -31,10 +31,4 @@ local.onHttpRequest(function(request, response) {
 			'</form>'
 		].join(''));
 	}).error(response);
-});
-local.postMessage('loaded', {
-	category : 'Edit',
-	name     : 'Text',
-	author   : 'pfraze',
-	version  : 'v1'
 });

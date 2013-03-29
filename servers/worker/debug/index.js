@@ -4,7 +4,7 @@ importScripts('lib/local/linkjs-ext/router.js');
 function renderNavTab(page, tab, label) {
 	return [
 	'<li',(page==tab)?' class="active"':'', '>',
-		'<a href="httpl://v1.pfraze.index.debug.app/?page=', tab, '">',label,'</a>',
+		'<a href="httpl://',local.config.domain,'/?page=', tab, '">',label,'</a>',
 	'</li>'
 	].join('');
 }
@@ -67,10 +67,4 @@ local.onHttpRequest(function(request, response) {
 			'</div>'
 		].join(''));
 	}).error(response);
-});
-local.postMessage('loaded', {
-	category : 'Debug',
-	name     : 'Index',
-	author   : 'pfraze',
-	version  : 'v1'
 });

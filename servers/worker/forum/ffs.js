@@ -5,8 +5,6 @@ importScripts('lib/local/linkjs-ext/router.js');
 local.config.threads_page_size = local.config.threads_page_size || 5;
 local.config.thread_posts_page_size = local.config.thread_posts_page_size || 5;
 local.config.icons_baseurl = local.config.icons_baseurl || ('http://'+local.config.environmentHost+'/assets/icons/16x16/');
-// our domain
-var domain = 'httpl://v1.pfraze.ffs.forum.app';
 // ffs provider
 var ffsService = Link.navigator('/').service('ffs');
 // common headers
@@ -23,14 +21,14 @@ function threadsBody(request) {
 	return function(threads) {
 		var html = [];
 
-		html.push('<p><span class="muted">FFS</span> <a href="httpl://v1.pfraze.ffs.forum.app/new" title="Create New Thread">New Thread</a></p>');
+		html.push('<p><span class="muted">FFS</span> <a href="httpl://',local.config.domain,'" title="Create New Thread">New Thread</a></p>');
 		html.push('<table class="table">');
 		for (var i=0, ii=threads.rows.length; i < ii; i++) {
 			var post = threads.rows[i];
 			html.push([
 				'<tr><td>',
 					'<strong>',optAuthor(post.author),'</strong> ',
-					'<a href="',domain,'/',post.id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
+					'<a href="httpl://',local.config.domain,'/',post.id,'" title="',post.title||'','">',optTitle(post.title),'</a>',
 					'<br/>',
 					'<small>',formatDate(post.created_at),'</small>',
 				'</td></tr>'
@@ -41,7 +39,7 @@ function threadsBody(request) {
 		var skip = parseInt(request.query.skip, 10) || 0;
 		var isFirst = (!skip);
 		var isLast = ((skip+local.config.threads_page_size) >= threads.total_rows);
-		html.push(paginator(isFirst, isLast, domain, (skip-local.config.threads_page_size), (skip+local.config.threads_page_size)));
+		html.push(paginator(isFirst, isLast, local.config.domain, (skip-local.config.threads_page_size), (skip+local.config.threads_page_size)));
 
 		return html.join('');
 	};
@@ -57,7 +55,7 @@ function newThreadBody(request) {
 	var n = Math.round(Math.random()*1000);
 	var title = (request.query.topic) ? 'Reply To: '+request.query.topic : 'New Thread';
 	return [
-		'<form action="',domain,'/new" method="POST" enctype="application/json">',
+		'<form action="httpl://',local.config.domain,'/new" method="POST" enctype="application/json">',
 			'<input type="hidden" name="type" value="post" />',
 			(request.query.reply_to) ?'<input type="hidden" name="reply_to" value="'+request.query.reply_to+'" />' : '',
 			(request.query.thread) ?'<input type="hidden" name="thread" value="'+request.query.thread+'" />' : '',
@@ -102,7 +100,7 @@ function threadBody(request, threadId) {
 		for (var i=skip, ii=thread.replies.length; i < ii && i < end; i++) {
 			var post = thread.replies[i];
 			html.push('<div class="media">');
-			html.push('<a class="pull-left" href="'+domain+'/'+post.id+'">');
+			html.push('<a class="pull-left" href="'+local.config.domain+'/'+post.id+'">');
 			html.push('<img class="media-object" src="'+local.config.icons_baseurl+opt(post.icon,'document_quote')+'.png">');
 			html.push('</a>');
 			html.push('<div class="media-body">');
@@ -120,7 +118,7 @@ function threadBody(request, threadId) {
 
 		var isFirst = (!skip);
 		var isLast = (end >= thread.replies.length);
-		html.push(paginator(isFirst, isLast, domain+'/'+threadId, (skip-local.config.thread_posts_page_size), (skip+local.config.thread_posts_page_size)));
+		html.push(paginator(isFirst, isLast, local.config.domain+'/'+threadId, (skip-local.config.thread_posts_page_size), (skip+local.config.thread_posts_page_size)));
 
 		return html.join('');
 	};
@@ -144,7 +142,7 @@ local.onHttpRequest(function(request, response) {
 				.then(function(res) {
 					var id = res.body;
 					console.log(res.body, id);
-					Link.responder(response).seeOther(null, { location:domain+'/'+(post.thread || id) }).end();
+					Link.responder(response).seeOther(null, { location:local.config.domain+'/'+(post.thread || id) }).end();
 				})
 				.except(function(res) {
 					Link.responder(response).noContent().end();
@@ -195,5 +193,5 @@ function paginator(isFirst, isLast, url, prev, next) {
 	].join('');
 }
 function replyLink(post) {
-	return domain+'/new?reply_to='+post.id+'&thread='+(post.thread||post.id)+'&topic='+encodeURIComponent(post.title);
+	return local.config.domain+'/new?reply_to='+post.id+'&thread='+(post.thread||post.id)+'&topic='+encodeURIComponent(post.title);
 }

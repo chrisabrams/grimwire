@@ -14,7 +14,7 @@ local.onHttpRequest(function(request, response) {
 		.mpa('get', '/', /html/, function() {
 			Link.responder(response).ok('html', stdHeaders).end([
 				'<legend>Subscribe to "',list,'"</legend>',
-				'<form class="form-inline" action="httpl://v1.pfraze.list.mail.app/" method="POST">',
+				'<form class="form-inline" action="httpl://',local.config.domain,'" method="POST">',
 					'<input type="text" name="email" class="span6" placeholder="Email" />',
 					'<input type="hidden" name="',list,'" />',
 					'<input class="btn" type="submit" />',
@@ -34,10 +34,4 @@ local.onHttpRequest(function(request, response) {
 				});
 		})
 		.error(response);
-});
-local.postMessage('loaded', {
-	category : 'Mail',
-	name     : 'List',
-	author   : 'pfraze',
-	version  : 'v1'
 });

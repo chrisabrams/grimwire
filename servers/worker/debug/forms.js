@@ -4,7 +4,7 @@ local.onHttpRequest(function(request, response) {
 	Link.router(request).mpa('get', '/', /html/, function() {
 		Link.responder(response).ok('html').end([
 			'[<a href="httpl://app/null">X</a>] ',
-			'<form method="post" action="httpl://v2.pfraze.forms.debug.app">',
+			'<form method="post" action="httpl://',local.config.domain,'">',
 				'<input type="text" name="foo" />',
 			'<input class="btn" name="button" draggable=true type="submit" value="Submit Inplace"/>',
 				'<input class="btn" name="button" draggable=true formtarget="-above" type="submit" value="Submit Above" />',
@@ -14,10 +14,4 @@ local.onHttpRequest(function(request, response) {
 	}).mpa('post', '/', /html/, function() {
 		Link.responder(response).ok('html').end(JSON.stringify(request.body));
 	}).error(response);
-});
-local.postMessage('loaded', {
-	category : 'Debug',
-	name     : 'Forms',
-	author   : 'pfraze',
-	version  : 'v2'
 });

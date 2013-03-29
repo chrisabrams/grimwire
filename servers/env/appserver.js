@@ -16,6 +16,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			.pma('/', /GET/i, 'text/event-stream', (function() {
 				Link.responder(response).ok('text/event-stream');
 				this.serversBroadcast.addStream(response);
+				this.serversBroadcast.emitTo(response, 'update');
 			}).bind(this))
 			.pm('/', /HEAD|GET/i, $getApps.bind(this, request, response))
 			.pmt('/', /POST/i, /json|form\-data|text/i, $addApp.bind(this, request, response))
@@ -115,56 +116,25 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		params.scriptUrl = params.url;
 		delete params.url;
 
+		var domain = params.scriptUrl.replace(/\./g, '-').split('/').reverse().join('.');
+		if (Environment.getServer(domain)) {
+			if (params.replace_existing) {
+				Environment.killServer(domain);
+			} else {
+				return respond
+					.seeOther('text/plain', { location: 'httpl://'+domain })
+					.end('Domain \''+domain+'\' is already in use');
+			}
+		}
+
 		server = new Environment.WorkerServer(params, function(result) {
 			respond.unprocessableEntity().end();
 		});
-		server.worker.onMessage('loaded', function(message) {
-			if (server.state === Environment.Server.DEAD) { throw "Received 'loaded' message from a dead worker"; }
-
-			var c = message.data || {};
-
-			if (!c.category) return fail('Request body must include `category`');
-			if (!c.name) return fail('Request body must include `name`');
-			if (!c.author) return fail('Request body must include `author`');
-			if (!c.version) return fail('Request body must include `version`');
-			c.tld = 'app';
-
-			var domains = [];
-			var fields = ['tld','category','name','author','version'];
-			for (var i=1; i <= 5; i++) {
-				var d = [];
-				for (var j=0; j < i; j++) {
-					d.unshift(c[fields[j]].replace(/ /g,'_').replace(/\./g,'').toLowerCase());
-				}
-				domains.push(d.join('.'));
-			}
-			// domains = [tld, category.tld, name.category.tld, author.name.category.tld, version.author.name.category.tld]
-			var domain = domains[4];
-
-			if (Environment.getServer(domain)) {
-				if (params.replace_existing) {
-					Environment.killServer(domain);
-				} else {
-					server.terminate();
-					return respond
-						.seeOther('text/plain', { location: Environment.getServer(domain).config.startUrl })
-						.end('Domain \''+domain+'\' is already in use');
-				}
-			}
-
-			server.config.domains = domains;
-			server.config.category = c.category;
-			server.config.name = c.name;
-			server.config.author = c.author;
-			server.config.version = c.version;
-			server.config.startUrl = c.startUrl || ('httpl://'+domain);
-			Environment.addServer(domain, server);
-
-			self.serversBroadcast.emit('update');
-			if (/html/.test(request.headers.accept))
-				return respond.pipe(Link.dispatch({ method:'get', url:server.config.startUrl, headers:{ accept:'text/html' }}, this));
-			respond.ok('application/json').end(server.config);
-		});
+		Environment.addServer(domain, server);
+		self.serversBroadcast.emit('update');
+		if (/html/.test(request.headers.accept))
+			return respond.pipe(Link.dispatch({ method:'get', url:'httpl://'+domain, headers:{ accept:'text/html' }}, this));
+		respond.ok('application/json').end(server.config);
 	}
 
 	// POST /load-confirmer
@@ -262,36 +232,27 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 	}
 
 	AppServer.prototype.renderAppsHtml = function(apps) {
-		var html = [], appsByCategory = {}, domain, category;
-		for (domain in apps) {
-			category = apps[domain].config.category;
-			appsByCategory[category] = (appsByCategory[category] || []).concat(apps[domain]);
-		}
 		var renderAppItem = function(app) {
 			return [
 				'<li>',
-					'<a target="-blank" href="', app.config.startUrl, '">',
-						app.config.name, '<br/><small>', app.config.author, ', ', app.config.version, '</small>',
+					'<a target="-blank" href="httpl://', app.config.domain, '">',
+						app.config.domain, '<br/><small>', app.config.scriptUrl, '</small>',
 					'</a>',
-				'</li>'].join('');
+				'</li>'
+			].join('');
 		};
-		for (category in appsByCategory) {
-			html.push([
-			'<li class="dropdown">',
-				'<a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0)">'+category+'</a>',
-				'<ul class="dropdown-menu">',
-					appsByCategory[category].map(renderAppItem).join(''),
-				'</ul>',
-			'</li>'
-			].join(''));
-		}
+		var html = [];
+		for (var domain in apps)
+			html.push(renderAppItem(apps[domain]));
 		return [
 		'<form action="httpl://app" data-output="true">',
-			// '<intent action="http://grimwire.com/intents/fix" draggable="true"><i class="intent icon-tools" title="Fix"></i></intent>',
-			// '<intent action="http://grimwire.com/intents/freeze" draggable="true"><i class="intent icon-snowflake" title="Freeze"></i></intent>',
-			//'<a class="reset" target="-bottom" href="javascript:void(0)" title="Reset :TODO:"><i class="intent icon-leaf-1"></i></a>',
 			'<ul class="nav nav-pills pull-right">',
-				html.join(''),
+				'<li class="dropdown">',
+					'<a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0)">Servers</a>',
+					'<ul class="dropdown-menu">',
+						html.join(''),
+					'</ul>',
+				'</li>',
 			'</ul>',
 		'</form>'
 		].join('');

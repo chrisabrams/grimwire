@@ -5,21 +5,29 @@ importScripts('lib/local/linkjs-ext/broadcaster.js');
 var log = [];
 var logBroadcast = Link.broadcaster();
 
-function renderHtml() {
+function renderHtml(section) {
 	var style = 'width:60px; text-align:center; background:#eee; color:#808080';
 	var entriesHtml = log
 		.slice(-10)
 		.map(function(entry) { return '<tr'+((entry.type)?' class="'+entry.type+'"':'')+'><td style="'+style+'">'+entry.time.toTimeString().slice(0,8)+'</td><td>'+entry.msg+'</td></tr>'; })
 		.join('');
-	var html = [
-		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
-		'<form action="httpl://v1.pfraze.log.util.app" data-output="true" data-intents="none">',
+	if (section == 'entries') {
+		return [
 			'<table class="log-entries table table-condensed table-bordered">',
 				entriesHtml,
-			'</table>',
+			'</table>'
+		].join('');
+	}
+	return [
+		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
+		'<form action="httpl://',local.config.domain,'" data-intents="none">',
+			'<output name="entries">',
+				'<table class="log-entries table table-condensed table-bordered">',
+					entriesHtml,
+				'</table>',
+			'</output>',
 		'</form>'
 	].join('');
-	return html;
 }
 
 local.onHttpRequest(function(request, response) {
@@ -34,11 +42,11 @@ local.onHttpRequest(function(request, response) {
 		headers.addLink('http://grimwire.com/grim/app/util/log.js', 'http://grimwire.com/rels/src', { title:'application' });
 
 		router.m('HEAD', function() {
-			respond.ok('html', headers).end(renderHtml()); // respond with log html
+			respond.ok(null, headers).end(); // respond with headers
 		});
 		// list
 		router.ma('GET', /html/, function() {
-			respond.ok('html', headers).end(renderHtml()); // respond with log html
+			respond.ok('html', headers).end(renderHtml(request.query.output)); // respond with log html
 		});
 		// subscribe to events
 		router.ma('GET', /event-stream/, function() {
@@ -63,10 +71,4 @@ local.onHttpRequest(function(request, response) {
 		router.error(response, 'path');
 	});
 	router.error(response);
-});
-local.postMessage('loaded', {
-	author   : 'pfraze',
-	name     : 'Log',
-	category : 'Util',
-	version  : 'v1'
 });
