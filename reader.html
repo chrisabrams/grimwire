@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Local.js RSS Environment 0.0.1</title>
+
+		<!-- security policies -->
+		<meta http-equiv="X-WebKit-CSP" content="frame-src 'none'; object-src 'none'; script-src 'self'"></meta>
+
+		<!-- styling -->
+		<link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
+		<link rel="stylesheet" href="index.css" />
+	</head>
+	
+	<body>
+		<!-- environment layout -->
+		<div class="container-fluid">
+			<div class="navbar">
+				<div class="navbar-inner">
+					<a class="brand" href="#">Local.js RSS Environment</a>
+				</div>
+			</div>
+			<div class="row-fluid">
+				<div class="span2" id="sidenav"></div>
+				<div class="span10" id="content"></div>
+			</div>
+		</div>
+
+		<!-- base libraries -->
+		<script src="local/lib/link.js"></script>
+		<script src="local/lib/common-client.js"></script>
+		<script src="local/lib/myhouse.js"></script>
+		<script src="local/lib/environment.js"></script>
+
+		<!-- extension libraries -->
+		<script src="local/lib/linkjs-ext/responder.js"></script>
+		<script src="local/lib/linkjs-ext/router.js"></script>
+		<script src="local/lib/linkjs-ext/broadcaster.js"></script>
+
+		<!-- environment -->
+		<script src="local/apps/env/localstorage.js"></script>
+		<script src="apps/env/reflector.js"></script>
+		<script src="apps/env/config.js"></script>
+		<script src="apps/env/sidenav.js"></script>
+		<script src="index.js"></script>
+	</body>
+</html>
