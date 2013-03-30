@@ -1,12 +1,6 @@
-[submodule "local"]
-	path = client/local
-	url = git@github.com:pfraze/local.git
-[submodule "client/hypersurface/threejs"]
-	path = client/hypersurface/threejs
-	url = https://github.com/mrdoob/three.js.git
-[submodule "client/hypersurface/html2canvas"]
-	path = client/hypersurface/html2canvas
-	url = git@github.com:pfraze/html2canvas.git
-[submodule "client/hypersurface/rasterizeHTML"]
-	path = client/hypersurface/rasterizeHTML
-	url = git@github.com:pfraze/rasterizeHTML.js.git
+[submodule "src/local"]
+	path = src/local
+	url = git://github.com/grimwire/local.git
+[submodule "assets"]
+	path = assets
+	url = git://github.com/grimwire/grimwire-assets.git

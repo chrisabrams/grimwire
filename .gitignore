@@ -1,7 +1,2 @@
 *~
-client/assets
-server/node_modules
-server/npm-debug.log
-server/config.production.js
-server/email_lists.json
-server/ffs_threads.json
+.DS_Store
