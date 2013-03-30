@@ -7,13 +7,13 @@ var baseIndexData = [
 		icon:'action_log',
 		title:'Local Servers',
 		href:'httpl://servers.env',
-		tags:['worker','servers','env'],
+		tags:['worker','servers','session'],
 		desc:'active local servers running in worker threads'
 	}, {
 		icon:'mail_server_setting',
 		title:'Configuration',
 		href:'httpl://config.env',
-		tags:['config','env'],
+		tags:['config','session'],
 		desc:'settings of the active session'
 	}, {
 		icon:'application',
@@ -43,6 +43,13 @@ var baseIndexData = [
 		tags:['documentation','local','help'],
 		desc:'documentation on grimwire\'s supporting library, local',
 		target:'_top'
+	}, {
+		icon:'book_open',
+		title:'Twitter Bootstrap Docs',
+		href:'http://twitter.github.com/bootstrap/index.html',
+		tags:['documentation','bootstrap','help'],
+		desc:'documentation on the twitter bootstrap css library',
+		target:'_top'
 	}
 ];
 
@@ -63,7 +70,7 @@ Environment.setRegionPostProcessor(function(el) {
 
 // instantiate env services
 var configService = Link.navigator('httpl://config.env');
-var indexService = Link.navigator('httpl://index.usr');
+// var indexService = Link.navigator('httpl://index.usr');
 Environment.addServer('localstorage.env', new LocalStorageServer());
 Environment.addServer('config.env', new ConfigServer());
 Environment.addServer('servers.env', new ReflectorServer(configService));

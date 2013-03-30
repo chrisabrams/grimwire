@@ -130,7 +130,8 @@ LunrServer.prototype._buildDocsHtml = function(docs) {
 					target = 'target="_top"';
 				if (doc.icon)
 					icon = '<img src="assets/icons/16x16/'+doc.icon+'.png" /> ';
-				return '<tr><td><a href="'+doc.href+'" '+target+'>'+icon+doc.title+'</a> <small>'+doc.desc+'</small></td></tr>';
+				tags = (doc.tags && Array.isArray(doc.tags)) ? doc.tags.map(function(t) { return '<span class="muted">'+t+'</span>'; }).join(' ') : '';
+				return '<tr><td><a href="'+doc.href+'" '+target+'>'+icon+doc.title+'</a> <small>'+doc.desc+'</small> '+tags+'</td></tr>';
 			}).join(''),
 		'</table>',
 		'<div id="search-results"></div>'
