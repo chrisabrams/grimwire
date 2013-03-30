@@ -83,18 +83,22 @@ LunrServer.prototype.addDocument = function(request, response) {
 	headerer.addLink('/', 'up via service');
 	var respond = Link.responder(response);
 
-	var doc = request.body;
-	if (!doc)
+	var docs = request.body;
+	if (!docs)
 		return respond.unprocessableEntity(null, headerer).end('request body required');
-	if (!doc.title)
-		return respond.unprocessableEntity(null, headerer).end('request body `title` required');
-	if (!doc.href)
-		return respond.unprocessableEntity(null, headerer).end('request body `href` required');
-	if (!doc.desc)
-		return respond.unprocessableEntity(null, headerer).end('request body `desc` required');
+	if (Array.isArray(docs) === false)
+		docs = [docs];
 
-	this._addDoc(doc);
-	respond.ok(null, headerer).end();
+	var results = [];
+	for (var i=0,ii=docs.length; i < ii; i++) {
+		var doc = docs[i];
+		if (!doc.title) { results.push('Error: request body `title` required'); continue; }
+		if (!doc.href) { results.push('Error: request body `href` required'); continue; }
+		if (!doc.desc) { results.push('Error: request body `desc` required'); continue; }
+		results.push(this._addDoc(doc));
+	}
+
+	respond.ok('json', headerer).end(results);
 };
 
 LunrServer.prototype._addDoc = function(doc) {
@@ -102,6 +106,7 @@ LunrServer.prototype._addDoc = function(doc) {
 	this.docs.push(doc);
 	this.idx.add(doc);
 	this.nDocs++;
+	return doc.__searchIndex;
 };
 
 LunrServer.prototype._getDocsByResultset = function(resultset) {

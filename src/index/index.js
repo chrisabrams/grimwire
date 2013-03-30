@@ -2,6 +2,25 @@ var defaultAppConfig = {
 	"index.usr"   : "servers/worker/index/lunr.js",
 	"sidenav.usr" : "servers/worker/index/sidenav.js"
 };
+var baseIndexData = [
+	{
+		title:'Local Servers',
+		href:'httpl://servers.env',
+		tags:['worker','servers','env'],
+		desc:'active local servers running in worker threads'
+	}, {
+		title:'Configuration',
+		href:'httpl://config.env',
+		tags:['config','env'],
+		desc:'settings of the active session'
+	}, {
+		title:'Reader',
+		href:'reader.html',
+		tags:['reader','rss','feed','env'],
+		desc:'feed-reader environment',
+		target:'_top'
+	}
+];
 
 // request wrapper
 Environment.config.workerBootstrapUrl = 'worker-server.min.js';
@@ -63,27 +82,7 @@ configService.collection('values').item('servers').getJson()
 		// seed the index
 		var indexService = Link.navigator('httpl://index.usr');
 		var indexDocsCollection = indexService.collection('docs');
-		promise(
-			indexDocsCollection.post({
-				title:'Local Servers',
-				href:'httpl://servers.env',
-				tags:['worker','servers','env'],
-				desc:'active local servers running in worker threads'
-			}, 'application/json'),
-			indexDocsCollection.post({
-				title:'Configuration',
-				href:'httpl://config.env',
-				tags:['config','env'],
-				desc:'settings of the active session'
-			}, 'application/json'),
-			indexDocsCollection.post({
-				title:'Reader',
-				href:'reader.html',
-				tags:['reader','rss','feed','env'],
-				desc:'feed-reader environment',
-				target:'_top'
-			}, 'application/json')
-		).then(function() {
+		indexDocsCollection.post(baseIndexData, 'application/json').then(function() {
 			// load index
 			sidenavRegion.dispatchRequest('httpl://sidenav.usr');
 			contentRegion.dispatchRequest(res.body.index);
