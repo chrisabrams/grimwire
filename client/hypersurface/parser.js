@@ -25,7 +25,7 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 	};
 
 	// fallback material when none is specified
-	var defaultMaterial = new THREE.MeshBasicMaterial({ color:0xFF9900, side:THREE.DoubleSide });
+	var defaultMaterial = new THREE.MeshBasicMaterial({ color:0x000000, opacity:0, side:THREE.DoubleSide });
 
 
 	// parseDocument()
@@ -133,7 +133,7 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 			};
 		};
 		return HSDocument;
-	}
+	};
 
 
 	// CoreAPI

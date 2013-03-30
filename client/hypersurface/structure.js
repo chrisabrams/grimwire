@@ -2,19 +2,15 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 (function(exports) {
 	var __id = 0;
 	exports.genStructureId = function() { return 'structure-'+__id++; };
-	var checkerCanvas;
-	var htmlGeometries = ['DIV','P','H1','H2','H3','H4','H5','H6'];
 
 	// Structure
 	// =========
 	// EXPORTED
 	// a tree of geometries with physical, chemical, and material properties
 	function Structure(id) {
-		Environment.ClientRegion.call(this, id);
 		this.scene = buildSceneFromDoc(this.element);
 		HyperSurface.Renderer.scene.add(this.scene);
 	}
-	Structure.prototype = Object.create(Environment.ClientRegion.prototype);
 
 	Structure.prototype.__handleResponse = function(e, request, response) {
 		response.headers = response.headers || {};
@@ -156,8 +152,8 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		if (elem.tagName == 'SURFACE') {
 			var canvas = document.createElement('canvas');
 			canvas.width = 512; canvas.height = 512;
-			document.body.appendChild(canvas);
-			
+			// document.body.appendChild(canvas);
+
 			material.map = new THREE.Texture(canvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.LinearFilter, THREE.LinearFilter);
 			rasterizeHTML.drawHTML(elem.innerHTML, { width:512, height:512 }, function(image) {
 				var ctx = canvas.getContext('2d');

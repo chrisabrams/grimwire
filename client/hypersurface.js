@@ -57,17 +57,40 @@ var HSDocument = HyperSurface.makeDocumentAPI(HyperSurface.CoreAPI);
 var doc = new HSDocument();
 var cube = doc.addGeometry('cube');
 cube.addMaterial('basic').style({ wireframe:true, color:0x3299BB });
-cube.addGeometry('sphere').style({ segments:[10,10], radius:0.5 })
-    .addMaterial('basic').style({ color:0xE9E9E9 });
+cube.addGeometry('sphere').style({ segments:[20,20], radius:0.5 })
+    .addMaterial('basic').style({ color:0xCC0000 });
 
 var someHTML = '<h1>Hello World</h1>';
-cube.addSurface('html', { orient:'top' }, { offset:[0,0,0.75] });
-cube.addSurface('html', { orient:'bottom' }, { offset:[0,0,0.75] });
-cube.addSurface('html', { orient:'left' }, { offset:[0,0,0.75] });
-cube.addSurface('html', { orient:'right' }, { offset:[0,0,0.75] });
-cube.addSurface('html', { orient:'front' }, { offset:[0,0,0.75] });
-cube.addSurface('html', { orient:'back' }, { offset:[0,0,0.75] });
+cube.addSurface('html', { orient:'top', content:someHTML }, { offset:[0,0,0.6] });
+cube.addSurface('html', { orient:'bottom', content:someHTML }, { offset:[0,0,0.6] });
+cube.addSurface('html', { orient:'left', content:someHTML }, { offset:[0,0,0.6] });
+cube.addSurface('html', { orient:'right', content:someHTML }, { offset:[0,0,0.6] });
+cube.addSurface('html', { orient:'front', content:someHTML }, { offset:[0,0,0.6] });
+cube.addSurface('html', { orient:'back', content:someHTML }, { offset:[0,0,0.6] });
 console.log(doc);
 var docJson = JSON.stringify(doc);
 
-HyperSurface.Renderer.scene.add(HyperSurface.parseDocument(docJson, HyperSurface.CoreAPI));
+var scene = HyperSurface.parseDocument(docJson, HyperSurface.CoreAPI);
+HyperSurface.Renderer.scene.add(scene);
+
+function addHtmlPolys(scene) {
+	for (var i =0; i < scene.children.length; i++) {
+		var node = scene.children[i];
+		if (node.geometry instanceof THREE.PlaneGeometry) {
+			var element = document.createElement('div');
+			element.style.width = '256px';
+			element.style.height = '256px';
+			element.style.background = 'white';
+			element.innerHTML = '<h1>Hello, World</h1><input type="text" /><br/><a href=//github.com/pfraze/>Link</a>';
+
+			var object = new THREE.CSS3DObject(element);
+			object.position = node.position;
+			object.rotation = node.rotation;
+			object.scale.x = 0.004;
+			object.scale.y = 0.004;
+			HyperSurface.Renderer.scene2.add( object );
+		}
+		addHtmlPolys(node);
+	}
+}
+addHtmlPolys(scene);
