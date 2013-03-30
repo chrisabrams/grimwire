@@ -1,68 +1,43 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Grimwire - a RESTful Web OS powered by NodeJS, Unhosted's remoteStorage, Bootstrap, and Local</title>
-		<meta charset="UTF-8"></meta>
+		<title>Index &there4; Grimwire OS</title>
 
 		<!-- security policies -->
-		<meta http-equiv="X-WebKit-CSP" content="script-src 'self' ajax.googleapis.com"></meta>
+		<meta http-equiv="X-WebKit-CSP" content="frame-src 'none'; object-src 'none'; script-src 'self'"></meta>
 
 		<!-- styling -->
 		<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.css" />
-		<link rel="stylesheet" href="assets/fontello/css/icons.css" />
+		<link rel="stylesheet" href="grim.css" />
 		<link rel="stylesheet" href="index.css" />
-		<link rel="icon" type="image/vnd.microsoft.icon" href="/assets/icons/16x16/global_telecom.png" />
 	</head>
 	
 	<body>
-
-		<!-- active servers -->
-		<div id="topside-mask">&nbsp;</div>
-		<div id="topside-bar">&nbsp;</div>
-
-		<!-- intents -->
-		<div id="leftside-mask">&nbsp;</div>
-		<div id="leftside-bar">
-			<ul class="intents">
-				<li><intent action="http://grimwire.com/intents/torch" draggable="true"><i class="icon-fire" title="Torch"></i></intent></li>
-				<li><intent action="http://grimwire.com/intents/clone" draggable="true"><i class="icon-docs" title="Clone"></i></intent></li>
-				<li><intent action="http://grimwire.com/intents/load" draggable="true"><i class="icon-off" title="Load"></i></intent></li>
-				<li><intent action="http://grimwire.com/intents/inspect" draggable="true"><i class="icon-search-1" title="Inspect"></i></intent></li>
-				<li class="divider">&mdash;</li>
-				<li><intent action="http://grimwire.com/intents/edit" draggable="true"><i class="icon-edit" title="Edit"></i></intent></li>
-				<li><intent action="http://grimwire.com/intents/render" draggable="true"><i class="icon-publish" title="Render"></i></intent></li>
-			</ul>
-		</div>
-
-		<table id="center">
-			<tr>
-				<td><div id="column1" class="column"><div class="client-region-animwrapper"><div id="secondapp" class="client-region"></div></div></div></td>
-				<td><div id="column2" class="column"><div class="client-region-animwrapper"><div id="firstapp" class="client-region"></div></div></div></td>
-				<td><div id="column3" class="column"><div class="client-region-animwrapper"><div id="thirdapp" class="client-region"></div></div></div></td>
-			</tr>
-		</table>
-
-		<!-- :DEBUG: build notice -->
-		<div style="position:fixed;bottom:0;right:0;background:gray;color:white;padding:5px">
-			<small id="chromenotice" style="background:white;color:gray;padding:10px;display:none">Not seeing anything? Try switching to Chrome.</small>
-			Develop Build
+		<!-- environment layout -->
+		<div class="container-fluid">
+			<div class="navbar">
+				<div class="navbar-inner">
+					<a class="brand" href="#">Index &there4; Grimwire OS</a>
+				</div>
+			</div>
+			<div class="row-fluid">
+				<div class="span2" id="sidenav"></div>
+				<div class="span10" id="content"></div>
+			</div>
 		</div>
 
 		<!-- libs -->
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-		<script src="assets/bootstrap/js/bootstrap.min.js"></script>
 		<script src="lib/local/local.min.js"></script>
 
-		<!-- env tools -->
-		<script src="src/grim/client.js"></script>
-		<script src="src/grim/center-elem.js"></script>
-		<script src="src/grim/intents.js"></script>
+		<!-- widgets -->
+		<script src="src/widgets/lifespan.js"></script>
 
-		<!-- env servers -->
-		<script src="servers/env/appserver.js"></script>
-		<script src="servers/env/scripts.js"></script>
+		<!-- servers -->
+		<script src="src/local/servers/env/localstorage.js"></script>
+		<script src="servers/env/reflector.js"></script>
+		<script src="servers/env/config.js"></script>
 
-		<!-- env -->
-		<script src="src/grim/index.js"></script>
+		<!-- environment -->
+		<script src="src/index/index.js"></script>
 	</body>
 </html>

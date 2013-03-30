@@ -116,4 +116,3 @@ local.onHttpRequest(function(request, response) {
 			});
 	}).error(response);
 });
-local.postMessage('loaded');

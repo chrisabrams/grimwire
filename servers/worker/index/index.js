@@ -1,11 +1,13 @@
-// SidenavServer
-// ============
-// serves HTML for navigation
-importScripts('lib/local/linkjs-ext/broadcaster.js');
+// index/index.js
+// ==============
+// Clientside search with lunr.js
+
+importScripts('lib/lunr/lunr.min.js');
+// importScripts('lib/local/linkjs-ext/broadcaster.js');
 importScripts('lib/local/linkjs-ext/router.js');
 importScripts('lib/local/linkjs-ext/responder.js');
 
-function SidenavServer(configService) {
+function LunrServer(configService) {
 	this.sidenavBroadcast = Link.broadcaster();
 	this.serversConfigItem = Link.navigator('httpl://config.env').collection('values').item('servers');
 
@@ -18,10 +20,10 @@ function SidenavServer(configService) {
 			});
 		});
 }
-SidenavServer.prototype = Object.create(local.Server.prototype);
+LunrServer.prototype = Object.create(local.Server.prototype);
 
 // request router
-SidenavServer.prototype.handleHttpRequest = function(request, response) {
+LunrServer.prototype.handleHttpRequest = function(request, response) {
 	var self = this;
 	var router = Link.router(request);
 	router.pma('/', /GET/i, /html/, this.handler('getInterface', request, response));
@@ -29,7 +31,7 @@ SidenavServer.prototype.handleHttpRequest = function(request, response) {
 	router.error(response);
 };
 
-SidenavServer.prototype.handler = function(handlerName, request, response) {
+LunrServer.prototype.handler = function(handlerName, request, response) {
 	var self = this;
 	var handler = this[handlerName];
 	return function(match) { handler.call(self, request, response, match); };
@@ -43,7 +45,8 @@ function addLI(url, label, activeUrl) {
 	].join('');
 }
 
-SidenavServer.prototype.getInterface = function(request, response) {
+LunrServer.prototype.getInterface = function(request, response) {
+	var self = this;
 	Link.responder(response).pipe(
 		this.serversConfigItem.getJson(),
 		function(headers) {
@@ -52,11 +55,11 @@ SidenavServer.prototype.getInterface = function(request, response) {
 		},
 		function(body) {
 			if (body && typeof body == 'object') {
-				var activeUrl = request.query.active || body.feed;
+				var activeUrl = request.query.active || body.index;
 				var ul = [
 					'<input type="hidden" name="active" value="',activeUrl,'" />',
 					'<ul class="nav nav-pills nav-stacked">',
-						addLI(body.feed, 'Feed', activeUrl),
+						addLI(body.index, 'Index', activeUrl),
 						addLI('httpl://servers.env', 'Local Servers', activeUrl),
 						addLI('httpl://config.env', 'Config', activeUrl),
 					'</ul>'
@@ -64,7 +67,7 @@ SidenavServer.prototype.getInterface = function(request, response) {
 				if (request.query.output == 'ul')
 					return ul;
 				return [
-				'<form action="httpl://sidenav.ui">',
+				'<form action="httpl://',self.config.domain,'">',
 					'<output name="ul">',
 						ul,
 					'</output>',
@@ -76,9 +79,9 @@ SidenavServer.prototype.getInterface = function(request, response) {
 	);
 };
 
-SidenavServer.prototype.getEventStream = function(request, response) {
+LunrServer.prototype.getEventStream = function(request, response) {
 	Link.responder(response).ok('event-stream');
 	this.sidenavBroadcast.addStream(response);
 };
 
-local.setServer(SidenavServer);
+local.setServer(LunrServer);

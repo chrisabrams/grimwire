@@ -44,6 +44,7 @@ function addLI(url, label, activeUrl) {
 }
 
 SidenavServer.prototype.getInterface = function(request, response) {
+	var self = this;
 	Link.responder(response).pipe(
 		this.serversConfigItem.getJson(),
 		function(headers) {
@@ -52,11 +53,11 @@ SidenavServer.prototype.getInterface = function(request, response) {
 		},
 		function(body) {
 			if (body && typeof body == 'object') {
-				var activeUrl = request.query.active || body.feed;
+				var activeUrl = request.query.active || body.index;
 				var ul = [
 					'<input type="hidden" name="active" value="',activeUrl,'" />',
 					'<ul class="nav nav-pills nav-stacked">',
-						addLI(body.feed, 'Feed', activeUrl),
+						addLI(body.index, 'Index', activeUrl),
 						addLI('httpl://servers.env', 'Local Servers', activeUrl),
 						addLI('httpl://config.env', 'Config', activeUrl),
 					'</ul>'
@@ -64,7 +65,7 @@ SidenavServer.prototype.getInterface = function(request, response) {
 				if (request.query.output == 'ul')
 					return ul;
 				return [
-				'<form action="httpl://sidenav.ui">',
+				'<form action="httpl://',self.config.domain,'">',
 					'<output name="ul">',
 						ul,
 					'</output>',

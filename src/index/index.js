@@ -1,7 +1,6 @@
 var defaultAppConfig = {
-	"feed.ui"    : "servers/worker/reader/feed.js",
-	"sidenav.ui" : "servers/worker/reader/sidenav.js",
-	"rss.proxy"  : "servers/worker/reader/rssproxy.js"
+	"index.usr"   : "servers/worker/index/lunr.js",
+	"sidenav.usr" : "servers/worker/index/sidenav.js"
 };
 
 // request wrapper
@@ -23,6 +22,7 @@ Environment.setRegionPostProcessor(function(el) {
 
 // instantiate env services
 var configService = Link.navigator('httpl://config.env');
+var indexService = Link.navigator('httpl://index.usr');
 Environment.addServer('localstorage.env', new LocalStorageServer());
 Environment.addServer('config.env', new ConfigServer());
 Environment.addServer('servers.env', new ReflectorServer(configService));
@@ -36,7 +36,7 @@ configService.collection('validators').post({
 	'bool'    : '^0|1|true|false$'
 }, 'application/json');
 configService.collection('schemas').item('servers').put({
-	feed    : { type:'url', label:'Feed', fallback:'httpl://feed.ui' },
+	index   : { type:'url', label:'Index', fallback:'httpl://index.usr' },
 	storage : { type:'url', label:'Storage', fallback:'httpl://localstorage.env' },
 	apps    : { type:'string', label:'Apps', fallback:JSON.stringify(defaultAppConfig), control:'textarea', readonly:true }
 }, 'application/json');
@@ -60,9 +60,34 @@ configService.collection('values').item('servers').getJson()
 		}
 		for (var domain in apps)
 			Environment.addServer(domain, new Environment.WorkerServer({ scriptUrl:appUrl(apps[domain]) }));
-		// load feed
-		sidenavRegion.dispatchRequest('httpl://sidenav.ui');
-		contentRegion.dispatchRequest(res.body.feed);
+		// seed the index
+		var indexService = Link.navigator('httpl://index.usr');
+		var indexDocsCollection = indexService.collection('docs');
+		promise(
+			indexDocsCollection.post({
+				title:'Local Servers',
+				href:'httpl://servers.env',
+				tags:['worker','servers','env'],
+				desc:'active local servers running in worker threads'
+			}, 'application/json'),
+			indexDocsCollection.post({
+				title:'Configuration',
+				href:'httpl://config.env',
+				tags:['config','env'],
+				desc:'settings of the active session'
+			}, 'application/json'),
+			indexDocsCollection.post({
+				title:'Reader',
+				href:'/reader.html',
+				tags:['reader','rss','feed','env'],
+				desc:'feed-reader environment',
+				target:'_top'
+			}, 'application/json')
+		).then(function() {
+			// load index
+			sidenavRegion.dispatchRequest('httpl://sidenav.usr');
+			contentRegion.dispatchRequest(res.body.index);
+		});
 	});
 
 
