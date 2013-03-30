@@ -125,10 +125,12 @@ LunrServer.prototype._buildDocsHtml = function(docs) {
 	html.push([
 		'<table class="table table-striped table-condensed">',
 			docs.map(function(doc) {
-				var target = '';
+				var target = '', icon = '';
 				if (doc.target == '_top')
 					target = 'target="_top"';
-				return '<tr><td><a href="'+doc.href+'" '+target+'>'+doc.title+'</a> <small>'+doc.desc+'</small></td></tr>';
+				if (doc.icon)
+					icon = '<img src="assets/icons/16x16/'+doc.icon+'.png" /> ';
+				return '<tr><td><a href="'+doc.href+'" '+target+'>'+icon+doc.title+'</a> <small>'+doc.desc+'</small></td></tr>';
 			}).join(''),
 		'</table>',
 		'<div id="search-results"></div>'

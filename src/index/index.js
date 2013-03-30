@@ -4,20 +4,44 @@ var defaultAppConfig = {
 };
 var baseIndexData = [
 	{
+		icon:'action_log',
 		title:'Local Servers',
 		href:'httpl://servers.env',
 		tags:['worker','servers','env'],
 		desc:'active local servers running in worker threads'
 	}, {
+		icon:'mail_server_setting',
 		title:'Configuration',
 		href:'httpl://config.env',
 		tags:['config','env'],
 		desc:'settings of the active session'
 	}, {
-		title:'Reader',
+		icon:'application',
+		title:'Reader.html',
 		href:'reader.html',
 		tags:['reader','rss','feed','env'],
 		desc:'feed-reader environment',
+		target:'_top'
+	}, {
+		icon:'script_code',
+		title:'Grimwire Repo',
+		href:'https://github.com/grimwire/grimwire',
+		tags:['code','git','repo'],
+		desc:'github repository for grimwire',
+		target:'_top'
+	}, {
+		icon:'script_code',
+		title:'LocalJS Repo',
+		href:'https://github.com/grimwire/local',
+		tags:['code','git','repo'],
+		desc:'github repository for grimwire\'s supporting library, local',
+		target:'_top'
+	}, {
+		icon:'book_open',
+		title:'LocalJS Docs',
+		href:'http://grimwire.com/local',
+		tags:['documentation','local','help'],
+		desc:'documentation on grimwire\'s supporting library, local',
 		target:'_top'
 	}
 ];
@@ -25,10 +49,6 @@ var baseIndexData = [
 // request wrapper
 Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
-	// update sidenav highlight
-	if (origin instanceof Environment.ClientRegion && origin.element.id == 'sidenav')
-		updateSidenavHighlight(request.url);
-
 	// allow request
 	var response = dispatch(request);
 	response.then(console.log.bind(console), request);
@@ -37,6 +57,8 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 });
 Environment.setRegionPostProcessor(function(el) {
 	lifespanPostProcess(el);
+	if (el.id == 'content')
+		updateSidenavHighlight(contentRegion.context.url);
 });
 
 // instantiate env services
