@@ -1,16 +1,12 @@
 var defaultAppConfig = {
-	"feed.ui"    : "servers/worker/reader/feed.js",
-	"sidenav.ui" : "servers/worker/reader/sidenav.js",
-	"rss.proxy"  : "servers/worker/reader/rssproxy.js"
+	"feed.usr"    : "servers/worker/reader/feed.js",
+	"sidenav.usr" : "servers/worker/reader/sidenav.js",
+	"rss.proxy"   : "servers/worker/reader/rssproxy.js"
 };
 
 // request wrapper
 Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
-	// update sidenav highlight
-	if (origin instanceof Environment.ClientRegion && origin.element.id == 'sidenav')
-		updateSidenavHighlight(request.url);
-
 	// allow request
 	var response = dispatch(request);
 	response.then(console.log.bind(console), request);
@@ -19,6 +15,8 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 });
 Environment.setRegionPostProcessor(function(el) {
 	lifespanPostProcess(el);
+	if (el.id == 'content')
+		updateSidenavHighlight(contentRegion.context.url);
 });
 
 // instantiate env services
@@ -36,7 +34,7 @@ configService.collection('validators').post({
 	'bool'    : '^0|1|true|false$'
 }, 'application/json');
 configService.collection('schemas').item('servers').put({
-	feed    : { type:'url', label:'Feed', fallback:'httpl://feed.ui' },
+	feed    : { type:'url', label:'Feed', fallback:'httpl://feed.usr' },
 	storage : { type:'url', label:'Storage', fallback:'httpl://localstorage.env' },
 	apps    : { type:'string', label:'Apps', fallback:JSON.stringify(defaultAppConfig), control:'textarea', readonly:true }
 }, 'application/json');
@@ -61,7 +59,7 @@ configService.collection('values').item('servers').getJson()
 		for (var domain in apps)
 			Environment.addServer(domain, new Environment.WorkerServer({ scriptUrl:appUrl(apps[domain]) }));
 		// load feed
-		sidenavRegion.dispatchRequest('httpl://sidenav.ui');
+		sidenavRegion.dispatchRequest('httpl://sidenav.usr');
 		contentRegion.dispatchRequest(res.body.feed);
 	});
 

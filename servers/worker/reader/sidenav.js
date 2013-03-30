@@ -44,6 +44,7 @@ function addLI(url, label, activeUrl) {
 }
 
 SidenavServer.prototype.getInterface = function(request, response) {
+	var self = this;
 	Link.responder(response).pipe(
 		this.serversConfigItem.getJson(),
 		function(headers) {
@@ -64,7 +65,7 @@ SidenavServer.prototype.getInterface = function(request, response) {
 				if (request.query.output == 'ul')
 					return ul;
 				return [
-				'<form action="httpl://sidenav.ui">',
+				'<form action="httpl://',self.config.domain,'">',
 					'<output name="ul">',
 						ul,
 					'</output>',
