@@ -78,7 +78,7 @@ configService.collection('values').item('servers').getJson()
 			}, 'application/json'),
 			indexDocsCollection.post({
 				title:'Reader',
-				href:'/reader.html',
+				href:'reader.html',
 				tags:['reader','rss','feed','env'],
 				desc:'feed-reader environment',
 				target:'_top'
