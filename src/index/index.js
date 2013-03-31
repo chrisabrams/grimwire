@@ -50,6 +50,13 @@ var baseIndexData = [
 		tags:['documentation','bootstrap','help'],
 		desc:'documentation on the twitter bootstrap css library',
 		target:'_top'
+	}, {
+		icon:'book_open',
+		title:'APIHub',
+		href:'http://www.apihub.com/',
+		tags:['documentation','api','help'],
+		desc:'web api listing for finding backend services',
+		target:'_top'
 	}
 ];
 

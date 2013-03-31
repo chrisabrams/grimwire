@@ -1,24 +1,30 @@
-# Grimwire: a desktop environment in the browser
+# Grimwire: a REST OS
 
-*Grimwire is not ready for deployment, so setup instructions are not yet provided. The beta will be released soon.*
+Using [Local](http://github.com/grimwire/local), Grimwire hosts Web servers in threads on the browser. This gives you (the user) control over software on the page, allowing you to change backends, mod interfaces, add features, and mashup the Web.
 
-## Background
+Highlights:
 
-The browser is a relatively secure but rigid environment. <a href="http://www.cs.utexas.edu/~mwalfish/papers/zoog-hotnets11.pdf">A paper by Microsoft and UTexas researchers</a> lists its traits as Isolated, Rich, On-demand, and Networked (IRON). Broadly speaking, they argue that without the IRON properties, the Web would be too dangerous or too unsophisticated to get any use of.
+ - Modify and hot-swap Worker Servers in the session
+ - Easily store private data and sync between devices with [Unhosted's remoteStorage API](http://remotestorage.io/)
+ - Leverage a unified HTTP/REST interface (links, forms, and Ajax calls) for software running locally or remotely
+ - Built entirely out of static assets &ndash; host with out-of-the-box Apache or GitHub Pages
 
-The browser is bad at injecting its own software; Greasemonkey tends to only decorate UIs, and browser apps (which Chrome offers) live in isolation of each other, just like websites do. We now have Web Workers, <a href="http://stackoverflow.com/questions/12209657/how-can-i-sandbox-untrusted-user-submitted-javascript-content"> which can safely sandbox a script</a>, but can't touch the DOM API. The other option&mdash;the iframe&mdash;is kept in the same thread as the parent document, making denial-of-service attacks on the processor possible. Neither option is structured for configurability.
+Planned Features:
 
-## Overview
+ - P2P Ajax over WebRTC
+ - Permissions layer to mediate all traffic
 
-<a href="httpl://grimwire.com/local">Local</a> was created to structure Web Workers into a configurable environment. It uses HTTPL to communicate with the programs, and enforces security through a central messaging router. Common client behaviors remove the need for Workers to touch the document, instead allowing them to control the UI with markup directives. These tools can be hosted statically at any website to host user applications.
+## How does it work?
 
-Grimwire is a general-purpose deployment of Local. Its target is to be an easily-moddable, easily-deployable web desktop environment. The features are still in development, and will be added gradually as their needs become clear. Currently implemented or planned:
+HTML documents construct "Environments" to host user software. Each Environment is structured around a particular task &ndash; feed reading, email, search, social networking, development, etc &ndash; and provides tools, Web API, and layout for its hosted software to leverage.
 
- - User data management, permissioning, and publishing
- - App capabilities control for executing untrusted software
- - In-browser development tools with services for storing and serving scripts
- - A well-documented API for modding and extending the UI
- - A powerful, composable interface built around Local's messaging system
+Web Workers run as servers which handle HTTPL requests ([the L stands for "Local"](http://github.com/grimwire/local)). They provide HTML interfaces for the Environment, as well as APIs for other programs to run. To improve discoverability, the servers fill the [Link header](http://www.w3.org/wiki/LinkHeader) with available resources which can be [programmatically navigated](http://grimwire.com/local/docs.html#lib/linkjs/navigator.md).
+
+These Worker servers, along with remote services, form a one-page [SOA](http://en.wikipedia.org/wiki/Service-oriented_architecture) which can be configured and customized for the user.
+
+## Project Status
+
+Grimwire is currently in early development, and can be previewed at [http://grimwire.github.com/grimwire/](http://grimwire.github.com/grimwire/). If you would like to join the project, contact Paul Frazee (pfrazee@gmail.com).
 
 ## License
 
