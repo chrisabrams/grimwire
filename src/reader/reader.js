@@ -76,5 +76,5 @@ windowLocationDirname = windowLocationDirname.join('/');
 function appUrl(path) {
 	if (Link.parseUri(path).protocol)
 		return path;
-	return window.location.origin + windowLocationDirname + path;
+	return window.location.protocol + '//' + window.location.host + windowLocationDirname + path;
 }

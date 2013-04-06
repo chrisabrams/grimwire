@@ -23,6 +23,12 @@ function getDate(item) {
   if (item.pubDate) { return new Date(item.pubDate); }
 }
 function normalizeSchema(res) {
+  // Firefox has a bug that keeps it from enumerating its headers during CORs
+  // This means that the HTTP layer didnt get a content-type, so the body hasnt been parsed
+  // Go ahead and parse now with the assumption that it's json
+  if (typeof res.body == 'string') {
+    try { res.body = JSON.parse(res.body); } catch (e) {}
+  }
   res.body.value.items.forEach(function(item) {
     item.link = getLink(item);
     item.date = getDate(item);
