@@ -8,6 +8,10 @@ function ConfigServer() {
 	this.values = {};
 	this.validators = {};
 	this.broadcasters = {};
+
+	var loc = window.location.pathname;
+	if (loc == '/') loc = '/index.html';
+	this.configNamespace = 'config'+(loc.replace(/\/|\./g,'_'));
 }
 ConfigServer.prototype = Object.create(Environment.Server.prototype);
 
@@ -387,7 +391,7 @@ ConfigServer.prototype.writeToStorage = function(key) {
 		return;
 	var values = JSON.parse(JSON.stringify(this.values[key]));
 	values.id = key;
-	backend.collection('config').post(values, 'application/json');
+	backend.collection(this.configNamespace).post(values, 'application/json');
 };
 
 ConfigServer.prototype.readFromStorage = function(key) {
@@ -406,7 +410,7 @@ ConfigServer.prototype.readFromStorage = function(key) {
 	}
 
 	var self = this;
-	var req = backend.collection('config').item(key).getJson();
+	var req = backend.collection(this.configNamespace).item(key).getJson();
 	req.then(function(res) { self.values[key] = res.body; });
 	return req;
 };
