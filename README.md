@@ -5,14 +5,9 @@ Using [Local](http://github.com/grimwire/local), Grimwire hosts Web servers in t
 Highlights:
 
  - Modify and hot-swap Worker Servers in the session
+ - Do peer-to-peer Ajax and share sessions over WebRTC
  - Easily store private data and sync between devices with [Unhosted's remoteStorage API](http://remotestorage.io/)
  - Leverage a unified HTTP/REST interface (links, forms, and Ajax calls) for software running locally or remotely
- - Built entirely out of static assets &ndash; host with out-of-the-box Apache or GitHub Pages
-
-Planned Features:
-
- - P2P Ajax over WebRTC
- - Permissions layer to mediate all traffic
 
 ## How does it work?
 
