@@ -65,8 +65,10 @@ Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	// allow request
 	var response = dispatch(request);
-	response.then(console.log.bind(console), request);
-	response.except(console.log.bind(console), request);
+	response.then(
+		function(res) { console.log(res.status, request.method, request.url); },
+		function(err) { console.log(err.response.status, request.method, request.url); }
+	);
 	return response;
 });
 Environment.setRegionPostProcessor(function(el) {
@@ -104,7 +106,7 @@ contentRegion.addRight('element targeting');
 
 // load config and go
 configService.collection('values').item('servers').getJson()
-	.then(function(res) {
+	.succeed(function(res) {
 		// load apps
 		var apps;
 		try {
@@ -118,7 +120,7 @@ configService.collection('values').item('servers').getJson()
 		// seed the index
 		var indexService = Link.navigator('httpl://index.usr');
 		var indexDocsCollection = indexService.collection('docs');
-		indexDocsCollection.post(baseIndexData, 'application/json').then(function() {
+		indexDocsCollection.post(baseIndexData, 'application/json').succeed(function() {
 			// load index
 			sidenavRegion.dispatchRequest('httpl://sidenav.usr');
 			contentRegion.dispatchRequest(res.body.index);

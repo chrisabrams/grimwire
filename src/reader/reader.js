@@ -9,8 +9,10 @@ Environment.config.workerBootstrapUrl = 'worker-server.min.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	// allow request
 	var response = dispatch(request);
-	response.then(console.log.bind(console), request);
-	response.except(console.log.bind(console), request);
+	response.then(
+		function(res) { console.log(res.status, request.method, request.url); },
+		function(err) { console.log(err.response.status, request.method, request.url); }
+	);
 	return response;
 });
 Environment.setRegionPostProcessor(function(el) {
@@ -47,7 +49,7 @@ contentRegion.addRight('element targeting');
 
 // load config and go
 configService.collection('values').item('servers').getJson()
-	.then(function(res) {
+	.succeed(function(res) {
 		// load apps
 		var apps;
 		try {

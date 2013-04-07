@@ -14,7 +14,7 @@ var feedConfig = Link.navigator('httpl://config.env').collection('values').item(
 
 var feeds = null;
 function getAllFeeds() {
-	var p = promise();
+	var p = Local.promise();
 	if (feeds) {
 		p.fulfill(feeds);
 		return p;
@@ -28,10 +28,13 @@ function getAllFeeds() {
 		var numFeedsFetched = 0;
 		var inc = function() { if (++numFeedsFetched === feedUrls.length) { p.fulfill(feeds); } };
 		feedUrls.forEach(function(url) {
-			Link.navigator(url).getJson().then(function(res) {
-				feeds[url] = res.body;
-				inc();
-			}).except(inc);
+			Link.navigator(url).getJson().then(
+				function(res) {
+					feeds[url] = res.body;
+					inc();
+				},
+				inc
+			);
 		});
 	});
 	return p;

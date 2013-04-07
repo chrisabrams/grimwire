@@ -66,12 +66,10 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 				});
 				router.a(/javascript|plain/i, function() {
 					// retrieve source
-					promise(server.getSource())
+					Local.promise(server.getSource())
 						.then(function(source) {
-							// send back content
 							respond.ok('application/javascript', headerer).end(source);
-						})
-						.except(function(err) { respond.badGateway(headerer).end(); });
+						}, function(err) { respond.badGateway(headerer).end(); });
 				});
 				router.error(response, ['path','method']);
 			} else {
@@ -131,12 +129,10 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 			headerer.addLink('/'+domain+'/editor', 'self current');
 			if (/GET/i.test(request.method)) {
 				// retrieve source
-				promise(server.getSource())
+				Local.promise(server.getSource())
 					.then(function(source) {
-						// send back html
 						respond.ok('html').end(self.renderServerEditorHtml(domain, source));
-					})
-					.except(function(err) { respond.badGateway(headerer).end(); });
+					}, function(err) { respond.badGateway(headerer).end(); });
 			} else {
 				// respond with headers
 				respond.ok(null, headerer).end();

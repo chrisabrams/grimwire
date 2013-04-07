@@ -66,7 +66,7 @@ local.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
             // :TODO: send a limit & offset param!!
-			prevRequestsCollection.getJson().then(respondInterface, request, response);
+			prevRequestsCollection.getJson().succeed(respondInterface, request, response);
 		})
 		.mpta('post', '/', /json/, /html/, function() {
 			var body;
@@ -77,7 +77,7 @@ local.onHttpRequest(function(request, response) {
 				headers : { 'content-type':'application/json' },
 				body    : body
 			};
-			prevRequestsCollection.post(pipeRequest,'application/json').except(console.log);
+			prevRequestsCollection.post(pipeRequest,'application/json').fail(console.log);
 			Link.responder(response).pipe(Link.dispatch(pipeRequest), headerPipe, bodyPipe);
 		})
 		.error(response);

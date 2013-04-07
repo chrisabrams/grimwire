@@ -34,7 +34,7 @@ local.onHttpRequest(function(request, response) {
 				return Link.responder(response).ok(null, headers).end();
 
 			Link.router(request).pmta('/formatter', /post/i, /text/, /html/, function() {
-				promise(request.body || '')
+				Local.promise(request.body || '')
 					.then(replaceURLWithHTMLLinks)
 					.then(addBrToNewlines)
 					.then(quickStrong)

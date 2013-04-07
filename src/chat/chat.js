@@ -28,8 +28,8 @@ var Streams = {
 Environment.config.workerBootstrapUrl = '/local/lib/worker_bootstrap.js';
 Environment.setDispatchWrapper(function(request, origin, dispatch) {
 	var response = dispatch(request);
-	response.then(console.log.bind(console), request);
-	response.except(console.log.bind(console), request);
+	response.succeed(console.log.bind(console), request);
+	response.fail(console.log.bind(console), request);
 	return response;
 });
 
@@ -59,8 +59,7 @@ document.querySelector('#input textarea').addEventListener('keydown', function(e
 		UiProviders.dashboard.service('formatter').post(e.target.value, 'text/plain', { accept:'text/html' })
 			.then(function(res) {
 				DataProviders.msgs.post({ message:res.body, author:session.data.username }, 'application/json');
-			})
-			.except(console.log.bind(console)); // :TODO: remove this once all link requests get properly routed through the environment dispatcher
+			});
 		e.target.value = '';
 		e.preventDefault();
 		return false;

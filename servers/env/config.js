@@ -55,7 +55,7 @@ ConfigServer.prototype.getConfigInterface = function(request, respond) {
 			var serve = function() {
 				respond.ok('html', headerer).end(self.buildConfigInterfaceHTML(request.query.section));
 			};
-			this.readFromStorage().then(serve).except(serve);
+			this.readFromStorage().then(serve, serve);
 		} else {
 			// respond with data
 			respond.ok('json', headerer).end({ schemaItems:Object.keys(this.schemas), valueItems:Object.keys(this.values) });
@@ -152,7 +152,7 @@ ConfigServer.prototype.getValuesItem = function(request, respond, match) {
 			return respond.noContent().end(); // do no content so they can navigate to the key before it exists
 		respond.ok('json').end(self.values[key]);
 	};
-	this.readFromStorage(key).then(serve).except(serve);
+	this.readFromStorage(key).then(serve, serve);
 };
 
 ConfigServer.prototype.setValuesItem = function(request, respond, match) {
@@ -397,10 +397,10 @@ ConfigServer.prototype.writeToStorage = function(key) {
 ConfigServer.prototype.readFromStorage = function(key) {
 	var backend = this.getStorageService();
 	if (!backend)
-		return promise(true);
+		return Local.promise(true);
 
 	if (!key) {
-		var p = promise();
+		var p = Local.promise();
 		for (var k in this.schemas) {
 			var p2 = this.readFromStorage(k);
 			p2.chain(p);
@@ -411,7 +411,9 @@ ConfigServer.prototype.readFromStorage = function(key) {
 
 	var self = this;
 	var req = backend.collection(this.configNamespace).item(key).getJson();
-	req.then(function(res) { self.values[key] = res.body; });
+	req.then(function(res) {
+		self.values[key] = res.body;
+	});
 	return req;
 };
 
