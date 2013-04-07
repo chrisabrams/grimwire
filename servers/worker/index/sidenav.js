@@ -18,7 +18,7 @@ function SidenavServer(configService) {
 			});
 		});
 }
-SidenavServer.prototype = Object.create(local.Server.prototype);
+SidenavServer.prototype = Object.create(localApp.Server.prototype);
 
 // request router
 SidenavServer.prototype.handleHttpRequest = function(request, response) {
@@ -82,4 +82,4 @@ SidenavServer.prototype.getEventStream = function(request, response) {
 	this.sidenavBroadcast.addStream(response);
 };
 
-local.setServer(SidenavServer);
+localApp.setServer(SidenavServer);

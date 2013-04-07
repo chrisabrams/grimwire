@@ -36,6 +36,6 @@ function normalizeSchema(res) {
   res.body = { items:res.body.value.items };
   return res;
 }
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	Link.responder(response).pipe(getFeed(request.query.url, 'json').then(normalizeSchema));
 });

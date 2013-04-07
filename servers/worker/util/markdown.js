@@ -14,7 +14,7 @@ function headerRewrite(headers) {
 }
 function bodyRewrite(md) { return (md) ? marked(md) : ''; }
 
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
 			if (request.query.url) {
@@ -26,7 +26,7 @@ local.onHttpRequest(function(request, response) {
 				Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
 			} else {
 				Link.responder(response).ok('html', stdHeaders).end([
-					'<form action="httpl://',local.config.domain,'" method="POST">',
+					'<form action="httpl://',localApp.config.domain,'" method="POST">',
 						'<legend>Markdown Converter</legend>',
 						'<p class="muted">powered by marked.js (by Christopher Jeffrey)</p>',
 						'<p><textarea name="text" class="input-block-level" rows="10"></textarea></p>',

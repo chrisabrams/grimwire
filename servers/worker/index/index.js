@@ -20,7 +20,7 @@ function LunrServer(configService) {
 			});
 		});
 }
-LunrServer.prototype = Object.create(local.Server.prototype);
+LunrServer.prototype = Object.create(localApp.Server.prototype);
 
 // request router
 LunrServer.prototype.handleHttpRequest = function(request, response) {
@@ -84,4 +84,4 @@ LunrServer.prototype.getEventStream = function(request, response) {
 	this.sidenavBroadcast.addStream(response);
 };
 
-local.setServer(LunrServer);
+localApp.setServer(LunrServer);

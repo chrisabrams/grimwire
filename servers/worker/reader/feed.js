@@ -87,7 +87,7 @@ function buildListInterface(items) {
 	].join('');
 }
 
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	var router = Link.router(request);
 	router.pma('/', /GET/i, /html/, function() {
 		getAllFeeds()

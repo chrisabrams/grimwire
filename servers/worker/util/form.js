@@ -62,7 +62,7 @@ function bodyPipe(body) {
     return body;
 }
 
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.mpa('get', '/', /html/, function() {
             // :TODO: send a limit & offset param!!

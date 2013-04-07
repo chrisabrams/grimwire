@@ -18,7 +18,7 @@ function LunrServer(configService) {
 		this.field('desc');
 	});
 }
-LunrServer.prototype = Object.create(local.Server.prototype);
+LunrServer.prototype = Object.create(localApp.Server.prototype);
 
 // request router
 LunrServer.prototype.handleHttpRequest = function(request, response) {
@@ -139,4 +139,4 @@ LunrServer.prototype._buildDocsHtml = function(docs) {
 	return html;
 };
 
-local.setServer(LunrServer);
+localApp.setServer(LunrServer);

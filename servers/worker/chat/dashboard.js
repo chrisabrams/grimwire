@@ -6,12 +6,12 @@ importScripts('linkjs-ext/responder.js');
 importScripts('linkjs-ext/router.js');
 
 var urls = {
-	app: 'httpl://'+local.config.domain,
-	formatter: 'httpl://'+local.config.domain+'/formatter',
-	profile: 'httpl://'+local.config.domain+'/profile'
+	app: 'httpl://'+localApp.config.domain,
+	formatter: 'httpl://'+localApp.config.domain+'/formatter',
+	profile: 'httpl://'+localApp.config.domain+'/profile'
 };
 
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	Link.router(request)
 		.p('/', function() {
 			var headers = Link.headerer();

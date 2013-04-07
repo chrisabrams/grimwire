@@ -20,7 +20,7 @@ function renderHtml(section) {
 	}
 	return [
 		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
-		'<form action="httpl://',local.config.domain,'" data-intents="none">',
+		'<form action="httpl://',localApp.config.domain,'" data-intents="none">',
 			'<output name="entries">',
 				'<table class="log-entries table table-condensed table-bordered">',
 					entriesHtml,
@@ -30,7 +30,7 @@ function renderHtml(section) {
 	].join('');
 }
 
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	var router = Link.router(request);
 	var respond = Link.responder(response);
 

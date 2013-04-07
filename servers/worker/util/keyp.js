@@ -5,7 +5,7 @@
 
 importScripts('lib/local/linkjs-ext/responder.js');
 importScripts('lib/local/linkjs-ext/router.js');
-local.onHttpRequest(function(request, response) {
+localApp.onHttpRequest(function(request, response) {
 	Link.router(request).mp('get', '/', function() {
 		var path = (request.query.path || '').split(request.query.separator || '.');
 		var proxyRequest = Link.dispatch({
