@@ -1,4 +1,4 @@
-# Grimwire: a REST OS
+# Grimwire: a REST bOS
 
 Using [Local](http://github.com/grimwire/local), Grimwire hosts Web servers in threads on the browser. This gives you (the user) control over software on the page, allowing you to change backends, mod interfaces, add features, and mashup the Web.
 
