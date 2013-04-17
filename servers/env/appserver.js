@@ -245,7 +245,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 		for (var domain in apps)
 			html.push(renderAppItem(apps[domain]));
 		return [
-		'<form action="httpl://app" data-output="true">',
+		'<div data-subscribe="httpl://app">',
 			'<ul class="nav nav-pills pull-right">',
 				'<li class="dropdown">',
 					'<a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0)">Servers</a>',
@@ -254,7 +254,7 @@ Grim = (typeof Grim == 'undefined') ? {} : Grim;
 					'</ul>',
 				'</li>',
 			'</ul>',
-		'</form>'
+		'</div>'
 		].join('');
 	};
 

@@ -20,13 +20,11 @@ function renderHtml(section) {
 	}
 	return [
 		'<style>.log-entries td { max-width: 400px;white-space: nowrap;overflow: hidden; }</style>',
-		'<form action="httpl://',localApp.config.domain,'" data-intents="none">',
-			'<output name="entries">',
-				'<table class="log-entries table table-condensed table-bordered">',
-					entriesHtml,
-				'</table>',
-			'</output>',
-		'</form>'
+		'<div data-subscribe="httpl://',localApp.config.domain,'?output=entries">',
+			'<table class="log-entries table table-condensed table-bordered">',
+				entriesHtml,
+			'</table>',
+		'</div>'
 	].join('');
 }
 

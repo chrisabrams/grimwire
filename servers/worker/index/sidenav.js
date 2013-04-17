@@ -66,11 +66,9 @@ SidenavServer.prototype.getInterface = function(request, response) {
 				if (request.query.output == 'ul')
 					return ul;
 				return [
-				'<form action="httpl://',self.config.domain,'">',
-					'<output name="ul">',
-						ul,
-					'</output>',
-				'</form>'
+				'<div data-subscribe="httpl://',self.config.domain,'?output=ul">',
+					ul,
+				'</div>'
 				].join('');
 			}
 			return 'Error: server config would not load';
