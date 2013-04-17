@@ -4,54 +4,46 @@ var defaultAppConfig = {
 };
 var baseIndexData = [
 	{
-		icon:'action_log',
 		title:'Local Servers',
 		href:'httpl://servers.env',
 		tags:['worker','servers','session'],
-		desc:'active local servers running in worker threads'
+		desc:'Active local servers running in worker threads'
 	}, {
-		icon:'mail_server_setting',
 		title:'Configuration',
 		href:'httpl://config.env',
 		tags:['config','session'],
-		desc:'settings of the active session'
+		desc:'Settings of the active session'
 	}, {
-		icon:'application',
 		title:'Reader.html',
 		href:'reader.html',
 		tags:['reader','rss','feed','env'],
 		desc:'feed-reader environment',
 		target:'_top'
 	}, {
-		icon:'script_code',
 		title:'Grimwire Repo',
 		href:'https://github.com/grimwire/grimwire',
 		tags:['code','git','repo'],
 		desc:'github repository for grimwire',
 		target:'_top'
 	}, {
-		icon:'script_code',
 		title:'LocalJS Repo',
 		href:'https://github.com/grimwire/local',
 		tags:['code','git','repo'],
 		desc:'github repository for grimwire\'s supporting library, local',
 		target:'_top'
 	}, {
-		icon:'book_open',
 		title:'LocalJS Docs',
 		href:'http://grimwire.com/local',
 		tags:['documentation','local','help'],
 		desc:'documentation on grimwire\'s supporting library, local',
 		target:'_top'
 	}, {
-		icon:'book_open',
 		title:'Twitter Bootstrap Docs',
 		href:'http://twitter.github.com/bootstrap/index.html',
 		tags:['documentation','bootstrap','help'],
 		desc:'documentation on the twitter bootstrap css library',
 		target:'_top'
 	}, {
-		icon:'book_open',
 		title:'APIHub',
 		href:'http://www.apihub.com/',
 		tags:['documentation','api','help'],

@@ -123,15 +123,12 @@ LunrServer.prototype._getDocsByResultset = function(resultset) {
 LunrServer.prototype._buildDocsHtml = function(docs) {
 	var html = [];
 	html.push([
-		'<table class="table table-striped table-condensed">',
+		'<table class="table table-striped">',
 			docs.map(function(doc) {
-				var target = '', icon = '';
+				var target = '';
 				if (doc.target == '_top')
 					target = 'target="_top"';
-				if (doc.icon)
-					icon = '<img src="assets/icons/16x16/'+doc.icon+'.png" /> ';
-				tags = (doc.tags && Array.isArray(doc.tags)) ? doc.tags.map(function(t) { return '<span class="muted">'+t+'</span>'; }).join(' ') : '';
-				return '<tr><td><a href="'+doc.href+'" '+target+'>'+icon+doc.title+'</a> <small>'+doc.desc+'</small> '+tags+'</td></tr>';
+				return '<tr><td><a href="'+doc.href+'" '+target+'>'+doc.title+'</a> <span>'+doc.desc+'</span></td></tr>';
 			}).join(''),
 		'</table>',
 		'<div id="search-results"></div>'

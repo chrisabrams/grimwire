@@ -72,7 +72,7 @@ function formatDate(date) {
 
 function buildListInterface(items) {
 	return [
-		'<table class="table table-striped table-condensed">',
+		'<table class="table table-striped">',
 			'<thead><tr><th>Source</th><th>Article</th><th>Published</th></tr></thead>',
 			items.map(function(item, index) {
 				return [

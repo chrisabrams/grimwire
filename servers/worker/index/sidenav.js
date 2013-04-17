@@ -35,7 +35,7 @@ SidenavServer.prototype.handler = function(handlerName, request, response) {
 	return function(match) { handler.call(self, request, response, match); };
 };
 
-function addLI(url, label, activeUrl) {
+function li(url, label, activeUrl) {
 	return [
 		'<li ', (url == activeUrl) ? 'class="active"' : '', '>',
 			'<a href="',url,'" target="content">',label,'</a>',
@@ -57,9 +57,10 @@ SidenavServer.prototype.getInterface = function(request, response) {
 				var ul = [
 					'<input type="hidden" name="active" value="',activeUrl,'" />',
 					'<ul class="nav nav-pills nav-stacked">',
-						addLI(body.index, 'Index', activeUrl),
-						addLI('httpl://servers.env', 'Local Servers', activeUrl),
-						addLI('httpl://config.env', 'Config', activeUrl),
+						li(body.index, 'Everything', activeUrl),
+						li(body.index, 'Applications', false), //:TODO:
+						li(body.index, 'Workers', false), //:TODO:
+						li(body.index, 'Documentation', false), //:TODO:
 					'</ul>'
 				].join('');
 				if (request.query.output == 'ul')
