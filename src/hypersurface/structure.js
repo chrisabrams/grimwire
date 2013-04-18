@@ -59,11 +59,8 @@ HyperSurface = (typeof HyperSurface == 'undefined') ? {} : HyperSurface;
 		
 		// :TODO: new structure creation
 
-		if (this.hasRights('element targeting'))
-			// :TODO: constrain to elements within the structure
-			return document.getElementById(request.target) || this.element;
-		else
-			return this.element;
+		// :TODO: constrain to elements within the structure
+		return document.getElementById(request.target) || this.element;
 	};
 
 	Structure.prototype.renderResponseBody = function(targetElem, body, ctype) {

@@ -44,8 +44,6 @@ configService.collection('schemas').item('servers').put({
 // load client regions
 var sidenavRegion = Environment.addClientRegion('sidenav');
 var contentRegion = Environment.addClientRegion('content');
-sidenavRegion.addRight('element targeting');
-contentRegion.addRight('element targeting');
 
 // load config and go
 configService.collection('values').item('servers').getJson()
