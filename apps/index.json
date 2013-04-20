@@ -1,0 +1,71 @@
+{
+	"id": "mail",
+	"title": "Webmail",
+	"icon": "inbox",
+	"layout": [
+		[
+			{ "width":2, "regions":"httpl://index.usr/filters" },
+			{ "id":"main", "width":10, "regions":"httpl://index.usr" }
+		]
+	],
+	"workers": [
+		{
+			"domain": "index.usr",
+			"title": "Search Index",
+			"src": "servers/worker/index/lunr.js",
+			"seed": [
+				{
+					"title":"Local Servers",
+					"href":"httpl://servers.env",
+					"tags":["worker","servers","session"],
+					"desc":"Active local servers running in worker threads"
+				},{
+					"title":"Configuration",
+					"href":"httpl://config.env",
+					"tags":["config","session"],
+					"desc":"Settings of the active session"
+				},{
+					"title":"Reader.html",
+					"href":"reader.html",
+					"tags":["reader","rss","feed","env"],
+					"desc":"feed-reader environment",
+					"target":"_top"
+				},{
+					"title":"Grimwire Repo",
+					"href":"https://github.com/grimwire/grimwire",
+					"tags":["code","git","repo"],
+					"desc":"github repository for grimwire",
+					"target":"_top"
+				},{
+					"title":"LocalJS Repo",
+					"href":"https://github.com/grimwire/local",
+					"tags":["code","git","repo"],
+					"desc":"github repository for grimwire's supporting library, local",
+					"target":"_top"
+				},{
+					"title":"LocalJS Docs",
+					"href":"http://grimwire.com/local",
+					"tags":["documentation","local","help"],
+					"desc":"documentation on grimwire's supporting library, local",
+					"target":"_top"
+				},{
+					"title":"Twitter Bootstrap Docs",
+					"href":"http://twitter.github.com/bootstrap/index.html",
+					"tags":["documentation","bootstrap","help"],
+					"desc":"documentation on the twitter bootstrap css library",
+					"target":"_top"
+				},{
+					"title":"APIHub",
+					"href":"http://www.apihub.com/",
+					"tags":["documentation","api","help"],
+					"desc":"web api listing for finding backend services",
+					"target":"_top"
+				}
+			]
+		}
+	],
+	"common": {
+		"grimHost": "http://grimwire.github.io",
+		"storageHost": "httpl://sessionstorage.env"
+	}
+}

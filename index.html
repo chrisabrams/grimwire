@@ -19,7 +19,7 @@
 				<div class="navbar-inner">
 					<a class="brand" href="#">Grimwire</a>
 					<div class="nav-collapse collapse navbar-responsive-collapse">
-						<ul class="nav">
+						<ul id="grim-topbar-apps" class="nav">
 							<li class="active"><a href="/index.html"><i class="icon-search"></i> Index</a></li>
 							<li class="divider-vertical"></li>
 							<li><a href="/reader.html"><i class="icon-th-list"></i> Reader</a></li>
@@ -42,7 +42,7 @@
 					</div><!-- /.nav-collapse -->
 				</div>
 			</div>
-			<div class="row-fluid">
+			<div id="grim-layout-container" class="row-fluid">
 				<div class="span2" id="sidenav"></div>
 				<div class="span10" id="content"></div>
 			</div>
@@ -57,11 +57,11 @@
 		<script src="src/widgets/lifespan.js"></script>
 
 		<!-- servers -->
-		<script src="src/local/servers/env/localstorage.js"></script>
+		<script src="src/local/servers/env/storage.js"></script>
 		<script src="servers/env/reflector.js"></script>
 		<script src="servers/env/config.js"></script>
 
 		<!-- environment -->
-		<script src="src/index/index.js"></script>
+		<script src="index.js"></script>
 	</body>
 </html>
