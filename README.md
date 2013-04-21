@@ -1,41 +1,54 @@
-# Grimwire: a REST bOS (v0.0.1 unstable)
+# Grimwire, the REST bOS (v0.0.1 unstable)
 
-**Grimwire is a (developing) Web client application framework for hosting javascript REST servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers)**. Apps are built on Grimwire with JSON configurations of single-purpose Worker servers, and all configuration can be modified during the session. Doing so reloads the Workers while preserving the document state.
+Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). HTML fragments are served into the layout, and link/form elements target the Worker servers' `httpl://` addresses. "Client regions" navigate resources hosted by the Worker servers, and HATEOAS tools help Workers consume each others' Web APIs.
 
-**Grimwire isolates "client region" divs, allowing them to navigate resources hosted by the Worker servers and by remote servers**. To give Worker servers realtime control over the API, Grimwire uses event-streams ([Server-Sent Events](https://developer.mozilla.org/en-US/docs/Server-sent_events)) and response command-documents ("application/html-deltas+json" for targeted updates to the html).
+Apps built on Grimwire can be modified and shared by users, and do not require a backend service to operate.
 
-**Rather than bind to DOM events, links and forms point at Worker server domains**. This enables the user to configure the application using links, and introduces the possibility for user-proxies to be introduced.  These tools can also be used to give remote servers realtime control over the UI without writing client-side javascript, though there is more overhead (TCP and HTTP) compared to Websockets.
+**Features**
 
----
-
-**One of the project's requirements is to allow untrusted code to enter the environment**. The (developing) security model puts no trusted code inside the Workers namespaces, and instead requires all commands to enter the document as REST messages, where they are subject to permissions, scrubbing, and routing. The model relies on a trustworthy `/index.html` to host the Workers, so it's recommended that you DO NOT MODIFY `/index.html` or introduce new software into the document without a full security review. 
-
----
-
-**Features**:
-
+ - Multi-threaded Web applications with well-structured, strongly-encapsulated components
  - Unified HTTP/REST interface (links, forms, and Ajax calls) for software running locally or remotely
- - Promises-based API (unstable)
+ - Promises-based API
 
-**In Development**:
+**In Development**
 
- - User-configurable applications
+ - JSON-configurable applications
  - Core applications (search, rss, email, chat)
 
-**Roadmap**:
+**Roadmap**
 
  - In-session Worker editing
  - Peer-to-peer Ajax over WebRTC
- 
+
 
 ## Documentation
 
 [https://github.com/grimwire/grimwire/wiki](https://github.com/grimwire/grimwire/wiki)
 
 
+## Security
+
+One of the project's requirements is to allow untrusted code to enter the environment. The (developing) security model puts no trusted code inside the Workers, and instead requires all commands to enter the document as REST messages, where they are subject to permissions, scrubbing, and routing. The model relies on a trustworthy `/index.html` to host the Workers, so it's recommended that you DO NOT MODIFY `/index.html` or introduce new software into the document without a full security review. Instead, create configuration files to define layouts and load Worker servers.
+ 
+For security and composition reasons, no javascript is allowed to enter the document namespace. To give Worker servers realtime control over the API, Grimwire uses event-streams ([Server-Sent Events](https://developer.mozilla.org/en-US/docs/Server-sent_events)) and response command-documents ("application/html-deltas+json" for targeted updates to the html).
+
+*Most of the security tools are still in development - do not run untrusted Workers!*
+
+
 ## How does it work?
 
-### Load Process
+
+### How are applications created?
+
+Applications are defined with JSON configurations which include a layout and an array of Worker servers. The Worker servers are given links and settings which determine how they cooperate. All configuration can be modified during the session; doing so reloads the Workers while preserving document state.
+
+
+### How should I build Worker servers?
+
+Worker servers follow the Unix philosophy of simple, single-purpose programs which can be composed together using links, forms, proxies, and any other tools that develop (intents, pipes, etc). The Workers are generally stateless (they write their data to session storage) and are often unloaded or reloaded without warning.
+
+
+### What is the page load process?
 
 `/index.html` reads `/.host.json` on page-load to get a list of applications.
 
@@ -94,11 +107,11 @@ The API of 'httpl://storage.env':
  - `/`
    - GET: lists collections and the document keys within
    - POST: generates a unique, unused collection ID, then sets the empty collection there
- - '/:collection'
+ - `/:collection`
    - GET: lists the documents in the collection
    - POST: adds a document to the collection
    - DELETE: deletes the collection and its documents
- - '/:collection/:item'
+ - `/:collection/:item`
    - GET: fetches the document
    - PUT: replaces the document
    - PATCH: updates the document (must exist first)
