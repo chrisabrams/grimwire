@@ -1,6 +1,6 @@
 # Grimwire, the REST Browser OS (v0.0.1 unstable)
 
-Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). Its page is broken into independent regions which navigate Worker URLs (under the `httpl://` protocol). It is made to be a secure, user-configurable platform for social software.
+Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). Its page is broken into independent regions which navigate Worker URLs (under the `httpl://` protocol). It is made to be a secure, user-configurable platform for social software-sharing.
 
 Applications are created with JSON files specifying the active Workers and their settings. The Workers serve UIs and export APIs for each other to consume. The document hosts configuration at `httpl://config.env`, session storage at `httpl://storage.env`, and active Worker scripts at `httpl://workers.env`. As a result, apps on Grimwire can be shared and modified in-session by users, and do not require a backend service to operate.
 
