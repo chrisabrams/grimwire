@@ -23,9 +23,15 @@ Applications are created with JSON files specifying the active Workers and their
  - Peer-to-peer Ajax over WebRTC
 
 
+## Project Status
+
+Grimwire is currently in early development, and can be previewed at [http://grimwire.github.com/grimwire/](http://grimwire.github.com/grimwire/). Grimwire is a deployment of the [Local API](https://github.com/grimwire/local), a toolset for building a browser operating system (also in active development). /[@pfrazee](https://twitter.com/pfrazee)
+
+
 ## Documentation
 
-[https://github.com/grimwire/grimwire/wiki](https://github.com/grimwire/grimwire/wiki)
+### [GitHub Wiki](https://github.com/grimwire/grimwire/wiki)
+### [Local, the Core API](http://grimwire.com/local/docs.html)
 
 
 ## Getting Started
@@ -179,12 +185,6 @@ Permissions are not yet implemented. Do not load untrusted software!
 
 Grimwire disables inline scripts and styles through [CSP](https://developer.mozilla.org/en-US/docs/Security/CSP), and does not load `<script>` or `<style>` scripts. It's recommended that you do not alter the CSP unless you can guarantee that only trusted software will be loaded.
 
-
-## Project Status
-
-Grimwire is currently in early development, and can be previewed at [http://grimwire.github.com/grimwire/](http://grimwire.github.com/grimwire/).
-
-[@pfrazee](https://twitter.com/pfrazee)
 
 
 ## License
