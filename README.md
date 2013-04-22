@@ -1,12 +1,12 @@
-# Grimwire, the REST bOS (v0.0.1 unstable)
+# Grimwire, the REST Browser OS (v0.0.1 unstable)
 
-Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). HTML fragments are served into the layout, and link/form elements target the Worker servers' `httpl://` addresses. "Client regions" navigate resources hosted by the Worker servers, and HATEOAS tools help Workers consume each others' Web APIs.
+Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). Its page is broken into independent regions which navigate Worker URLs (under the `httpl://` protocol). It is made to be a secure, user-configurable platform for social software.
 
-Apps built on Grimwire can be modified and shared by users, and do not require a backend service to operate.
+Applications are created with JSON files specifying the active Workers and their settings. The Workers serve UIs and export APIs for each other to consume. The document hosts configuration at `httpl://config.env`, session storage at `httpl://storage.env`, and active Worker scripts at `httpl://workers.env`. As a result, apps on Grimwire can be shared and modified in-session by users, and do not require a backend service to operate.
 
-**Features**
+**Completed Features**
 
- - Multi-threaded Web applications with well-structured, strongly-encapsulated components
+ - Multi-threaded Web applications with well-structured, strongly-encapsulated programs
  - Unified HTTP/REST interface (links, forms, and Ajax calls) for software running locally or remotely
  - Promises-based API
 
@@ -17,7 +17,9 @@ Apps built on Grimwire can be modified and shared by users, and do not require a
 
 **Roadmap**
 
- - In-session Worker editing
+ - Permissions policies
+ - sessionStorage export/import to file
+ - In-browser Worker editing
  - Peer-to-peer Ajax over WebRTC
 
 
@@ -26,31 +28,36 @@ Apps built on Grimwire can be modified and shared by users, and do not require a
 [https://github.com/grimwire/grimwire/wiki](https://github.com/grimwire/grimwire/wiki)
 
 
+## Getting Started
+
+The latest stable build of Grimwire is kept active at [http://grimwire.github.io/grimwire/](http://grimwire.github.io/grimwire/).
+
+To host your own deployment:
+
+```
+git clone https://github.com/grimwire/grimwire.git grimwire
+cd grimwire
+python -m SimpleHTTPServer
+# open http://localhost:8000
+```
+
+If developing Grimwire's core software, clone the submodules and run make to build the scripts. **TODO** - link to detailed build instructions.
+
+
 ## Security
 
-One of the project's requirements is to allow untrusted code to enter the environment. The (developing) security model puts no trusted code inside the Workers, and instead requires all commands to enter the document as REST messages, where they are subject to permissions, scrubbing, and routing. The model relies on a trustworthy `/index.html` to host the Workers, so it's recommended that you DO NOT MODIFY `/index.html` or introduce new software into the document without a full security review. Instead, create configuration files to define layouts and load Worker servers.
+One of the project's requirements is to allow untrusted code to enter the environment. The (developing) security model puts no trusted code inside the Workers, and instead requires all commands to enter the document as REST messages, where they are subject to permissions, scrubbing, and routing. The model relies on a trustworthy `/index.html` to host the Workers, so it's recommended that you DO NOT MODIFY `/index.html` or introduce new software into the document without a full security review. Instead, use configuration files.
  
-For security and composition reasons, no javascript is allowed to enter the document namespace. To give Worker servers realtime control over the API, Grimwire uses event-streams ([Server-Sent Events](https://developer.mozilla.org/en-US/docs/Server-sent_events)) and response command-documents ("application/html-deltas+json" for targeted updates to the html).
-
 *Most of the security tools are still in development - do not run untrusted Workers!*
+
+ > Read More: [The Security Model](https://github.com/grimwire/grimwire/wiki/Security-Model)
 
 
 ## How does it work?
 
+### Load Process
 
-### How are applications created?
-
-Applications are defined with JSON configurations which include a layout and an array of Worker servers. The Worker servers are given links and settings which determine how they cooperate. All configuration can be modified during the session; doing so reloads the Workers while preserving document state.
-
-
-### How should I build Worker servers?
-
-Worker servers follow the Unix philosophy of simple, single-purpose programs which can be composed together using links, forms, proxies, and any other tools that develop (intents, pipes, etc). The Workers are generally stateless (they write their data to session storage) and are often unloaded or reloaded without warning.
-
-
-### What is the page load process?
-
-`/index.html` reads `/.host.json` on page-load to get a list of applications.
+`/index.html` GETs `/.host.json` on page-load to get a list of applications.
 
 ```json
 {
@@ -63,7 +70,7 @@ Worker servers follow the Unix philosophy of simple, single-purpose programs whi
 
 `/index.html` then reads each of the applications.
 
-*index.json*
+`/apps/index.json`:
 
 ```json
 {
@@ -77,12 +84,12 @@ Worker servers follow the Unix philosophy of simple, single-purpose programs whi
 		]
 	],
 	"workers": [
- 	{
+ 		{
 			"domain": "index.usr",
 			"title": "Search Index",
 			"src": "servers/worker/index/lunr.js"
 		},
- 	{
+ 		{
 			"domain": "bookmarks.usr",
 			"title": "User Bookmarks",
 			"src": "servers/worker/storage/bookmarks.js"
@@ -95,14 +102,46 @@ Worker servers follow the Unix philosophy of simple, single-purpose programs whi
 }
 ```
 
-The workers are loaded and given the configuration in the JSON. The layout is then constructed and populated with the HTML from the given URLs.
+The workers are loaded and given their configuration entries (mixed over the `common` configuration object, above). The layout is then constructed and populated with the HTML from the given URLs.
+
+ > Read More: [The Applications](https://github.com/grimwire/grimwire/wiki/The-applications)
+
+
+### How are Worker servers built?
+
+Worker servers are simple, single-purpose programs. They are generally stateless (they write their data to session storage) and are often unloaded or reloaded without warning. This makes them easy to reconfigure and rewrite during the session, and decouples the Workers from the document.
+
+A markdown proxy:
+
+```javascript
+importScripts('linkjs-ext/responder.js');
+importScripts('vendor/marked.js');
+
+marked.setOptions({ gfm: true, tables: true });
+function headerRewrite(headers) {
+	headers['content-type'] = 'text/html';
+	return headers;
+}
+function bodyRewrite(md) { return (md) ? marked(md) : ''; }
+
+localApp.onHttpRequest(function(request, response) {
+	var mdRequest = Link.dispatch({
+		method  : 'get',
+		url     : localApp.config.baseUrl + request.path,
+		headers : { accept:'text/plain' }
+	});
+	Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
+});
+```
+
+ > Read More: [The Workers](https://github.com/grimwire/grimwire/wiki/The-workers)
 
 
 ### How is the session managed?
 
-Grimwire provides 'httpl://storage.env' as a simple JSON document collection storage. It stores its data in the `sessionStorage` API, and is an ideal place for state to be kept (so the Workers can reload without losing data). The data in 'httpl://storage.env' can be exported and imported as JSON, allowing the user to resume a session by opening the file.
+Grimwire provides `httpl://storage.env` as a simple JSON document storage. It stores data in `sessionStorage` and is an ideal place to keep state (so the Workers can reload without losing data). The data in `httpl://storage.env` can be exported and imported as JSON, allowing the user to resume a session by reopening the file.
 
-The API of 'httpl://storage.env':
+The API of `httpl://storage.env`:
 
  - `/`
    - GET: lists collections and the document keys within
@@ -117,21 +156,21 @@ The API of 'httpl://storage.env':
    - PATCH: updates the document (must exist first)
    - DELETE: deletes the document
 
+This can be easily consumed using `Link.navigator`
 
-### How is configuration managed?
+```javascript
+var storage = Link.navigator('httpl://storage.env').collection('myapp');
+storage.item('usercfg').patch({ id:'johndoe', email:'jdoe@email.com' });
+storage.getJson().then(function(res) {
+	console.log(res.body);
+})
+```
 
-Grimwire provides the 'httpl://config.env' interface, which initially loads the json files from the host, then loads configurations from 'httpl://config.env/applications' (starting with 'httpl://config.env/applications/.host') and layers those configurations over the host's. This is how the user is able to modify the configuration of the server. These tools will evolve over time; the goal is to merge configuration smartly enough that users can make targeted updates and not become disconnected from updates by the host. *The current mechanism is in development and should not be considered stable.*
+Navigator works by following entries in response `Link` headers and using URI templates. 
 
-Workers' `localApp.config` variables are populated with their configurations, which are merged with the 'common' object. They can always rely on the `localApp.config.domain` attribute to locate themselves.
+ > Read More about `Navigator`: [Local APIs](https://github.com/grimwire/grimwire/wiki/Local-APIs)
 
-All responses should include a 'Link' header, as it is used by the `Navigator` object to locate resources.
-
-**TODO-- example code**
-
-
-### How are sessions and credentials managed?
-
-**TODO** (short answer, traffic is scrubbed, the environment keeps a map of session data to different domains, and it attaches that data to requests targeting those domains)
+*Permissions policies will eventually regulate which `httpl://session.env` resources the Workers can access.*
 
 
 ### How are permissions managed?
@@ -139,17 +178,6 @@ All responses should include a 'Link' header, as it is used by the `Navigator` o
 Permissions are not yet implemented. Do not load untrusted software!
 
 Grimwire disables inline scripts and styles through [CSP](https://developer.mozilla.org/en-US/docs/Security/CSP), and does not load `<script>` or `<style>` scripts. It's recommended that you do not alter the CSP unless you can guarantee that only trusted software will be loaded.
-
-
-### How do I build the UI without client-side styling or javascript?
-
-**TODO** (short answer, response directives, server-sent events, twitter bootstrap styles and data-* apis for widgets)
-
-
-### How do I host Grimwire?
-
-**TODO** (short answer, statically, along with your Worker server js files and application configs)
-
 
 
 ## Project Status
