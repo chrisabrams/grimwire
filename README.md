@@ -2,12 +2,12 @@
 
 Grimwire is a Web client framework which runs RESTful servers inside of [Web Workers](https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers). Its page is broken into independent regions which navigate Worker URLs (under the `httpl://` protocol). It is made to be a secure, user-configurable platform for social software-sharing.
 
-Applications are created with JSON files specifying the active Workers and their settings. The Workers serve UIs and export APIs for each other to consume. The document hosts configuration at `httpl://config.env`, session storage at `httpl://storage.env`, and active Worker scripts at `httpl://workers.env`. As a result, apps on Grimwire can be shared and modified in-session by users, and do not require a backend service to operate.
+Apps on Grimwire (including their source code) can be shared and modified in-session by users, and do not require a backend service to operate. Workers can be reused between apps - in fact, apps are just arrays of Workers configured together. With no client-side Javascript (all Workers are servers) Grimwire can enforce permissions and compose UIs in a shared layout, making it an ideal platform for reusable, user-driven Web software.
 
 **Completed Features**
 
  - Multi-threaded Web applications with well-structured, strongly-encapsulated programs
- - Unified HTTP/REST interface (links, forms, and Ajax calls) for software running locally or remotely
+ - Unified HTTP messaging (links, forms, and Ajax calls) for software running locally or remotely
  - Promises-based API
 
 **In Development**
@@ -25,7 +25,7 @@ Applications are created with JSON files specifying the active Workers and their
 
 ## Project Status
 
-Grimwire is currently in early development, and can be previewed at [http://grimwire.github.com/grimwire/](http://grimwire.github.com/grimwire/). Grimwire is a deployment of the [Local API](https://github.com/grimwire/local), a toolset for building a browser operating system (also in active development). /[@pfrazee](https://twitter.com/pfrazee)
+Grimwire is currently in early development, and can be previewed at [http://grimwire.github.com/grimwire/](http://grimwire.github.com/grimwire/). Grimwire is a deployment of the [Local API](https://github.com/grimwire/local), a toolset for building browser operating systems (also in active development). /[@pfrazee](https://twitter.com/pfrazee)
 
 
 ## Documentation
