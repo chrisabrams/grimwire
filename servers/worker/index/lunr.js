@@ -30,7 +30,12 @@ function main(request, response) {
 			addDocument(request, response);
 		else
 			response.writeHead(405, 'bad method').end();
-	} else
+	}
+	else if (request.path == '/.config') {
+		response.writeHead(200, 'ok', {'content-type':'text/html'});
+		response.end('Index Lunr TODO!');
+	}
+	else
 		response.writeHead(404, 'not found').end();
 }
 
@@ -73,7 +78,7 @@ function getInterface(request, response) {
 
 	headers['content-type'] = 'text/html';
 	response.writeHead(200, 'ok', headers).end([
-		'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'/docs" target="search-results">',
+		'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'/docs" accept="application/html-deltas+json">',
 			'<input type="text" placeholder="Search',subjectDesc,'..." class="input-xxlarge" name="q">',
 			'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
 		'</form>',
@@ -95,11 +100,13 @@ function getDocuments(request, response) {
 	var docIds = (request.query.q) ? idx.search(request.query.q) : undefined;
 	var subset = getDocsByResultset(docIds);
 
-	if (/html/.test(request.headers.accept)) {
+	if (/html-deltas/.test(request.headers.accept)) {
+		headers['content-type'] = 'application/html-deltas+json';
+		response.writeHead(200, 'ok', headers).end({ replace:{ '#search-results':buildDocsHtml(subset) }});
+	} else if (/html/.test(request.headers.accept)) {
 		headers['content-type'] = 'text/html';
 		response.writeHead(200, 'ok', headers).end(buildDocsHtml(subset));
-	}
-	else {
+	} else {
 		headers['content-type'] = 'application/json';
 		response.writeHead(200, 'ok', headers).end(subset);
 	}

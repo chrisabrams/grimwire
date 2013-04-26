@@ -1,6 +1,8 @@
 var $layoutContainerEl = $('#layout');
+var $topbarEl = $('#grim-topbar');
 var $topbarAppsEl = $('#grim-topbar-apps');
 if ($layoutContainerEl.length === 0) throw "#layout element not found";
+if ($topbarEl.length === 0) throw "#grim-topbar element not found";
 if ($topbarAppsEl.length === 0) throw "#grim-topbar-apps element not found";
 var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('layout'));
 
@@ -56,7 +58,7 @@ local.env.addServer('config.env', configServer);
 	appConfigsCollection.item('.active').subscribe().succeed(function(activeApp) {
 		activeApp.on('update', function(e) {
 			var config = e.data;
-			document.title = (config.title || 'Untitled Application') + ' - Grimwire';
+			document.title = 'Grimwire - ' + (config.title || 'Untitled Application');
 			highlightActiveApp(config.id);
 			layoutRegion.dispatchRequest(config.startpage);
 		});
@@ -83,14 +85,15 @@ configServer.loadFromHost()
 function renderTopbarApps(appCfgs) {
 	var html = [];
 	for (var id in appCfgs) {
+		if (id.charAt(0) == '_') continue; // env app, no nav item
 		html.push('<li><a href="#',id,'"><i class="icon-',(appCfgs[id].icon || 'folder-close'),'"></i> ',appCfgs[id].title,'</a></li>');
 		html.push('<li class="divider-vertical"></li>');
 	}
 	$topbarAppsEl.html(html.join(''));
 }
 function highlightActiveApp(appId) {
-	$('.active', $topbarAppsEl).removeClass('active');
-	$('[href="#'+appId+'"]').parent().addClass('active');
+	$('.active', $topbarEl).removeClass('active');
+	$('[href="#'+appId+'"]', $topbarEl).parent().addClass('active');
 }
 
 

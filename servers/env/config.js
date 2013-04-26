@@ -18,6 +18,13 @@
 		this.activeAppId = null;
 		this.defaultAppId = null; // as inferred from the ordering of "applications" in .hosts.json
 
+		// add special environment apps
+		this.hostAppConfigs['_workers'] = {
+			id: '_workers',
+			title: 'Active Workers',
+			startpage: 'httpl://config.env/workers'
+		};
+
 		this.broadcasts = {
 			apps: local.http.broadcaster(),
 			activeApp: local.http.broadcaster()
@@ -30,6 +37,7 @@
 			{ _prefix:'http', head:'get', patch:'set', put:'set', post:'addTo' },
 			{
 				'/': [this, 'Service'],
+				'/workers': [this, 'Workers'],
 				'/:collection': [this, 'Collection'],
 				'/:collection/:item': [this, 'Item']
 			}
@@ -216,6 +224,48 @@
 		else if (/head/i.test(request.method))
 			response.writeHead(200, 'ok', headers).end();
 		else
+			response.writeHead(406, 'not acceptable').end();
+	};
+
+	ConfigServer.prototype.httpGetWorkers = function(request, response) {
+		var headers = {
+			link: [
+				{ rel:'up via service', href:'/' },
+				{ rel:'self', href:'/workers' },
+				{ rel:'item', href:'/workers/{title}' }
+			]
+		};
+		if (/html/.test(request.headers.accept)) {
+			// fetch config interfaces from each worker server
+			local.promise.bundle(
+				Object.keys(local.env.servers)
+					.filter(function(domain) { return (local.env.servers[domain] instanceof local.env.WorkerServer); })
+					.map(function(domain) {
+						var server = local.env.servers[domain];
+						// GET httpl://<worker>/.config text/html
+						return local.http.dispatch({ method:'get', url:'httpl://'+server.config.domain+'/.config', headers:{ accept:'text/html' }})
+							.then(
+								function(res) {
+									// interface given
+									return { cfg:server.config, html:res.body };
+								},
+								function() {
+									// fallback default interface :TODO:
+									return { cfg:server.config, html:JSON.stringify(server.config) };
+								}
+							);
+					})
+			).then(function(workers) {
+				// construct into final interface
+				var html = '<h3>Active Workers</h3><hr/>';
+				html += workers.map(function(worker) {
+					return '<h4>'+worker.cfg.title+' <small>'+worker.cfg.domain+'</small></h4><div>'+worker.html+'</div><hr/>';
+				}).join('');
+
+				headers['content-type'] = 'text/html';
+				response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
+			});
+		} else
 			response.writeHead(406, 'not acceptable').end();
 	};
 

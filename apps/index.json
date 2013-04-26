@@ -18,20 +18,16 @@
 			"src": "servers/worker/index/lunr.js",
 			"seed": [
 				{
-					"title":"Local Servers",
-					"href":"httpl://servers.env",
-					"tags":["worker","servers","session"],
-					"desc":"Active local servers running in worker threads"
-				},{
-					"title":"Configuration",
-					"href":"httpl://config.env",
-					"tags":["config","session"],
-					"desc":"Settings of the active session"
-				},{
-					"title":"Reader.html",
-					"href":"reader.html",
+					"title":"Reader",
+					"href":"#rss",
 					"tags":["reader","rss","feed","app"],
 					"desc":"feed-reader application",
+					"target":"_top"
+				},{
+					"title":"Active Workers",
+					"href":"#_workers",
+					"tags":["workers","env","app"],
+					"desc":"active workers sys application",
 					"target":"_top"
 				},{
 					"title":"Grimwire Repo",
