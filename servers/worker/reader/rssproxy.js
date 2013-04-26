@@ -1,14 +1,12 @@
-importScripts('lib/local/linkjs-ext/responder.js');
-
 // we use yahoo pipes to deal with single-origin policy
 // http://www.badlydrawntoy.com/2008/07/08/yahoo-pipes-and-jquery-same-origin-policy/
-var yahooPipeTemplate = Link.UriTemplate.parse('http://pipes.yahoo.com/pipes/pipe.run?_id=c2d940db8f6853ecebe1a522ba11ead5{&_render,url}');
+var yahooPipeTemplate = local.http.UriTemplate.parse('http://pipes.yahoo.com/pipes/pipe.run?_id=c2d940db8f6853ecebe1a522ba11ead5{&_render,url}');
 function getFeed(url, format) {
 	var opts = {
 		url: encodeURIComponent(url),
 		_render: format
 	};
-	return Link.dispatch({ method:'get', url:yahooPipeTemplate.expand(opts) });
+	return local.http.dispatch({ method:'get', url:yahooPipeTemplate.expand(opts) });
 }
 function getLink(item) {
   if (item['feedburner:origLink']) { return item['feedburner:origLink']; }
@@ -36,6 +34,6 @@ function normalizeSchema(res) {
   res.body = { items:res.body.value.items };
   return res;
 }
-localApp.onHttpRequest(function(request, response) {
-	Link.responder(response).pipe(getFeed(request.query.url, 'json').then(normalizeSchema));
-});
+function main(request, response) {
+	local.http.pipe(response, getFeed(request.query.url, 'json').then(normalizeSchema));
+}

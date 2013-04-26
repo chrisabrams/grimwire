@@ -96,6 +96,6 @@ function highlightActiveApp(appId) {
 
 // UI behaviors
 // -
-$topbarAppsEl.click(function(e) {
-	configServer.setActiveApp($(e.target).getAttribute('href').slice(1));
+window.addEventListener('hashchange', function() {
+	configServer.setActiveApp(window.location.hash.slice(1));
 });
