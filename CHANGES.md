@@ -1,6 +1,11 @@
 Changes
 =======
 
+2013/04/26 pfraze
+
+ - Added local.client.GrimRegion with grim-layout behaviors
+
+
 2013/04/25 pfraze
 
  - Rebuilt /servers/env/config.js to...

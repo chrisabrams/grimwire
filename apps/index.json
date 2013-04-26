@@ -30,8 +30,8 @@
 				},{
 					"title":"Reader.html",
 					"href":"reader.html",
-					"tags":["reader","rss","feed","env"],
-					"desc":"feed-reader environment",
+					"tags":["reader","rss","feed","app"],
+					"desc":"feed-reader application",
 					"target":"_top"
 				},{
 					"title":"Grimwire Repo",

@@ -2,7 +2,7 @@ var $layoutContainerEl = $('#layout');
 var $topbarAppsEl = $('#grim-topbar-apps');
 if ($layoutContainerEl.length === 0) throw "#layout element not found";
 if ($topbarAppsEl.length === 0) throw "#grim-topbar-apps element not found";
-var layoutRegion = local.env.addClientRegion('layout');
+var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('layout'));
 
 // request wrapper
 // -
@@ -22,7 +22,7 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 // -
 local.env.setRegionPostProcessor(function(el) {
 	lifespanPostProcess(el);
-	layoutPostProcess(el);
+	grimLayoutPostProcess(el);
 });
 
 
@@ -91,19 +91,6 @@ function renderTopbarApps(appCfgs) {
 function highlightActiveApp(appId) {
 	$('.active', $topbarAppsEl).removeClass('active');
 	$('[href="#'+appId+'"]').parent().addClass('active');
-}
-// :DEBUG: this is a temporary solution
-var __temp_counter = 100;
-function layoutPostProcess(el) {
-	$('[data-grim-layout]', el).each(function(i, region) {
-		var params = region.dataset.grimLayout.split(' ');
-		if (params[1]) {
-			var div = document.createElement('div');
-			div.id = __temp_counter++;
-			region.appendChild(div);
-			local.env.addClientRegion(div.id).dispatchRequest(params[1]);
-		}
-	});
 }
 
 

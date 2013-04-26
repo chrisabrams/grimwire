@@ -45,13 +45,39 @@ function getInterface(request, response) {
 	if (/head/i.test(request.method))
 		return response.writeHead(200, 'ok', headers).end();
 
+	// :DEBUG: temporary show of function while refining layouts system
+	var subset = docs;
+	var subjectDesc = '';
+	if (request.query.subject) {
+		var q;
+		switch (request.query.subject) {
+			case 'apps':
+				subjectDesc = ' Applications';
+				q = 'app';
+				break;
+			case 'workers':
+				subjectDesc = ' Workers';
+				q = 'worker';
+				break;
+			case 'docs':
+				subjectDesc = ' Documentation';
+				q = 'doc';
+				break;
+			default:
+				subjectDesc = ' '+request.query.subject;
+				q = rqeuest.query.subject;
+				break;
+		}
+		subset = getDocsByResultset(idx.search(q));
+	}
+
 	headers['content-type'] = 'text/html';
 	response.writeHead(200, 'ok', headers).end([
-		'<form class="form-search" method="get" action="httpl://',local.worker.config.domain,'/docs" target="search-results">',
-			'<input type="text" placeholder="Search..." class="input-xxlarge search-query" name="q">',
+		'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'/docs" target="search-results">',
+			'<input type="text" placeholder="Search',subjectDesc,'..." class="input-xxlarge" name="q">',
 			'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
 		'</form>',
-		'<div id="search-results">',buildDocsHtml(docs),'</div>'
+		'<div id="search-results">',buildDocsHtml(subset),'</div>'
 	].join(''));
 }
 
@@ -67,15 +93,15 @@ function getDocuments(request, response) {
 		return response.writeHead(200, 'ok', headers).end();
 
 	var docIds = (request.query.q) ? idx.search(request.query.q) : undefined;
-	var docs = getDocsByResultset(docIds);
+	var subset = getDocsByResultset(docIds);
 
 	if (/html/.test(request.headers.accept)) {
 		headers['content-type'] = 'text/html';
-		response.writeHead(200, 'ok', headers).end(buildDocsHtml(docs));
+		response.writeHead(200, 'ok', headers).end(buildDocsHtml(subset));
 	}
 	else {
 		headers['content-type'] = 'application/json';
-		response.writeHead(200, 'ok', headers).end(docs);
+		response.writeHead(200, 'ok', headers).end(subset);
 	}
 }
 
