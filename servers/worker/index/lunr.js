@@ -1,7 +1,7 @@
 // index/lunr.js
 // ==============
 // Clientside search with lunr.js
-var lunr = require('vendor/lunr/lunr.min.js');
+var lunr = require('vendor/lunr.min.js');
 
 var docs = [];
 var nDocs = 0;

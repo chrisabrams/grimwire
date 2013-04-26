@@ -1,6 +1,3 @@
 [submodule "src/local"]
 	path = src/local
 	url = git://github.com/grimwire/local.git
-[submodule "lib/lunr"]
-	path = lib/lunr
-	url = git://github.com/olivernn/lunr.js.git
