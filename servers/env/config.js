@@ -5,116 +5,143 @@
 	// interfaces over host and userdata config
 	// - loads host's static configs, then merges userdata config over it
 	// - provides UIs and APIs for reading static and read/writing userdata
-	// - gives workers config profile-management
 	// - embeds worker-provided config interfaces in UI
 	function ConfigServer(storageHost) {
-		Environment.Server.call(this);
+		local.env.Server.call(this);
 
 		this.storageHost = storageHost;
-		this.storageHost.apps = storageHost.collection('applications');
+		this.storageHost.apps = storageHost.collection('apps');
 
 		this.hostEnvConfig = {}; // :NOTE: as provided by the host
 		this.hostAppConfigs = {}; // :NOTE: as provided by the host
 		// ^ to get config with user settings mixed in, use getAppConfig()
 		this.activeAppId = null;
+		this.defaultAppId = null; // as inferred from the ordering of "applications" in .hosts.json
 
 		this.broadcasts = {
-			apps: Link.broadcaster(),
-			activeApp: Link.broadcaster()
+			apps: local.http.broadcaster(),
+			activeApp: local.http.broadcaster()
 		};
 	}
-	ConfigServer.prototype = Object.create(Environment.Server.prototype);
+	ConfigServer.prototype = Object.create(local.env.Server.prototype);
 
 	ConfigServer.prototype.handleHttpRequest = function(request, response) {
-		var self = this;
-		var router = Link.router(request);
-		var respond = Link.responder(response);
-		// :TODO:
-		/*router.pm('/',                              /HEAD|GET/i, this.handler('getConfigInterface', request, respond));
-		router.pm('/values',                        /HEAD|GET/i, this.handler('getValuesCollection', request, respond));
-		router.pm('/schemas',                       /HEAD|GET/i, this.handler('getSchemasCollection', request, respond));
-		router.pm('/validators',                    /HEAD|GET/i, this.handler('getValidatorsCollection', request, respond));
-		router.pmt('/validators',                   /POST/i, /json|form/, this.handler('addValidators', request, respond));
-		router.pm(RegExp('^/values/(.*)','i'),      /HEAD|GET/i, this.handler('getValuesItem', request, respond));
-		router.pm(RegExp('^/schemas/(.*)','i'),     /HEAD|GET/i, this.handler('getSchemasItem', request, respond));
-		router.pm(RegExp('^/validators/(.*)','i'),  /HEAD|GET/i, this.handler('getValidatorsItem', request, respond));
-		router.pmt(RegExp('^/values/(.*)','i'),     /PUT|PATCH/i, /json|form/, this.handler('setValuesItem', request, respond));
-		router.pmt(RegExp('^/schemas/(.*)','i'),    /PUT|PATCH/i, /json|form/, this.handler('setSchemasItem', request, respond));
-		router.pmt(RegExp('^/validators/(.*)','i'), /PUT|PATCH/i, /json|form|text/, this.handler('setValidatorsItem', request, respond));*/
-		router.error(response);
+		// construct the name of the function to handle the request based on:
+		// - path, with a /:collection/:item structure
+		// - method, with methods mapping to Get, Set, AddTo, or Delete
+		// eg
+		// - POST /applications -> "httpAddToCollection" 
+		// - DELETE /applications/mail -> "httpDeleteItem"
+
+		var handler;
+		if (/HEAD|GET/i.test(request.method))       handler = 'httpGet';
+		else if (/PATCH|PUT/i.test(request.method)) handler = 'httpSet';
+		else if (/POST/i.test(request.method))      handler = 'httpAddTo';
+		else if (/DELETE/i.test(request.method))    handler = 'httpDelete';
+		else return response.writeHead(405, 'bad method').end();
+
+		path = request.path.split('/').filter(function(part) { return !!part; });
+		if (!path[0])                 handler += 'Service';
+		else if (path[0] && !path[1]) handler += 'Collection';
+		else if (path[0] && path[1])  handler += 'Item';
+		else return response.writeHead(404, 'not found').end();
+
+		var handlerFn = this[handler];
+		if (!handlerFn)
+			return response.writeHead(405, 'bad method').end();
+		handlerFn.call(this, request, response, path[0], path[1]);
 	};
+
+	// api
+	// -
 
 	ConfigServer.prototype.loadFromHost = function(url) {
 		url = url || '/.host.json';
 		var self = this;
 		// load json at given url
-		return Link.navigator(url).getJson()
+		return local.http.navigator(url).getJson()
 			.succeed(function(res) {
 				self.hostEnvConfig = res.body;
 
+				// may still be a string if the host didnt give an accurate content-type header
+				if (typeof self.hostEnvConfig == 'string')
+					self.hostEnvConfig = JSON.parse(self.hostEnvConfig);
+
 				// load application configs
-				var appConfigGETs = self.hostEnvConfig.applications.map(function(url) { return Link.navigator(url).getJson(); });
-				return Local.promise.bundle(appConfigGETs);
+				var appConfigGETs = self.hostEnvConfig.applications.map(function(url) { return local.http.navigator(url).getJson(); });
+				return local.promise.bundle(appConfigGETs);
 			})
 			.succeed(function(responses) {
 				// save app configs
 				responses.forEach(function(res) {
 					if (!res.body) return;
+					// may still be a string if the host didnt give an accurate content-type header
+					if (typeof res.body == 'string')
+						res.body = JSON.parse(res.body);
 					if (!res.body.id) throw "Invalid application config: `id` is required";
 					self.hostAppConfigs[res.body.id] = res.body;
 				});
+				// use the getter so we can mix in config from userdata
 				return self.getAppConfigs();
 			})
-			.succeed(function(configs) {
+			.succeed(function(appCfgs) {
 				// broadcast that the loaded apps have changed
-				self.broadcasts.apps.emit('update', configs);
-				return configs;
+				self.broadcasts.apps.emit('update', appCfgs);
+				return appCfgs;
 			});
 	};
 
 	ConfigServer.prototype.openApp = function(appId) {
 		var self = this;
 		return this.getAppConfig(appId)
-			.succeed(function(config) {
-				if (!config.workers) throw "Invalid application config: `workers` is required";
-				if (!config.layout) throw "Invalid application config: `layout` is required";
-
-				self.closeActiveApp();
-				self.activeAppId = appId;
+			.succeed(function(appCfg) {
+				if (!appCfg.startpage) throw "Invalid application config: `startpage` is required";
+				if (!appCfg.workers) throw "Invalid application config: `workers` is required";
+				if (!appCfg.workers.length) throw "Invalid application config: `workers` must be an array with at least 1 member";
 
 				// load workers
-				config.workers.forEach(function(workerCfg) {
+				appCfg.workers.forEach(function(workerCfg) {
 					// :TODO: mix in app common
+					workerCfg = deepClone(workerCfg);
 					if (!workerCfg.title) return console.error('Invalid worker config: `title` is required', workerCfg);
-					if (!workerCfg.domain) return console.error('Invalid worker config: `domain` is required', workerCfg);
+					if (!workerCfg.id) return console.error('Invalid worker config: `id` is required', workerCfg);
 					if (!workerCfg.src) return console.error('Invalid worker config: `src` is required', workerCfg);
 					workerCfg.scriptUrl = workerCfg.src;
-					Environment.addServer(workerCfg.domain, new Environment.WorkerServer(workerCfg));
+					workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
+					local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
 				});
 
-				// broadcast
-				self.broadcasts.activeApp.emit('update', config);
-				self.broadcasts.activeApp.emit('open', config);
+				// :TODO: broadcast update or open event on the app?
 			});
 	};
 
-	ConfigServer.prototype.reloadActiveApp = function() {
-		var appId = this.activeAppId;
-		if (!appId)
-			return;
-		this.closeActiveApp();
+	ConfigServer.prototype.closeApp = function(appId) {
+		// :TODO: get app config to do unloading
+		for (var domain in local.env.servers) {
+			var server = local.env.servers[domain];
+			if (server instanceof local.env.WorkerServer)
+				local.env.killServer(domain);
+		}
+		// :TODO: broadcast update or close event on the app?
+	};
+
+	ConfigServer.prototype.reloadApp = function(appId) {
+		this.closeApp(appId);
 		this.openApp(appId);
 	};
 
-	ConfigServer.prototype.closeActiveApp = function() {
-		for (var domain in Environment.servers) {
-			var server = Environment.servers[domain];
-			if (server instanceof Environment.WorkerServer)
-				Environment.killServer(domain);
-		}
-		this.activeAppId = null;
-		this.broadcasts.activeApp.emit('update', null);
-		this.broadcasts.activeApp.emit('close');
+	ConfigServer.prototype.setActiveApp = function(appId) {
+		var self = this;
+		if (!appId)
+			appId = this.defaultAppId;
+		this.getAppConfig(appId).then(
+			function(appCfg) {
+				self.activeAppId = appId;
+				self.broadcasts.activeApp.emit('update', appCfg);
+			},
+			function() {
+				console.log('Failed to set active app to "'+appId+'": not found');
+			});
 	};
 
 	ConfigServer.prototype.getEnvConfig = function(appId) {
@@ -153,18 +180,18 @@
 		return this.getAppIds()
 			.succeed(function(appIds) {
 				envAppIds = appIds;
+				self.defaultAppId = appIds[0]; // let the first in the list be the default
 				// get user storage app configs
 				var appConfigGETs = appIds.map(function(appId) { return self.storageHost.apps.item(appId).getJson(); });
-				return Local.promise.bundle(appConfigGETs);
+				return local.promise.bundle(appConfigGETs);
 			})
 			.succeed(function(userCfgResponses) {
 				var appConfigs = {
-					__defaultApp: envAppIds[0] // used to choose the app to load on init
 				};
 				// mix user app config & host app config
 				userCfgResponses.forEach(function (userCfgResponse, i) {
 					var appId = envAppIds[i];
-					appConfigs[appId] = patch(hostAppConfigs[appId], userCfgResponse.body);
+					appConfigs[appId] = patch(hostAppConfigs[appId], userCfgResponse.body || {});
 				});
 				return appConfigs;
 			});
@@ -172,395 +199,167 @@
 
 	ConfigServer.prototype.getAppConfig = function(appId) {
 		var self = this;
-		var config = deepClone(this.hostAppConfigs[appId] || {});
-		// mix user and host config
+		var hostCfg;
+
+		// given a config object?
+		if (appId && typeof appId == 'object') {
+			hostCfg = deepClone(appId);
+			appId = hostCfg.id;
+		} else
+			hostCfg = (this.hostAppConfigs[appId]) ? deepClone(this.hostAppConfigs[appId]) : {};
+
+		// get user cfg and mix with host cfg
 		return this.storageHost.apps.item(appId).getJson()
 			.then(function(res) { return res.body; }, function() { return {}; })
-			.succeed(function(userConfig) {
-				return patch(config, userConfig);
+			.succeed(function(userCfg) {
+				return patch(hostCfg, userCfg);
 			});
 	};
 
-	// INTERNAL
+	// handlers
+	// -
 
-
-
-	ConfigServer.prototype.getConfigInterface = function(request, respond) {
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'self current');
-		headerer.addLink('/values', 'collection', { title:'values' });
-		headerer.addLink('/schemas', 'collection', { title:'schemas' });
-		headerer.addLink('/validators', 'collection', { title:'validators' });
-
-		if (/GET/i.test(request.method)) {
-			if (/html/.test(request.headers.accept)) {
-				// respond with interface
-				var self = this;
-				var serve = function() {
-					respond.ok('html', headerer).end(self.buildConfigInterfaceHTML(request.query.section));
-				};
-				this.readFromStorage().then(serve, serve);
-			} else {
-				// respond with data
-				respond.ok('json', headerer).end({ schemaItems:Object.keys(this.schemas), valueItems:Object.keys(this.values) });
-			}
-		} else {
-			// respond with headers
-			respond.ok(null, headerer).end();
-		}
-	};
-
-	function buildControl(formKey, controlKey, schema, value) {
-		var k = formKey, l = controlKey;
-		switch (schema.control) {
-			case 'textarea':
-				return ['<textarea id="',k+'-'+l,'"',' name="',l,'" class="input-xxlarge" rows="5" ',(schema.readonly)?'disabled':'','>',value,'</textarea>'].join('');
-			default:
-				return ['<input type="text" id="',k+'-'+l,'"',' name="',l,'" value="',value,'" class="input-xxlarge" />'].join('');
-		}
-	}
-
-	ConfigServer.prototype.buildConfigInterfaceHTML = function(section, opts) {
-		opts = opts || {};
-		var html = [];
-		for (var k in this.values) {
-			if (section && section != k)
-				continue;
-
-			opts[k] = opts[k] || {};
-			var errors = opts[k].errors || {};
-			var fieldsHtml = [];
-
-			for (var l in this.schemas[k]) {
-				fieldsHtml.push([
-					'<div class="control-group ',(l in errors) ? 'error' : '','">',
-						'<label class="control-label" for="',k+'-'+l,'">',this.schemas[k][l].label,'</label>',
-						'<div class="controls">',
-							buildControl(k, l, this.schemas[k][l], this.values[k][l]),
-							(l in errors) ? ' <span class="help-inline">'+errors[l]+'</span>' : '',
-						'</div>',
-					'</div>'
-				].join(''));
-			}
-			html.push([
-				'<form id="',k,'" class="form-horizontal" target="',k,'" action="httpl://',this.config.domain,'/values/'+k+'" method="put">',
-					'<legend>',toTitleCase(k),'</legend>',
-					(opts[k].message) ? '<div class="alert alert-success" data-lifespan="5">'+opts[k].message+'</div>' : '',
-					fieldsHtml.join(''),
-					'<input type="submit" class="btn" />',
-				'</form>'
-			].join(''));
-		}
-		return html.join('');
-	};
-
-
-	// Values Handlers
-	// ===============
-
-	ConfigServer.prototype.getValuesCollection = function(request, respond) {
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'up');
-		headerer.addLink('/values', 'self');
-		headerer.addLink('/values/{title}', 'item');
-		for (var k in this.values) {
-			headerer.addLink('/values/'+k, 'item', { title:k });
-		}
-
-		if (/GET/i.test(request.method)) {
-			// respond with data
-			respond.ok('json', headerer).end({ items:Object.keys(this.values) });
-		} else {
-			// respond with headers
-			respond.ok(null, headerer).end();
-		}
-	};
-
-	ConfigServer.prototype.getValuesItem = function(request, respond, match) {
-		var self = this;
-		var key = match.path[1];
-		var serve = function() {
-			var headerer = Link.headerer();
-			headerer.addLink('/values', 'up collection');
-			headerer.addLink('/values/'+key, 'self');
-
-			if (/event-stream/.test(request.headers.accept)) {
-				respond.ok('event-stream', headerer);
-				self.broadcasters[key] = self.broadcasters[key] || Link.broadcaster();
-				self.broadcasters[key].addStream(respond.response);
-				return;
-			}
-
-			if (!(key in self.values))
-				return respond.noContent().end(); // do no content so they can navigate to the key before it exists
-			respond.ok('json').end(self.values[key]);
+	ConfigServer.prototype.httpGetService = function(request, response) {
+		var headers = {
+			link: [
+				{ rel:'self', href:'/' },
+				{ rel:'collection', href:'/apps', title:'apps' },
+				{ rel:'collection', href:'/{title}' }
+			]
 		};
-		this.readFromStorage(key).then(serve, serve);
+		if (/html/.test(request.headers.accept))
+			response.writeHead(501, 'not implemented').end(); // :TODO:
+		else if (/head/i.test(request.method))
+			response.writeHead(200, 'ok', headers).end();
+		else
+			response.writeHead(406, 'not acceptable').end();
 	};
 
-	ConfigServer.prototype.setValuesItem = function(request, respond, match) {
-		var key = match.path[1];
-		var values = request.body;
-		if (!values)
-			return respond.badRequest().end('No request body was provided');
-
-		var schema = this.schemas[key];
-		if (!schema)
-			return respond.failedDependency().end('No schema was found for the value collection');
-
-		// run validation
-		var errors = {};
-		for (var k in values) {
-			var valueSchema = schema[k];
-			if (!valueSchema) {
-				errors[k] = 'Not a valid attribute in the schema';
-				continue;
-			}
-			var validator = this.validators[valueSchema.type];
-			if (!validator) {
-				errors[k] = 'Schema misconfigure: "'+valueSchema.type+'" type is not a registered validator';
-				continue;
-			}
-			if (RegExp(validator,'i').test(''+values[k]) === false) {
-				errors[k] = 'Invalid '+valueSchema.type;
-				continue;
-			}
-		}
-		if (Object.keys(errors).length !== 0) {
-			if (/html/.test(request.headers.accept)) {
-				var opts = {};
-				opts[key] = { errors:errors };
-				return respond.ok('html').end(this.buildConfigInterfaceHTML(opts));
-			}
-			return respond.badRequest().end(errors);
-		}
-
-		if (/PUT/i.test(request.method)) {
-			// set any undefined values to their fallback
-			for (var k in schema) {
-				if (typeof values[k] == 'undefined')
-					values[k] = schema[k].fallback;
-			}
-			// overwrite
-			this.values[key] = values;
-		} else {
-			// update
-			this.values[key] = this.values[key] || {};
-			for (var k in values)
-				this.values[key][k] = values[k];
-		}
-		this.writeToStorage(key);
-		if (key in this.broadcasters)
-			this.broadcasters[key].emit('update');
-
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/values', 'up collection');
-		headerer.addLink('/values/'+key, 'self');
-		if (/html/.test(request.headers.accept)) {
-			var opts = {};
-			opts[key] = { message:'Updated' };
-			return respond.ok('html').end(this.buildConfigInterfaceHTML(key, opts));
-		}
-		respond.ok().end();
-	};
-
-
-	// Schemas Handlers
-	// ================
-
-	ConfigServer.prototype.getSchemasCollection = function(request, respond) {
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'up');
-		headerer.addLink('/schemas', 'self');
-		headerer.addLink('/schemas/{title}', 'item');
-		for (var k in this.schemas)
-			headerer.addLink('/schemas/'+k, 'item', { title:k });
-
-		if (/GET/i.test(request.method)) {
-			// respond with data
-			respond.ok('json', headerer).end({ items:Object.keys(this.schemas) });
-		} else {
-			// respond with headers
-			respond.ok(null, headerer).end();
+	ConfigServer.prototype.httpGetCollection = function(request, response, cid) {
+		var headers = {
+			link: [
+				{ rel:'up via service', href:'/' },
+				{ rel:'self', href:'/'+cid },
+				{ rel:'item', href:'/'+cid+'/{title}' }
+			]
+		};
+		var forEvents = /event-stream/.test(request.headers.accept);
+		var forJson = /json/.test(request.headers.accept);
+		switch (cid) {
+			case 'apps':
+				if (forEvents) {
+					headers['content-type'] = 'text/event-stream';
+					response.writeHead(200, 'ok', headers);
+					this.broadcasts.apps.addStream(response);
+				} else if (forJson) {
+					headers['content-type'] = 'application/json';
+					this.getAppConfigs().then(
+						function(cfgs) { response.writeHead(200, 'ok', headers).end(cfgs); },
+						function() { response.writeHead(500).end(); }
+					);
+				} else if (/head/i.test(request.method))
+					response.writeHead(200, 'ok', headers).end();
+				else
+					response.writeHead(406, 'not acceptable').end();
+				break;
+			default:
+				response.writeHead(404, 'not found').end();
+				break;
 		}
 	};
 
-	ConfigServer.prototype.getSchemasItem = function(request, respond, match) {
-		var key = match.path[1];
-		var schema = this.schemas[key];
-
-		var headerer = Link.headerer();
-		headerer.addLink('/schemas', 'up collection');
-		headerer.addLink('/schemas/'+key, 'self');
-		if (!schema)
-			return respond.noContent().end();
-		respond.ok('json').end(schema);
-	};
-
-	ConfigServer.prototype.setSchemasItem = function(request, respond, match) {
-		var key = match.path[1];
-		var schema = request.body;
-		if (!schema)
-			return respond.badRequest().end('No request body was provided');
-
-		// run validation
-		var errors = {};
-		for (var k in schema) {
-			var item = schema[k];
-			if (!item.type || !(item.type in this.validators)) {
-				errors[k] = 'Invalid type "'+item.type+'"';
-				continue;
-			}
-			if (!item.label) {
-				errors[k] = '`label` is required';
-				continue;
-			}
-			if (typeof item.fallback == 'undefined') {
-				errors[k] = '`fallback` is required';
-				continue;
-			}
-		}
-		if (Object.keys(errors).length !== 0)
-			return respond.badRequest().end(errors);
-
-		if (/PUT/i.test(request.method)) {
-			// overwrite
-			this.schemas[key] = schema;
-		} else {
-			// update
-			this.schemas[key] = this.schemas[key] || {};
-			for (var k in schema)
-				this.schemas[key][k] = schema[k];
-		}
-
-		// fill in any values that have been added
-		this.values[key] = this.values[key] || {};
-		for (var k in schema) {
-			if (!this.values[key][k])
-				this.values[key][k] = this.schemas[key][k].fallback;
-		}
-
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/schemas', 'up collection');
-		headerer.addLink('/schemas/'+key, 'self');
-		respond.ok().end();
-	};
-
-
-	// Validators Handlers
-	// ===================
-
-	ConfigServer.prototype.getValidatorsCollection = function(request, respond) {
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'up');
-		headerer.addLink('/validators', 'self');
-		headerer.addLink('/validators/{title}', 'item');
-		for (var k in this.validators)
-			headerer.addLink('/validators/'+k, 'item', { title:k });
-
-		if (/GET/i.test(request.method)) {
-			// respond with data
-			respond.ok('json', headerer).end({ items:Object.keys(this.validators) });
-		} else {
-			// respond with headers
-			respond.ok(null, headerer).end();
+	ConfigServer.prototype.httpAddToCollection = function(request, response, cid) {
+		var headers = {
+			link:[] // :TODO:
+		};
+		switch (cid) {
+			case 'apps':
+				// :TODO:
+				response.writeHead(501, 'not implemented').end();
+				break;
+			default:
+				response.writeHead(404, 'not found').end();
+				break;
 		}
 	};
 
-	ConfigServer.prototype.addValidators = function(request, respond) {
-		var validators = request.body;
-		if (!validators || typeof validators != 'object')
-			return respond.badRequest().end('Validators must be provided as a json of {validatorN:<str>,...} form');
+	ConfigServer.prototype.httpGetItem = function(request, response, cid, iid) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/'+cid },
+				{ rel:'self', href:'/'+cid+'/'+iid }
+			]
+		};
+		var forEvents = /event-stream/.test(request.headers.accept);
+		var forJson = /json/.test(request.headers.accept);
+		switch (cid) {
+			case 'apps':
+				// "active app" special item
+				if (iid == '.active') {
+					if (forEvents) {
+						headers['content-type'] = 'text/event-stream';
+						response.writeHead(200, 'ok', headers);
+						this.broadcasts.activeApp.addStream(response);
+						return;
+					}
+					iid = this.activeAppId; // give the correct id and let handle below
+				}
 
-		for (var k in validators) {
-			if (typeof validators[k] == 'string')
-				this.validators[k] = validators[k];
+				// fetch item config
+				if (forJson) {
+					headers['content-type'] = 'application/json';
+					this.getAppConfig(iid).then(
+						function(cfg) { response.writeHead(200, 'ok', headers).end(cfg); },
+						function()    { response.writeHead(404, 'not found').end(); }
+					);
+				} else if (/head/i.test(request.method))
+					response.writeHead(200, 'ok', headers).end();
+				else
+					response.writeHead(406, 'not acceptable').end();
+				break;
+			default:
+				response.writeHead(404, 'not found').end();
+				break;
 		}
-
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/', 'up');
-		headerer.addLink('/validators', 'self');
-		headerer.addLink('/validators/{title}', 'item');
-		for (var k in this.validators)
-			headerer.addLink('/validators/'+k, 'item', { title:k });
-		respond.ok().end();
 	};
 
-	ConfigServer.prototype.getValidatorsItem = function(request, respond, match) {
-		var key = match.path[1];
-		var validator = this.validators[key];
-
-		var headerer = Link.headerer();
-		headerer.addLink('/validators', 'up collection');
-		headerer.addLink('/validators/'+key, 'self');
-		if (!validator)
-			return respond.noContent().end();
-		respond.ok('json').end(schema);
-	};
-
-	ConfigServer.prototype.setValidatorsItem = function(request, respond, match) {
-		var key = match.path[1];
-		var validator = request.body;
-		if (validator && typeof validator == 'object')
-			validator = validator.regex;
-		if (!validator || typeof validator != 'string')
-			return respond.badRequest().end('Validator must be provided as a string or json of {regex:<str>} form');
-
-		this.validators[key] = validator;
-
-		// build headers
-		var headerer = Link.headerer();
-		headerer.addLink('/validators', 'up collection');
-		headerer.addLink('/validators/'+key, 'self');
-		respond.ok().end();
-	};
-
-	ConfigServer.prototype.getStorageService = function() {
-		try {
-			if (this.values.servers.storage)
-				return Link.navigator(this.values.servers.storage);
-		} catch(e) {}
-		return null;
-	};
-
-	ConfigServer.prototype.writeToStorage = function(key) {
-		var backend = this.getStorageService();
-		if (!backend)
-			return;
-		var values = JSON.parse(JSON.stringify(this.values[key]));
-		values.id = key;
-		backend.collection(this.configNamespace).post(values, 'application/json');
-	};
-
-	ConfigServer.prototype.readFromStorage = function(key) {
-		var backend = this.getStorageService();
-		if (!backend)
-			return Local.promise(true);
-
-		if (!key) {
-			var p = Local.promise();
-			for (var k in this.schemas) {
-				var p2 = this.readFromStorage(k);
-				p2.chain(p);
-				p = p2;
-			}
-			return p;
+	ConfigServer.prototype.httpSetItem = function(request, response, cid, iid) {
+		var headers = {
+			link:[] // :TODO:
+		};
+		switch (cid) {
+			case 'apps':
+				if (iid == '.active')
+					return response.writeHead(405, 'bad method').end();
+				// :TODO:
+				response.writeHead(501, 'not implemented').end();
+				break;
+			default:
+				response.writeHead(404, 'not found').end();
+				break;
 		}
-
-		var self = this;
-		var req = backend.collection(this.configNamespace).item(key).getJson();
-		req.then(function(res) {
-			self.values[key] = res.body;
-		});
-		return req;
 	};
+
+	ConfigServer.prototype.httpDeleteItem = function(request, response, cid, iid) {
+		var headers = {
+			link:[] // :TODO:
+		};
+		switch (cid) {
+			case 'apps':
+				if (iid == '.active')
+					return response.writeHead(405, 'bad method').end();
+				// :TODO:
+				response.writeHead(501, 'not implemented').end();
+				break;
+			default:
+				response.writeHead(404, 'not found').end();
+				break;
+		}
+	};
+
+	// helpers
+	// -
 
 	// http://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
 	function toTitleCase(str) {

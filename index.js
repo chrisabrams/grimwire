@@ -1,18 +1,18 @@
-var $layoutContainerEl = $('#grim-layout-container');
+var $layoutContainerEl = $('#layout');
 var $topbarAppsEl = $('#grim-topbar-apps');
-if ($layoutContainerEl.length === 0) throw "#grim-layout-container element not found";
+if ($layoutContainerEl.length === 0) throw "#layout element not found";
 if ($topbarAppsEl.length === 0) throw "#grim-topbar-apps element not found";
-
+var layoutRegion = local.env.addClientRegion('layout');
 
 // request wrapper
 // -
-Environment.config.workerBootstrapUrl = 'worker-server.min.js';
-Environment.setDispatchWrapper(function(request, origin, dispatch) {
+local.env.config.workerBootstrapUrl = 'worker.min.js';
+local.env.setDispatchWrapper(function(request, origin, dispatch) {
 	// allow request
 	var response = dispatch(request);
 	response.then(
 		function(res) { console.log(res.status, request.method, request.url); },
-		function(err) { console.log(err.response.status, request.method, request.url); }
+		function(res) { console.log(res.status, request.method, request.url); }
 	);
 	return response;
 });
@@ -20,44 +20,45 @@ Environment.setDispatchWrapper(function(request, origin, dispatch) {
 
 // client post-processor
 // -
-Environment.setRegionPostProcessor(function(el) {
+local.env.setRegionPostProcessor(function(el) {
 	lifespanPostProcess(el);
+	layoutPostProcess(el);
 });
 
 
 // environment services
 // -
 var hosts = {
-	storage: Link.navigator('httpl://storage.env'),
-	config: Link.navigator('httpl://config.env'),
-	workers: Link.navigator('httpl://workers.env')
+	storage: local.http.navigator('httpl://storage.env'),
+	config:  local.http.navigator('httpl://config.env')
+	// workers: local.http.navigator('httpl://workers.env')
 };
 var storageServer = new StorageServer(sessionStorage);
 var configServer = new ConfigServer(hosts.storage);
-var workerServer = new ReflectorServer(hosts.config);
-Environment.addServer('storage.env', storageServer);
-Environment.addServer('config.env', configServer);
-Environment.addServer('workers.env', workerServer);
+// var workerServer = new ReflectorServer(hosts.config);
+local.env.addServer('storage.env', storageServer);
+local.env.addServer('config.env', configServer);
+// local.env.addServer('workers.env', workerServer);
 
 
 // environment event handlers
 // -
 (function() {
-	var configsCollection = hosts.config.collection('applications');
+	var appConfigsCollection = hosts.config.collection('apps');
 
-	configsCollection.subscribe().succeed(function(apps) {
+	appConfigsCollection.subscribe().succeed(function(apps) {
 		apps.on('update', function(e) {
 			renderTopbarApps(e.data);
 			highlightActiveApp(configServer.activeAppId);
 		});
 	});
 
-	configsCollection.item('.active').subscribe().succeed(function(activeApp) {
-		activeApp.on('open', function(e) {
+	appConfigsCollection.item('.active').subscribe().succeed(function(activeApp) {
+		activeApp.on('update', function(e) {
 			var config = e.data;
-			document.title = (config.title || 'Untitled Application') + ' &there4; Grimwire OS';
+			document.title = (config.title || 'Untitled Application') + ' - Grimwire';
 			highlightActiveApp(config.id);
-			renderLayout(config.layout);
+			layoutRegion.dispatchRequest(config.startpage);
 		});
 	});
 })();
@@ -66,10 +67,14 @@ Environment.addServer('workers.env', workerServer);
 // host config load
 // -
 configServer.loadFromHost()
-	.succeed(function(configs) {
-		var appId = window.location.hash.slice(1);
-		if (!configs[appId]) appId = configs.__defaultApp;
-		return configServer.openApp(appId);
+	.succeed(function(appCfgs) {
+		// open the apps
+		var opens = [];
+		for (var appId in appCfgs)
+			configServer.openApp(appCfgs[appId]);
+
+		// set active app by hash
+		configServer.setActiveApp(window.location.hash.slice(1));
 	});
 
 
@@ -85,9 +90,21 @@ function renderTopbarApps(appCfgs) {
 }
 function highlightActiveApp(appId) {
 	$('.active', $topbarAppsEl).removeClass('active');
-	$('#grim-topbar-apps-'+appId).addClass('active');
+	$('[href="#'+appId+'"]').parent().addClass('active');
 }
-function renderLayout(layoutCfg) {
+var __temp_counter = 100;
+function layoutPostProcess(el) {
+	$('[data-grim-layout]', el).each(function(i, region) {
+		var params = region.dataset.grimLayout.split(' ');
+		if (params[1]) {
+			var div = document.createElement('div');
+			div.id = __temp_counter++;
+			region.appendChild(div);
+			local.env.addClientRegion(div.id).dispatchRequest(params[1]);
+		}
+	});
+}
+/*function renderLayout(layoutCfg) {
 	var regionUrls=[], nRegions=0;
 
 	// build html
@@ -116,17 +133,17 @@ function renderLayout(layoutCfg) {
 
 	// replace all client regions
 	$('.client-region', $layoutContainerEl).forEach(function($el) {
-		Environment.removeClientRegion($el.id);
+		local.env.removeClientRegion($el.id);
 	});
 	$layoutContainerEl.html(html.join(''));
 	regionUrls.forEach(function(url, i) {
-		Environment.addClientRegion('client-region-'+i).dispatchRequest(url);
+		local.env.addClientRegion('client-region-'+i).dispatchRequest(url);
 	});
-}
+}*/
 
 
 // UI behaviors
 // -
 $topbarAppsEl.click(function(e) {
-	configServer.openApp($(e.target).getAttribute('href').slice(1));
+	configServer.setActiveApp($(e.target).getAttribute('href').slice(1));
 });

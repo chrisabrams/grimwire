@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Index &there4; Grimwire OS</title>
+		<title>Grimwire</title>
 
 		<!-- security policies -->
 		<meta http-equiv="X-WebKit-CSP" content="frame-src 'none'; object-src 'none'; script-src 'self'"></meta>
@@ -12,19 +12,14 @@
 		<link rel="stylesheet" href="index.css" />
 	</head>
 	
-	<body>
-		<!-- environment layout -->
+	<body>		
 		<div class="container-fluid">
+			<!-- top bar navigation -->
 			<div class="navbar">
 				<div class="navbar-inner">
 					<a class="brand" href="#">Grimwire</a>
 					<div class="nav-collapse collapse navbar-responsive-collapse">
-						<ul id="grim-topbar-apps" class="nav">
-							<li class="active"><a href="/index.html"><i class="icon-search"></i> Index</a></li>
-							<li class="divider-vertical"></li>
-							<li><a href="/reader.html"><i class="icon-th-list"></i> Reader</a></li>
-							<li class="divider-vertical"></li>
-						</ul>
+						<ul id="grim-topbar-apps" class="nav"></ul>
 						<ul class="nav pull-right">
 							<li class="divider-vertical"></li>
 							<li><a href="#"><i class="icon-tasks"></i> Workers</a></li>
@@ -39,13 +34,11 @@
 								</ul>
 							</li>
 						</ul>
-					</div><!-- /.nav-collapse -->
+					</div>
 				</div>
 			</div>
-			<div id="grim-layout-container" class="row-fluid">
-				<div class="span2" id="sidenav"></div>
-				<div class="span10" id="content"></div>
-			</div>
+			<!-- workspace -->
+			<div id="layout"></div>
 		</div>
 
 		<!-- libs -->
@@ -58,7 +51,6 @@
 
 		<!-- servers -->
 		<script src="src/local/servers/env/storage.js"></script>
-		<script src="servers/env/reflector.js"></script>
 		<script src="servers/env/config.js"></script>
 
 		<!-- environment -->

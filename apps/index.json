@@ -1,16 +1,19 @@
 {
-	"id": "mail",
-	"title": "Webmail",
-	"icon": "inbox",
-	"layout": [
-		[
-			{ "width":2, "regions":"httpl://index.usr/filters" },
-			{ "id":"main", "width":10, "regions":"httpl://index.usr" }
-		]
-	],
+	"id": "index",
+	"title": "Index",
+	"icon": "search",
+	"startpage": "httpl://layout.index.usr",
+	"common": {
+		"storageHost": "httpl://storage.env"
+	},
 	"workers": [
 		{
-			"domain": "index.usr",
+			"id": "layout",
+			"title": "Layout",
+			"src": "servers/worker/index/layout.js"
+		},
+		{
+			"id": "lunr",
 			"title": "Search Index",
 			"src": "servers/worker/index/lunr.js",
 			"seed": [
@@ -63,9 +66,5 @@
 				}
 			]
 		}
-	],
-	"common": {
-		"grimHost": "http://grimwire.github.io",
-		"storageHost": "httpl://sessionstorage.env"
-	}
+	]
 }
