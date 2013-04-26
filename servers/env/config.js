@@ -26,30 +26,14 @@
 	ConfigServer.prototype = Object.create(local.env.Server.prototype);
 
 	ConfigServer.prototype.handleHttpRequest = function(request, response) {
-		// construct the name of the function to handle the request based on:
-		// - path, with a /:collection/:item structure
-		// - method, with methods mapping to Get, Set, AddTo, or Delete
-		// eg
-		// - POST /applications -> "httpAddToCollection" 
-		// - DELETE /applications/mail -> "httpDeleteItem"
-
-		var handler;
-		if (/HEAD|GET/i.test(request.method))       handler = 'httpGet';
-		else if (/PATCH|PUT/i.test(request.method)) handler = 'httpSet';
-		else if (/POST/i.test(request.method))      handler = 'httpAddTo';
-		else if (/DELETE/i.test(request.method))    handler = 'httpDelete';
-		else return response.writeHead(405, 'bad method').end();
-
-		path = request.path.split('/').filter(function(part) { return !!part; });
-		if (!path[0])                 handler += 'Service';
-		else if (path[0] && !path[1]) handler += 'Collection';
-		else if (path[0] && path[1])  handler += 'Item';
-		else return response.writeHead(404, 'not found').end();
-
-		var handlerFn = this[handler];
-		if (!handlerFn)
-			return response.writeHead(405, 'bad method').end();
-		handlerFn.call(this, request, response, path[0], path[1]);
+		routeMap(request, response,
+			{ _prefix:'http', head:'get', patch:'set', put:'set', post:'addTo' },
+			{
+				'/': [this, 'Service'],
+				'/:collection': [this, 'Collection'],
+				'/:collection/:item': [this, 'Item']
+			}
+		);
 	};
 
 	// api
@@ -357,33 +341,6 @@
 				break;
 		}
 	};
-
-	// helpers
-	// -
-
-	// http://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
-	function toTitleCase(str) {
-		return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-	}
-
-	// brings updates into org value
-	// :NOTE: mutates its first parameter out of laziness
-	function patch(org, update) {
-		if (update === null) { return null; }
-		if (org === null) { org = {}; }
-		for (var k in update) {
-			if (typeof org[k] == 'object' && typeof update[k] == 'object')
-				org[k] = patch(org[k], update[k]);
-			else
-				org[k] = update[k];
-		}
-		return org;
-	}
-
-	function deepClone(obj) {
-		// :TODO: not this
-		return JSON.parse(JSON.stringify(obj));
-	}
 
 	exports.ConfigServer = ConfigServer;
 })(window);

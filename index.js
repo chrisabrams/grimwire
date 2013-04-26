@@ -92,6 +92,7 @@ function highlightActiveApp(appId) {
 	$('.active', $topbarAppsEl).removeClass('active');
 	$('[href="#'+appId+'"]').parent().addClass('active');
 }
+// :DEBUG: this is a temporary solution
 var __temp_counter = 100;
 function layoutPostProcess(el) {
 	$('[data-grim-layout]', el).each(function(i, region) {
@@ -104,42 +105,6 @@ function layoutPostProcess(el) {
 		}
 	});
 }
-/*function renderLayout(layoutCfg) {
-	var regionUrls=[], nRegions=0;
-
-	// build html
-	var html = [];
-	layoutCfg.forEach(function(rowCfg) {
-		if (!Array.isArray(rowCfg)) rowCfg = [rowCfg];
-		html.push('<div class="row">');
-		rowCfg.forEach(function(columnCfg) {
-			if (!columnCfg.width) return console.warn('Invalid layout config: `width` is required', columnCfg);
-			html.push(
-				'<div class="span{{width}}" {{id}}>'
-					.replace('{{width}}', columnCfg.width)
-					.replace('{{id}}', (columnCfg.id) ? 'id="'+columnCfg.id+'"' : '')
-			);
-			if (columnCfg.regions) {
-				if (!Array.isArray(columnCfg.regions)) columnCfg.regions = [columnCfg.regions];
-				columnCfg.regions.forEach(function(url) {
-					regionUrls.push(url);
-					html.push('<div class="client-region" id="client-region-'+(nRegions++)+'"></div>');
-				});
-			}
-			html.push('</div>');
-		});
-		html.push('</div>');
-	});
-
-	// replace all client regions
-	$('.client-region', $layoutContainerEl).forEach(function($el) {
-		local.env.removeClientRegion($el.id);
-	});
-	$layoutContainerEl.html(html.join(''));
-	regionUrls.forEach(function(url, i) {
-		local.env.addClientRegion('client-region-'+i).dispatchRequest(url);
-	});
-}*/
 
 
 // UI behaviors
