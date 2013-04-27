@@ -38,6 +38,7 @@
 			{
 				'/': [this, 'Service'],
 				'/workers': [this, 'Workers'],
+				'/workers/:domain': [this, 'Worker'],
 				'/:collection': [this, 'Collection'],
 				'/:collection/:item': [this, 'Item']
 			}
@@ -95,11 +96,9 @@
 				appCfg.workers.forEach(function(workerCfg) {
 					// :TODO: mix in app common
 					workerCfg = deepClone(workerCfg);
-					if (!workerCfg.title) return console.error('Invalid worker config: `title` is required', workerCfg);
-					if (!workerCfg.id) return console.error('Invalid worker config: `id` is required', workerCfg);
-					if (!workerCfg.src) return console.error('Invalid worker config: `src` is required', workerCfg);
-					workerCfg.scriptUrl = workerCfg.src;
-					workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
+					var errors = validateWorkerConfig(workerCfg);
+					if (errors) return console.error('Invalid worker config:', errors, workerCfg);
+					prepWorkerConfig(workerCfg, appCfg);
 					local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
 				});
 
@@ -241,14 +240,59 @@
 				.map(function(domain) { return local.env.servers[domain].config; });
 
 			var html = '<h3>Active Workers</h3><hr/>';
-			html += workerCfgs.map(function(cfg) {
-				return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4><div data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div><hr/>';
-			}).join('');
+			html += workerCfgs.map(workerHtmlSidetabs).join('');
 
 			headers['content-type'] = 'text/html';
 			response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
 		} else
 			response.writeHead(406, 'not acceptable').end();
+	};
+
+	ConfigServer.prototype.httpSetWorker = function(request, response, domain) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/workers' },
+				{ rel:'self', href:'/workers/'+domain }
+			]
+		};
+
+		var server = local.env.servers[domain];
+		if (!server) // :TODO: should we create the worker in this case?
+			return response.writeHead(404, 'not found').end();
+
+		if (/json|form/.test(request.headers['content-type'])) {
+			var workerCfg;
+			if (/PATCH/i.test(request.method))
+				workerCfg = patch(deepClone(server.config), request.body);
+			else
+				workerCfg = request.body;
+
+			var errors = validateWorkerConfig(workerCfg);
+			if (errors)
+				return response.writeHead(422, 'semantic errors').end(errors);
+
+			this.getAppConfig(workerCfg.appId).then(
+				function(appCfg) {
+					prepWorkerConfig(workerCfg, appCfg);
+
+					// :NOTE: replace in-place so that ordering is maintained in the Workers page
+					// local.env.killServer(workerCfg.domain);
+					local.http.unregisterLocal(workerCfg.domain);
+					server.terminate();
+					// local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
+					server = local.env.servers[workerCfg.domain] = new local.env.WorkerServer(workerCfg);
+					server.loadUserScript();
+					local.http.registerLocal(workerCfg.domain, server.handleHttpRequest, server);
+
+					response.writeHead(204, 'no content').end();
+				},
+				function() {
+					response.writeHead(422, 'semantic errors').end({ appId:'invalid app id' });
+				}
+			);
+		} else
+			response.writeHead(415, 'bad content type').end();
 	};
 
 	ConfigServer.prototype.httpGetCollection = function(request, response, cid) {
@@ -373,6 +417,44 @@
 				break;
 		}
 	};
+
+	function validateWorkerConfig(cfg) {
+		var errors = {};
+		if (!cfg) return { _body:'required' };
+		if (!cfg.title) errors.title = 'required';
+		if (!cfg.id) errors.id = 'required';
+		if (!cfg.src) errors.src = 'required';
+		return (Object.keys(errors).length > 0) ? errors : null;
+	}
+
+	function prepWorkerConfig(workerCfg, appCfg) {
+		workerCfg.appId = appCfg.id;
+		workerCfg.scriptUrl = workerCfg.src;
+		workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
+	}
+
+	// :DEBUG: choose one of these
+	function workerHtmlSidetabs(cfg) {
+		return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4>'+
+			'<div class="tabbable tabs-left">'+
+				'<ul class="nav nav-tabs">'+
+					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i> Configure</a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i> Edit</a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Run"><i class="icon-hand-right"></i> Execute</a></li>'+
+				'</ul>'+
+				'<div id="cfg-'+cfg.domain+'" class="tab-content" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
+			'</div><hr/>';
+	}
+	function workerHtmlToptabs(cfg) {
+		return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4>'+
+			'<ul class="nav nav-tabs">'+
+				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
+				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
+				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Run"><i class="icon-hand-right"></i></a></li>'+
+			'</ul>'+
+			'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
+			'<hr/>';
+	}
 
 	exports.ConfigServer = ConfigServer;
 })(window);

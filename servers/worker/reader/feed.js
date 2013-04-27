@@ -1,8 +1,10 @@
 // setup config
-var defaultSources = [
-	'httpl://rssproxy.rss.usr?url=http://lambda-the-ultimate.org/rss.xml',
-	'httpl://rssproxy.rss.usr?url=http://googleresearch.blogspot.co.uk/feeds/posts/default'
-];
+if (!local.worker.config.sources) {
+	local.worker.config.sources = [
+		'httpl://rssproxy.rss.usr?url=http://lambda-the-ultimate.org/rss.xml',
+		'httpl://rssproxy.rss.usr?url=http://googleresearch.blogspot.co.uk/feeds/posts/default'
+	];
+}
 
 var feeds = null;
 function getAllFeeds() {
@@ -10,9 +12,8 @@ function getAllFeeds() {
 		return local.promise(feeds);
 	feeds = {};
 
-	var sources = defaultSources; // :DEBUG:
 	return local.promise.bundle(
-		sources.map(function(url) {
+		local.worker.config.sources.map(function(url) {
 			return local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {
@@ -104,6 +105,35 @@ function main(request, response) {
 					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				}
 			});
+	}
+	if (request.path == '/.grim/config') {
+		var msg = '';
+		if (/POST/i.test(request.method)) {
+			var sources = (request.body.sources && typeof request.body.sources == 'string') ?
+				request.body.sources.split("\n").filter(function(i) { return i; }) :
+				[];
+			local.http.dispatch({
+				method: 'patch',
+				url: 'httpl://config.env/workers/'+local.worker.config.domain,
+				body: { sources:sources },
+				headers: { 'content-type':'application/json' }
+			});
+			local.worker.config.sources = sources;
+			msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
+		}
+
+		response.writeHead(200, 'ok', {'content-type':'text/html'});
+		response.end(
+			'<form action="httpl://'+local.worker.config.domain+'/.grim/config" method="post">'+
+				msg+
+				'<label for="reader-feed-sources">Feed Sources</label>'+
+				'<textarea id="reader-feed-sources" name="sources" rows="5" class="span8">'+
+					local.worker.config.sources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+				'</textarea><br/>'+
+				'<button class="btn">Submit</button>'+
+			'</form>'
+		);
+		return;
 	}
 	response.writeHead(404, 'not found').end();
 }

@@ -23,7 +23,7 @@ function main(request, response) {
 		else
 			response.writeHead(405, 'bad method').end();
 	}
-	else if (/^\/docs\/?$/.test(request.path)) {
+	else if (request.path == '/docs') {
 		if (/HEAD|GET/i.test(request.method))
 			getDocuments(request, response);
 		else if (/POST/i.test(request.method))
@@ -32,8 +32,36 @@ function main(request, response) {
 			response.writeHead(405, 'bad method').end();
 	}
 	else if (request.path == '/.grim/config') {
+		var msg = '';
+		if (/POST/i.test(request.method)) {
+			var seed;
+			try { seed = JSON.parse(request.body.seed); }
+			catch (e) { seed = null; msg = '<div class="alert alert-error">Invalid seed JSON - '+e.message+'</div>'; }
+
+			if (seed) {
+				local.http.dispatch({
+					method: 'patch',
+					url: 'httpl://config.env/workers/'+local.worker.config.domain,
+					body: { seed:seed },
+					headers: { 'content-type':'application/json' }
+				});
+				local.worker.config.seed = seed;
+				msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
+			}
+		}
+
 		response.writeHead(200, 'ok', {'content-type':'text/html'});
-		response.end('Index Lunr TODO!');
+		response.end(
+			'<form action="httpl://'+local.worker.config.domain+'/.grim/config" method="post">'+
+				msg+
+				'<label for="index-index-seed">Seed Data</label>'+
+				'<textarea id="index-index-seed" name="seed" rows="15" class="input-xxlarge">'+
+					JSON.stringify(local.worker.config.seed, null, 4).replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+				'</textarea>'+
+				'<span class="help-block">A JSON array of initial values to populate the index.</span>'+
+				'<button class="btn">Submit</button>'+
+			'</form>'
+		);
 	}
 	else
 		response.writeHead(404, 'not found').end();

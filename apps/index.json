@@ -1,6 +1,6 @@
 {
 	"id": "index",
-	"title": "Index",
+	"title": "Search",
 	"icon": "search",
 	"startpage": "httpl://layout.index.usr",
 	"common": {
@@ -9,7 +9,7 @@
 	"workers": [
 		{
 			"id": "layout",
-			"title": "Layout",
+			"title": "Search Layout",
 			"src": "servers/worker/index/layout.js"
 		},
 		{
