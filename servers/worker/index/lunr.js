@@ -31,7 +31,7 @@ function main(request, response) {
 		else
 			response.writeHead(405, 'bad method').end();
 	}
-	else if (request.path == '/.config') {
+	else if (request.path == '/.grim/config') {
 		response.writeHead(200, 'ok', {'content-type':'text/html'});
 		response.end('Index Lunr TODO!');
 	}

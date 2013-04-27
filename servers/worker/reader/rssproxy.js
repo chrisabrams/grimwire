@@ -35,7 +35,7 @@ function normalizeSchema(res) {
   return res;
 }
 function main(request, response) {
- if (request.path == '/.config') {
+ if (request.path == '/.grim/config') {
     response.writeHead(200, 'ok', {'content-type':'text/html'});
     response.end('RSS Proxy TODO!');
   }

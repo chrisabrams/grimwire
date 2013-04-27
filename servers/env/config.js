@@ -172,7 +172,7 @@
 		return this.getAppIds()
 			.succeed(function(appIds) {
 				envAppIds = appIds;
-				self.defaultAppId = appIds[0]; // let the first in the list be the default
+				self.defaultAppId = appIds[1]; // let the first in the list (after "_workers") be the default
 				// get user storage app configs
 				var appConfigGETs = appIds.map(function(appId) { return self.storageHost.apps.item(appId).getJson(); });
 				return local.promise.bundle(appConfigGETs);
@@ -236,35 +236,17 @@
 			]
 		};
 		if (/html/.test(request.headers.accept)) {
-			// fetch config interfaces from each worker server
-			local.promise.bundle(
-				Object.keys(local.env.servers)
-					.filter(function(domain) { return (local.env.servers[domain] instanceof local.env.WorkerServer); })
-					.map(function(domain) {
-						var server = local.env.servers[domain];
-						// GET httpl://<worker>/.config text/html
-						return local.http.dispatch({ method:'get', url:'httpl://'+server.config.domain+'/.config', headers:{ accept:'text/html' }})
-							.then(
-								function(res) {
-									// interface given
-									return { cfg:server.config, html:res.body };
-								},
-								function() {
-									// fallback default interface :TODO:
-									return { cfg:server.config, html:JSON.stringify(server.config) };
-								}
-							);
-					})
-			).then(function(workers) {
-				// construct into final interface
-				var html = '<h3>Active Workers</h3><hr/>';
-				html += workers.map(function(worker) {
-					return '<h4>'+worker.cfg.title+' <small>'+worker.cfg.domain+'</small></h4><div>'+worker.html+'</div><hr/>';
-				}).join('');
+			var workerCfgs = Object.keys(local.env.servers)
+				.filter(function(domain) { return (local.env.servers[domain] instanceof local.env.WorkerServer); })
+				.map(function(domain) { return local.env.servers[domain].config; });
 
-				headers['content-type'] = 'text/html';
-				response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
-			});
+			var html = '<h3>Active Workers</h3><hr/>';
+			html += workerCfgs.map(function(cfg) {
+				return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4><div data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div><hr/>';
+			}).join('');
+
+			headers['content-type'] = 'text/html';
+			response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
 		} else
 			response.writeHead(406, 'not acceptable').end();
 	};

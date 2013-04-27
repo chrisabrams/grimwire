@@ -17,7 +17,7 @@ function main(request, response) {
 				'<div id="main" data-grim-layout="replace httpl://lunr.index.usr" class="span12"></div>',
 			'</div>'
 		].join(''));
-	} else if (request.path == '/.config') {
+	} else if (request.path == '/.grim/config') {
 		response.writeHead(200, 'ok', {'content-type':'text/html'});
 		response.end('Index Layout TODO!');
 	} else {
