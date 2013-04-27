@@ -235,15 +235,27 @@
 			]
 		};
 		if (/html/.test(request.headers.accept)) {
-			var workerCfgs = Object.keys(local.env.servers)
-				.filter(function(domain) { return (local.env.servers[domain] instanceof local.env.WorkerServer); })
-				.map(function(domain) { return local.env.servers[domain].config; });
+			this.getAppConfigs()
+				.succeed(function(appCfgs) {
+					var html = '<h3>Active Workers</h3><hr/>';
+					for (var appId in appCfgs) {
+						var appCfg = appCfgs[appId];
+						if (!appCfg.workers) continue;
+						html +=
+							'<ul class="breadcrumb">'+
+								'<li><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</li>'+
+							'</ul>';
+						html += appCfgs[appId].workers
+							.map(function(workerCfg) { return local.env.servers[workerCfg.id+'.'+appCfg.id+'.usr'].config; })
+							.map(workerHtmlSidetabs)
+							.join('<hr />');
+						html += '<hr />';
+					}
 
-			var html = '<h3>Active Workers</h3><hr/>';
-			html += workerCfgs.map(workerHtmlSidetabs).join('');
-
-			headers['content-type'] = 'text/html';
-			response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
+					headers['content-type'] = 'text/html';
+					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
+				})
+				.fail(function() { response.writeHead(500, 'internal error').end(); });
 		} else
 			response.writeHead(406, 'not acceptable').end();
 	};
@@ -429,6 +441,8 @@
 
 	function prepWorkerConfig(workerCfg, appCfg) {
 		workerCfg.appId = appCfg.id;
+		workerCfg.appTitle = appCfg.title;
+		workerCfg.appIcon = appCfg.icon;
 		workerCfg.scriptUrl = workerCfg.src;
 		workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
 	}
@@ -443,7 +457,7 @@
 					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Run"><i class="icon-hand-right"></i> Execute</a></li>'+
 				'</ul>'+
 				'<div id="cfg-'+cfg.domain+'" class="tab-content" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
-			'</div><hr/>';
+			'</div>';
 	}
 	function workerHtmlToptabs(cfg) {
 		return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4>'+
