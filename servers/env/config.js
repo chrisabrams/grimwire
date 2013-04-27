@@ -24,6 +24,11 @@
 			title: 'Active Workers',
 			startpage: 'httpl://config.env/workers'
 		};
+		this.hostAppConfigs['_apps'] = {
+			id: '_apps',
+			title: 'Applications',
+			startpage: 'httpl://config.env/apps'
+		};
 
 		this.broadcasts = {
 			apps: local.http.broadcaster(),
@@ -39,8 +44,8 @@
 				'/': [this, 'Service'],
 				'/workers': [this, 'Workers'],
 				'/workers/:domain': [this, 'Worker'],
-				'/:collection': [this, 'Collection'],
-				'/:collection/:item': [this, 'Item']
+				'/apps': [this, 'Apps'],
+				'/apps/:id': [this, 'App']
 			}
 		);
 	};
@@ -80,6 +85,11 @@
 			.succeed(function(appCfgs) {
 				// broadcast that the loaded apps have changed
 				self.broadcasts.apps.emit('update', appCfgs);
+
+				// write all of them back to storage, in case this is a new session
+				for (var appId in appCfgs)
+					self.storageHost.apps.item(appId).put(appCfgs[appId], 'application/json');
+
 				return appCfgs;
 			});
 	};
@@ -88,32 +98,41 @@
 		var self = this;
 		return this.getAppConfig(appId)
 			.succeed(function(appCfg) {
-				if (!appCfg.startpage) throw "Invalid application config: `startpage` is required";
-				if (!appCfg.workers) throw "Invalid application config: `workers` is required";
-				if (!appCfg.workers.length) throw "Invalid application config: `workers` must be an array with at least 1 member";
+				if (appCfg.id && appCfg.id.charAt(0) !== '_') { // dont validate environment apps
+					var errors = validateAppConfig(appCfg);
+					if (errors) throw "Invalid application config for '"+appId+"': "+JSON.stringify(errors);
+				}
 
 				// load workers
-				appCfg.workers.forEach(function(workerCfg) {
-					// :TODO: mix in app common
-					workerCfg = deepClone(workerCfg);
-					var errors = validateWorkerConfig(workerCfg);
-					if (errors) return console.error('Invalid worker config:', errors, workerCfg);
-					prepWorkerConfig(workerCfg, appCfg);
-					local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
-				});
+				if (Array.isArray(appCfg.workers)) {
+					appCfg.workers.forEach(function(workerCfg) {
+						// :TODO: mix in app common
+						workerCfg = deepClone(workerCfg);
+						var errors = validateWorkerConfig(workerCfg);
+						if (errors) return console.error('Invalid worker config:', errors, workerCfg);
+						prepWorkerConfig(workerCfg, appCfg);
+						local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
+					});
+				}
 
 				// :TODO: broadcast update or open event on the app?
 			});
 	};
 
 	ConfigServer.prototype.closeApp = function(appId) {
-		// :TODO: get app config to do unloading
-		for (var domain in local.env.servers) {
-			var server = local.env.servers[domain];
-			if (server instanceof local.env.WorkerServer)
-				local.env.killServer(domain);
-		}
-		// :TODO: broadcast update or close event on the app?
+		return this.getAppConfig(appId)
+			.succeed(function(appCfg) {
+				// close all workers
+				if (Array.isArray(appCfg.workers)) {
+					appCfg.workers.forEach(function(workerCfg) {
+						console.log(workerCfg);
+						var server = local.env.servers[workerCfg.id+'.'+appId+'.usr'];
+						if (server instanceof local.env.WorkerServer)
+							local.env.killServer(server.config.domain);
+					});
+				}
+				// :TODO: broadcast update or close event on the app?
+			});
 	};
 
 	ConfigServer.prototype.reloadApp = function(appId) {
@@ -155,8 +174,8 @@
 		return this.storageHost.apps.getJson()
 			.succeed(function(res) {
 				if (!res.body || res.body.length === 0)
-					throw "No user application settings, falling back to host's defaults";
-				return Object.keys(res.body);
+					return Object.keys(self.hostAppConfigs); // fall back to host-defined
+				return res.body.map(function(cfg) { return cfg.id; });
 			})
 			.fail(function() {
 				return Object.keys(self.hostAppConfigs); // fall back to host-defined
@@ -171,7 +190,7 @@
 		return this.getAppIds()
 			.succeed(function(appIds) {
 				envAppIds = appIds;
-				self.defaultAppId = appIds[1]; // let the first in the list (after "_workers") be the default
+				self.defaultAppId = appIds[2]; // let the first in the list (after "_workers" and "_apps") be the default
 				// get user storage app configs
 				var appConfigGETs = appIds.map(function(appId) { return self.storageHost.apps.item(appId).getJson(); });
 				return local.promise.bundle(appConfigGETs);
@@ -237,18 +256,20 @@
 		if (/html/.test(request.headers.accept)) {
 			this.getAppConfigs()
 				.succeed(function(appCfgs) {
-					var html = '<h3>Active Workers</h3><hr/>';
+					var html = '';
 					for (var appId in appCfgs) {
 						var appCfg = appCfgs[appId];
 						if (!appCfg.workers) continue;
 						html +=
 							'<ul class="breadcrumb">'+
-								'<li><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</li>'+
+								'<li><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+' Workers</li>'+
 							'</ul>';
 						html += appCfgs[appId].workers
-							.map(function(workerCfg) { return local.env.servers[workerCfg.id+'.'+appCfg.id+'.usr'].config; })
+							.map(function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; })
+							.map(function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; })
+							.filter(function(cfg) { return !!cfg; })
 							.map(workerHtmlSidetabs)
-							.join('<hr />');
+							.join('');
 						html += '<hr />';
 					}
 
@@ -307,128 +328,152 @@
 			response.writeHead(415, 'bad content type').end();
 	};
 
-	ConfigServer.prototype.httpGetCollection = function(request, response, cid) {
+	ConfigServer.prototype.httpGetApps = function(request, response) {
 		var headers = {
 			link: [
 				{ rel:'up via service', href:'/' },
-				{ rel:'self', href:'/'+cid },
-				{ rel:'item', href:'/'+cid+'/{title}' }
+				{ rel:'self', href:'/apps' },
+				{ rel:'item', href:'/apps/{title}' }
 			]
 		};
-		var forEvents = /event-stream/.test(request.headers.accept);
-		var forJson = /json/.test(request.headers.accept);
-		switch (cid) {
-			case 'apps':
-				if (forEvents) {
-					headers['content-type'] = 'text/event-stream';
-					response.writeHead(200, 'ok', headers);
-					this.broadcasts.apps.addStream(response);
-				} else if (forJson) {
-					headers['content-type'] = 'application/json';
-					this.getAppConfigs().then(
-						function(cfgs) { response.writeHead(200, 'ok', headers).end(cfgs); },
-						function() { response.writeHead(500).end(); }
-					);
-				} else if (/head/i.test(request.method))
-					response.writeHead(200, 'ok', headers).end();
-				else
-					response.writeHead(406, 'not acceptable').end();
-				break;
-			default:
-				response.writeHead(404, 'not found').end();
-				break;
+		if (/event-stream/.test(request.headers.accept)) {
+			headers['content-type'] = 'text/event-stream';
+			response.writeHead(200, 'ok', headers);
+			this.broadcasts.apps.addStream(response);
 		}
+		else if (/json/.test(request.headers.accept)) {
+			headers['content-type'] = 'application/json';
+			this.getAppConfigs().then(
+				function(cfgs) { response.writeHead(200, 'ok', headers).end(cfgs); },
+				function() { response.writeHead(500).end(); }
+			);
+		}
+		else if (/html/.test(request.headers.accept)) {
+			headers['content-type'] = 'text/html';
+			this.getAppIds().then(
+				function(appIds) {
+					var html = appIds
+						.filter(function(appId) { return appId.charAt(0) != '_'; })
+						.map(function(appId) {
+							return '<div id="cfg-'+appId+'" data-grim-layout="replace httpl://config.env/apps/'+appId+'"></div>';
+						})
+						.join('<hr/>');
+					response.writeHead(200, 'ok', headers).end('<hr/>'+html+'<hr/>');
+				},
+				function() { response.writeHead(500).end(); }
+			);
+		}
+		else if (/head/i.test(request.method))
+			response.writeHead(200, 'ok', headers).end();
+		else
+			response.writeHead(406, 'not acceptable').end();
 	};
 
-	ConfigServer.prototype.httpAddToCollection = function(request, response, cid) {
-		var headers = {
-			link:[] // :TODO:
-		};
-		switch (cid) {
-			case 'apps':
-				// :TODO:
-				response.writeHead(501, 'not implemented').end();
-				break;
-			default:
-				response.writeHead(404, 'not found').end();
-				break;
-		}
-	};
-
-	ConfigServer.prototype.httpGetItem = function(request, response, cid, iid) {
+	ConfigServer.prototype.httpGetApp = function(request, response, appId) {
 		var headers = {
 			link: [
 				{ rel:'via service', href:'/' },
-				{ rel:'up', href:'/'+cid },
-				{ rel:'self', href:'/'+cid+'/'+iid }
+				{ rel:'up', href:'/apps' },
+				{ rel:'self', href:'/apps/'+appId }
 			]
 		};
-		var forEvents = /event-stream/.test(request.headers.accept);
-		var forJson = /json/.test(request.headers.accept);
-		switch (cid) {
-			case 'apps':
-				// "active app" special item
-				if (iid == '.active') {
-					if (forEvents) {
-						headers['content-type'] = 'text/event-stream';
-						response.writeHead(200, 'ok', headers);
-						this.broadcasts.activeApp.addStream(response);
-						return;
+
+		// "active app" special item
+		if (appId == '.active') {
+			if (/event-stream/.test(request.headers.accept)) {
+				headers['content-type'] = 'text/event-stream';
+				response.writeHead(200, 'ok', headers);
+				this.broadcasts.activeApp.addStream(response);
+				return;
+			}
+			appId = this.activeAppId; // give the correct id and let handle below
+		}
+
+		if (/json/.test(request.headers.accept)) {
+			headers['content-type'] = 'application/json';
+			this.getAppConfig(appId).then(
+				function(cfg) { response.writeHead(200, 'ok', headers).end(cfg); },
+				function()    { response.writeHead(404, 'not found').end(); }
+			);
+		}
+		else if (/html/.test(request.headers.accept)) {
+			headers['content-type'] = 'text/html';
+			this.getAppConfig(appId).then(
+				function(cfg) {
+					response.writeHead(200, 'ok', headers).end(renderAppConfigHtml(cfg, JSON.stringify(cfg, null, 4)));
+				},
+				function() { response.writeHead(404, 'not found').end(); }
+			);
+		}
+		else if (/head/i.test(request.method))
+			response.writeHead(200, 'ok', headers).end();
+		else
+			response.writeHead(406, 'not acceptable').end();
+	};
+
+	ConfigServer.prototype.httpAddToApp = function(request, response, appId) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/apps' },
+				{ rel:'self', href:'/apps/'+appId }
+			]
+		};
+
+		// "active app" special item
+		if (appId == '.active')
+			appId = this.activeAppId;
+
+		if (/form/.test(request.headers['content-type'])) {
+			if (request.body.config) {
+				var self = this;
+				this.getAppConfig(appId).then(function(cfg) {
+					var newCfg;
+					try { newCfg = JSON.parse(request.body.config); }
+					catch (e) {
+						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
+							.end(renderAppConfigHtml(cfg, request.body.config, { _body:'Unable to parse JSON -'+e }));
 					}
-					iid = this.activeAppId; // give the correct id and let handle below
-				}
 
-				// fetch item config
-				if (forJson) {
-					headers['content-type'] = 'application/json';
-					this.getAppConfig(iid).then(
-						function(cfg) { response.writeHead(200, 'ok', headers).end(cfg); },
-						function()    { response.writeHead(404, 'not found').end(); }
+					var errors = validateAppConfig(newCfg);
+					if (errors)
+						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
+								.end(renderAppConfigHtml(cfg, request.body.config, errors));
+
+					self.storageHost.apps.item(appId).put(newCfg, 'application/json').then(
+						function() {
+							self.reloadApp(appId);
+
+							self.getAppConfigs().then(function(appCfgs) {
+								// broadcast that the loaded apps have changed
+								self.broadcasts.apps.emit('update', appCfgs);
+							});
+
+							response.writeHead(200, 'ok', { 'content-type':'text/html' })
+								.end(renderAppConfigHtml(newCfg, request.body.config, null, 'Updated'));
+						},
+						function() {
+							response.writeHead(502, 'bad gateway', { 'content-type':'text/html' })
+								.end(renderAppConfigHtml(cfg, request.body.config, { _body:'Failed to save update' }));
+						}
 					);
-				} else if (/head/i.test(request.method))
-					response.writeHead(200, 'ok', headers).end();
-				else
-					response.writeHead(406, 'not acceptable').end();
-				break;
-			default:
-				response.writeHead(404, 'not found').end();
-				break;
+				});
+			} else
+				return response.writeHead(422, 'semantic errors').end('`config` is required');
 		}
+		else
+			response.writeHead(415, 'bad content-type').end();
 	};
 
-	ConfigServer.prototype.httpSetItem = function(request, response, cid, iid) {
-		var headers = {
-			link:[] // :TODO:
-		};
-		switch (cid) {
-			case 'apps':
-				if (iid == '.active')
-					return response.writeHead(405, 'bad method').end();
-				// :TODO:
-				response.writeHead(501, 'not implemented').end();
-				break;
-			default:
-				response.writeHead(404, 'not found').end();
-				break;
-		}
-	};
-
-	ConfigServer.prototype.httpDeleteItem = function(request, response, cid, iid) {
-		var headers = {
-			link:[] // :TODO:
-		};
-		switch (cid) {
-			case 'apps':
-				if (iid == '.active')
-					return response.writeHead(405, 'bad method').end();
-				// :TODO:
-				response.writeHead(501, 'not implemented').end();
-				break;
-			default:
-				response.writeHead(404, 'not found').end();
-				break;
-		}
-	};
+	function validateAppConfig(cfg) {
+		var errors = {};
+		if (!cfg) return { _body:'required' };
+		if (!cfg.id) errors.id = 'required';
+		if (!cfg.startpage) errors.startpage = 'required';
+		if (!cfg.workers) errors.workers = 'required';
+		if (!Array.isArray(cfg.workers) || !cfg.workers.length) errors.workers = 'must be an array with at least 1 member';
+		return (Object.keys(errors).length > 0) ? errors : null;
+	}
 
 	function validateWorkerConfig(cfg) {
 		var errors = {};
@@ -447,9 +492,27 @@
 		workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
 	}
 
+	function renderAppConfigHtml(cfg, cfgText, errors, msg) {
+		errors = errors || {};
+		msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
+		return '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
+			'<form action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
+				msg+
+				((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
+				'<ul class="inline">'+
+					'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
+					'<li><i class="icon-repeat"></i> <a href="#">Restore from Host</a></li>'+
+				'</ul>'+
+				'<textarea name="config" class="span8" rows="15">'+
+					cfgText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+				'</textarea><br/>'+
+				'<button class="btn">Update</button>'+
+			'</form>';
+	}
+
 	// :DEBUG: choose one of these
 	function workerHtmlSidetabs(cfg) {
-		return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4>'+
+		return '<h2>'+cfg.title+' <small>'+cfg.domain+'</small></h2>'+
 			'<div class="tabbable tabs-left">'+
 				'<ul class="nav nav-tabs">'+
 					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i> Configure</a></li>'+

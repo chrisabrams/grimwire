@@ -22,7 +22,7 @@ function routeMap(request, response, methodMap, pathMap) {
 
   // add a prefix to the function name
   if (methodMap._prefix)
-    method = methodMap._prefix+toTitleCase(method);
+    method = methodMap._prefix+toUpperFirst(method);
 
   // find a matching route
   var path = request.path;
@@ -33,7 +33,7 @@ function routeMap(request, response, methodMap, pathMap) {
 
       // add the path postfix if given
       if (Array.isArray(handlerObj)) {
-        method += toTitleCase(handlerObj[1]);
+        method += toUpperFirst(handlerObj[1]);
         handlerObj = handlerObj[0];
       }
 
@@ -59,6 +59,10 @@ function makeRouteRegex(route) {
 // http://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
 function toTitleCase(str) {
   return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
+
+function toUpperFirst(str) {
+  return str.charAt(0).toUpperCase() + str.substr(1);
 }
 
 // brings updates into org value

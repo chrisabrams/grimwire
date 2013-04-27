@@ -1,8 +1,8 @@
 // setup config
 if (!local.worker.config.sources) {
 	local.worker.config.sources = [
-		'httpl://rssproxy.rss.usr?url=http://lambda-the-ultimate.org/rss.xml',
-		'httpl://rssproxy.rss.usr?url=http://googleresearch.blogspot.co.uk/feeds/posts/default'
+		'http://lambda-the-ultimate.org/rss.xml',
+		'http://googleresearch.blogspot.co.uk/feeds/posts/default'
 	];
 }
 
@@ -14,7 +14,7 @@ function getAllFeeds() {
 
 	return local.promise.bundle(
 		local.worker.config.sources.map(function(url) {
-			return local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
+			return local.http.dispatch({ method:'get', url:'httpl://rssproxy.rss.usr?url='+url, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {
 						feeds[url] = res.body;

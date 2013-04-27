@@ -9,12 +9,12 @@
 	"workers": [
 		{
 			"id": "layout",
-			"title": "Search Layout",
+			"title": "Layout",
 			"src": "servers/worker/index/layout.js"
 		},
 		{
 			"id": "lunr",
-			"title": "Search Index",
+			"title": "Lunr.js Index",
 			"src": "servers/worker/index/lunr.js",
 			"seed": [
 				{
