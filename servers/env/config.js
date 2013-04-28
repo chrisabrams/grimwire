@@ -256,22 +256,39 @@
 		if (/html/.test(request.headers.accept)) {
 			this.getAppConfigs()
 				.succeed(function(appCfgs) {
-					var html = '';
+					var getDomain = function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; };
+					var getConfig = function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; };
+					var removeNulls = function(cfg) { return !!cfg; };
+					var makeWorkerHtml = function(cfg) {
+						var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+appId+'.usr';
+						if (first) {
+							first = false;
+							firstCfgUrl = cfgUrl;
+							return '<li class="active"><a href="'+cfgUrl+'" target="worker-cfg">'+cfg.title+'</a></li>';
+						}
+						return '<li><a href="'+cfgUrl+'" target="worker-cfg">'+cfg.title+'</a></li>';
+					};
+
+					var first = true;
+					var firstCfgUrl = '';
+					var html = '<div class="row-fluid"><div class="well well-small span2"><ul class="nav nav-list">';
 					for (var appId in appCfgs) {
 						var appCfg = appCfgs[appId];
 						if (!appCfg.workers) continue;
 						html +=
-							'<ul class="breadcrumb">'+
-								'<li><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+' Workers</li>'+
-							'</ul>';
+							'<li class="nav-header">'+
+								'<i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</li>'+
+							'</li>';
 						html += appCfgs[appId].workers
-							.map(function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; })
-							.map(function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; })
-							.filter(function(cfg) { return !!cfg; })
-							.map(workerHtmlSidetabs)
+							.map(getDomain)
+							.map(getConfig)
+							.filter(removeNulls)
+							.map(makeWorkerHtml)
 							.join('');
-						html += '<hr />';
+						html += '<li><a href="#"><i class="icon-plus-sign"></i> Add Worker</a></li>';
 					}
+					html += '</ul></div>'+
+						'<div id="worker-cfg" class="span10" data-grim-layout="replace '+firstCfgUrl+'"></div></div>';
 
 					headers['content-type'] = 'text/html';
 					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
@@ -279,6 +296,26 @@
 				.fail(function() { response.writeHead(500, 'internal error').end(); });
 		} else
 			response.writeHead(406, 'not acceptable').end();
+	};
+
+	ConfigServer.prototype.httpGetWorker = function(request, response, domain) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/workers' },
+				{ rel:'self', href:'/workers/'+domain }
+			]
+		};
+
+		var server = local.env.servers[domain];
+		if (!server)
+			return response.writeHead(404, 'not found').end();
+
+		if (/html/.test(request.headers.accept)) {
+			headers['content-type'] = 'text/html';
+			response.writeHead(200, 'ok', headers).end(workerHtmlToptabs(server.config));
+		} else
+			response.writeHead(406, 'bad accept type').end();
 	};
 
 	ConfigServer.prototype.httpSetWorker = function(request, response, domain) {
@@ -296,10 +333,8 @@
 
 		if (/json|form/.test(request.headers['content-type'])) {
 			var workerCfg;
-			if (/PATCH/i.test(request.method))
-				workerCfg = patch(deepClone(server.config), request.body);
-			else
-				workerCfg = request.body;
+			if (/PATCH/i.test(request.method)) workerCfg = patch(deepClone(server.config), request.body);
+			else workerCfg = request.body;
 
 			var errors = validateWorkerConfig(workerCfg);
 			if (errors)
@@ -523,7 +558,7 @@
 			'</div>';
 	}
 	function workerHtmlToptabs(cfg) {
-		return '<h4>'+cfg.title+' <small>'+cfg.domain+'</small></h4>'+
+		return '<h3>'+cfg.domain+'</h3>'+
 			'<ul class="nav nav-tabs">'+
 				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
