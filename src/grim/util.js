@@ -68,8 +68,8 @@ function toUpperFirst(str) {
 // brings updates into org value
 // :NOTE: mutates its first parameter out of laziness
 function patch(org, update) {
-  if (update === null) { return null; }
-  if (org === null) { org = {}; }
+  if (update === null) { return org; }
+  if (!org) { org = {}; }
   for (var k in update) {
     if (typeof org[k] == 'object' && typeof update[k] == 'object')
       org[k] = patch(org[k], update[k]);

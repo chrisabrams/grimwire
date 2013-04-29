@@ -19,11 +19,6 @@
 		this.defaultAppId = null; // as inferred from the ordering of "applications" in .hosts.json
 
 		// add special environment apps
-		this.hostAppConfigs['_workers'] = {
-			id: '_workers',
-			title: 'Active Workers',
-			startpage: 'httpl://config.env/workers'
-		};
 		this.hostAppConfigs['_apps'] = {
 			id: '_apps',
 			title: 'Applications',
@@ -190,7 +185,7 @@
 		return this.getAppIds()
 			.succeed(function(appIds) {
 				envAppIds = appIds;
-				self.defaultAppId = appIds[2]; // let the first in the list (after "_workers" and "_apps") be the default
+				self.defaultAppId = appIds[1]; // let the first in the list (after "_apps") be the default
 				// get user storage app configs
 				var appConfigGETs = appIds.map(function(appId) { return self.storageHost.apps.item(appId).getJson(); });
 				return local.promise.bundle(appConfigGETs);
@@ -254,46 +249,7 @@
 			]
 		};
 		if (/html/.test(request.headers.accept)) {
-			this.getAppConfigs()
-				.succeed(function(appCfgs) {
-					var getDomain = function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; };
-					var getConfig = function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; };
-					var removeNulls = function(cfg) { return !!cfg; };
-					var makeWorkerHtml = function(cfg) {
-						var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+appId+'.usr';
-						if (first) {
-							first = false;
-							firstCfgUrl = cfgUrl;
-							return '<li class="active"><a href="'+cfgUrl+'" target="worker-cfg">'+cfg.title+'</a></li>';
-						}
-						return '<li><a href="'+cfgUrl+'" target="worker-cfg">'+cfg.title+'</a></li>';
-					};
-
-					var first = true;
-					var firstCfgUrl = '';
-					var html = '<div class="row-fluid"><div class="well well-small span2"><ul class="nav nav-list">';
-					for (var appId in appCfgs) {
-						var appCfg = appCfgs[appId];
-						if (!appCfg.workers) continue;
-						html +=
-							'<li class="nav-header">'+
-								'<i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</li>'+
-							'</li>';
-						html += appCfgs[appId].workers
-							.map(getDomain)
-							.map(getConfig)
-							.filter(removeNulls)
-							.map(makeWorkerHtml)
-							.join('');
-						html += '<li><a href="#"><i class="icon-plus-sign"></i> Add Worker</a></li>';
-					}
-					html += '</ul></div>'+
-						'<div id="worker-cfg" class="span10" data-grim-layout="replace '+firstCfgUrl+'"></div></div>';
-
-					headers['content-type'] = 'text/html';
-					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
-				})
-				.fail(function() { response.writeHead(500, 'internal error').end(); });
+			response.writeHead(501, 'not implemented').end();
 		} else
 			response.writeHead(406, 'not acceptable').end();
 	};
@@ -313,7 +269,18 @@
 
 		if (/html/.test(request.headers.accept)) {
 			headers['content-type'] = 'text/html';
-			response.writeHead(200, 'ok', headers).end(workerHtmlToptabs(server.config));
+			var html;
+			var iface = request.query.interface;
+			if (iface == 'kill') {
+				html = '<form action="httpl://config.env/workers/'+server.config.domain+'" method="delete">'+
+						'<p><strong>Shut down this worker?</strong></p>'+
+						'<p>Workers are pieces of Grimwire applications. Shutting this one down will affect the "'+server.config.appTitle+'" app.</p>'+
+						'<button class="btn btn-danger"><i class="icon-ok icon-white"></i> Remove</button>'+
+					'</form>';
+			}
+			else
+				html = workerHtmlToptabs(server.config);
+			response.writeHead(200, 'ok', headers).end(html);
 		} else
 			response.writeHead(406, 'bad accept type').end();
 	};
@@ -385,7 +352,7 @@
 		}
 		else if (/html/.test(request.headers.accept)) {
 			headers['content-type'] = 'text/html';
-			this.getAppIds().then(
+			/*this.getAppIds().then(
 				function(appIds) {
 					var html = appIds
 						.filter(function(appId) { return appId.charAt(0) != '_'; })
@@ -396,7 +363,20 @@
 					response.writeHead(200, 'ok', headers).end('<hr/>'+html+'<hr/>');
 				},
 				function() { response.writeHead(500).end(); }
-			);
+			);*/
+			var view = request.query.view;
+			this.getAppConfigs()
+				.succeed(function(appCfgs) {
+					var html;
+					if (view == 'summary')
+						html = views.appsSummary(appCfgs);
+					else
+						html = views.appsMain(appCfgs);
+
+					headers['content-type'] = 'text/html';
+					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
+				})
+				.fail(function() { response.writeHead(500, 'internal error').end(); });
 		}
 		else if (/head/i.test(request.method))
 			response.writeHead(200, 'ok', headers).end();
@@ -435,7 +415,7 @@
 			headers['content-type'] = 'text/html';
 			this.getAppConfig(appId).then(
 				function(cfg) {
-					response.writeHead(200, 'ok', headers).end(renderAppConfigHtml(cfg, JSON.stringify(cfg, null, 4)));
+					response.writeHead(200, 'ok', headers).end(views.appCfg(cfg, JSON.stringify(cfg, null, 4)));
 				},
 				function() { response.writeHead(404, 'not found').end(); }
 			);
@@ -467,13 +447,13 @@
 					try { newCfg = JSON.parse(request.body.config); }
 					catch (e) {
 						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
-							.end(renderAppConfigHtml(cfg, request.body.config, { _body:'Unable to parse JSON -'+e }));
+							.end(views.appCfg(cfg, request.body.config, { _body:'Unable to parse JSON -'+e }));
 					}
 
 					var errors = validateAppConfig(newCfg);
 					if (errors)
 						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
-								.end(renderAppConfigHtml(cfg, request.body.config, errors));
+								.end(views.appCfg(cfg, request.body.config, errors));
 
 					self.storageHost.apps.item(appId).put(newCfg, 'application/json').then(
 						function() {
@@ -485,11 +465,11 @@
 							});
 
 							response.writeHead(200, 'ok', { 'content-type':'text/html' })
-								.end(renderAppConfigHtml(newCfg, request.body.config, null, 'Updated'));
+								.end(views.appCfg(newCfg, request.body.config, null, 'Updated'));
 						},
 						function() {
 							response.writeHead(502, 'bad gateway', { 'content-type':'text/html' })
-								.end(renderAppConfigHtml(cfg, request.body.config, { _body:'Failed to save update' }));
+								.end(views.appCfg(cfg, request.body.config, { _body:'Failed to save update' }));
 						}
 					);
 				});
@@ -527,23 +507,84 @@
 		workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
 	}
 
-	function renderAppConfigHtml(cfg, cfgText, errors, msg) {
-		errors = errors || {};
-		msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
-		return '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
-			'<form action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
-				msg+
-				((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
-				'<ul class="inline">'+
-					'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
-					'<li><i class="icon-repeat"></i> <a href="#">Restore from Host</a></li>'+
-				'</ul>'+
-				'<textarea name="config" class="span8" rows="15">'+
-					cfgText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+
-				'</textarea><br/>'+
-				'<button class="btn">Update</button>'+
-			'</form>';
-	}
+	var views = {
+		appsMain: function(appCfgs) {
+			var getDomain = function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; };
+			var getConfig = function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; };
+			var removeNulls = function(cfg) { return !!cfg; };
+			var makeWorkerHtml = function(cfg) {
+				var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+cfg.appId+'.usr';
+				return '<li><a href="'+cfgUrl+'" target="cfgappsmain">'+cfg.title+'</a></li>';
+			};
+
+			var html = '<div class="row-fluid"><div class="well well-small span2"><ul class="nav nav-list">';
+			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain"><strong>Applications</strong></a></li>';
+			for (var appId in appCfgs) {
+				var appCfg = appCfgs[appId];
+				if (!appCfg.workers) continue;
+				html +=
+					'<li class="nav-header">'+
+						'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
+					'</li>';
+				html += appCfgs[appId].workers
+					.map(getDomain)
+					.map(getConfig)
+					.filter(removeNulls)
+					.map(makeWorkerHtml)
+					.join('');
+			}
+			html += '</ul></div>'+
+				'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div></div>';
+			return html;
+		},
+		appsSummary: function(appCfgs) {
+			var html = '<h4>Applications on '+toUpperFirst(window.location.hostname)+'</h4><hr/>';
+			for (var id in appCfgs) {
+				if (id.charAt(0) == '_') continue;
+				var cfg = appCfgs[id];
+				html += '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
+					'<ul class="inline">'+
+						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
+						'<li><a href="#"><i class="icon-download-alt"></i> Copy to Your Applications</a></li>'+
+						'<li><a href="#"><i class="icon-remove"></i> Disable</a></li>'+
+					'</ul>'+
+					'<hr/>';
+			}
+			html += '<br/><br/>'+
+				'<h4>Your Applications <small><a href=#><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
+				'<hr/>';
+			for (var id in appCfgs) {
+				if (id.charAt(0) == '_') continue;
+				var cfg = appCfgs[id];
+				html += '<h2 class="muted"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> <span class="label">inactive</span></h2>'+
+					'<ul class="inline">'+
+						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
+						'<li><a href="#"><i class="icon-edit"></i> Edit</a></li>'+
+						'<li><a href="#"><i class="icon-remove-sign"></i> Uninstall</a></li>'+
+						'<li><a href="#"><i class="icon-ok"></i> Enable</a></li>'+
+					'</ul><hr/>';
+			}
+			//<p class=muted>Nothing yet!</p>'
+			return html;
+		},
+		appCfg: function(cfg, cfgText, errors, msg) {
+			errors = errors || {};
+			msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
+			return '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
+				'<form action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
+					msg+
+					((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
+					'<ul class="inline">'+
+						'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
+						'<li><i class="icon-repeat"></i> <a href="#">Restore from Host</a></li>'+
+					'</ul>'+
+					'<textarea name="config" class="span8" rows="15">'+
+						cfgText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+					'</textarea><br/>'+
+					'<button class="btn">Update</button>'+
+				'</form>';
+		}
+	};
 
 	// :DEBUG: choose one of these
 	function workerHtmlSidetabs(cfg) {
@@ -552,7 +593,7 @@
 				'<ul class="nav nav-tabs">'+
 					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i> Configure</a></li>'+
 					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i> Edit</a></li>'+
-					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Run"><i class="icon-hand-right"></i> Execute</a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="View Worker Interface"><i class="icon-hand-right"></i> Execute</a></li>'+
 				'</ul>'+
 				'<div id="cfg-'+cfg.domain+'" class="tab-content" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
 			'</div>';
@@ -562,7 +603,8 @@
 			'<ul class="nav nav-tabs">'+
 				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
-				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Run"><i class="icon-hand-right"></i></a></li>'+
+				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
+				'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?interface=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
 			'</ul>'+
 			'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
 			'<hr/>';
