@@ -1,10 +1,11 @@
 // setup config
-if (!local.worker.config.sources) {
-	local.worker.config.sources = [
+var feedSources =
+	local.worker.config.usr.sources ||
+	local.worker.config.sources ||
+	[
 		'http://lambda-the-ultimate.org/rss.xml',
 		'http://googleresearch.blogspot.co.uk/feeds/posts/default'
 	];
-}
 
 var feeds = null;
 function getAllFeeds() {
@@ -13,7 +14,7 @@ function getAllFeeds() {
 	feeds = {};
 
 	return local.promise.bundle(
-		local.worker.config.sources.map(function(url) {
+		feedSources.map(function(url) {
 			return local.http.dispatch({ method:'get', url:'httpl://rssproxy.rss.usr?url='+url, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {
@@ -109,16 +110,15 @@ function main(request, response) {
 	if (request.path == '/.grim/config') {
 		var msg = '';
 		if (/POST/i.test(request.method)) {
-			var sources = (request.body.sources && typeof request.body.sources == 'string') ?
+			feedSources = (request.body.sources && typeof request.body.sources == 'string') ?
 				request.body.sources.split("\n").filter(function(i) { return i; }) :
 				[];
 			local.http.dispatch({
-				method: 'patch',
+				method: 'put',
 				url: 'httpl://config.env/workers/'+local.worker.config.domain,
-				body: { sources:sources },
+				body: { sources:feedSources },
 				headers: { 'content-type':'application/json' }
 			});
-			local.worker.config.sources = sources;
 			msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
 		}
 
@@ -128,7 +128,7 @@ function main(request, response) {
 				msg+
 				'<label for="reader-feed-sources">Feed Sources</label>'+
 				'<textarea id="reader-feed-sources" name="sources" rows="5" class="span8">'+
-					local.worker.config.sources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+					feedSources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
 				'</textarea><br/>'+
 				'<button class="btn">Submit</button>'+
 			'</form>'

@@ -11,12 +11,13 @@
 
 		this.storageHost = storageHost;
 		this.storageHost.apps = storageHost.collection('apps');
+		this.storageHost.workerCfgs = storageHost.collection('workercfgs');
 
 		this.hostEnvConfig = {}; // :NOTE: as provided by the host
 		this.hostAppConfigs = {}; // :NOTE: as provided by the host
 		// ^ to get config with user settings mixed in, use getAppConfig()
 		this.activeAppId = null;
-		this.defaultAppId = null; // as inferred from the ordering of "applications" in .hosts.json
+		this.defaultAppId = 'rss'; // :TODO:
 
 		// add special environment apps
 		this.hostAppConfigs['_apps'] = {
@@ -71,7 +72,7 @@
 					// may still be a string if the host didnt give an accurate content-type header
 					if (typeof res.body == 'string')
 						res.body = JSON.parse(res.body);
-					if (!res.body.id) throw "Invalid application config: `id` is required";
+					if (!res.body.id) console.error("Invalid application config: `id` is required", res.body);
 					self.hostAppConfigs[res.body.id] = res.body;
 				});
 				// use the getter so we can mix in config from userdata
@@ -80,11 +81,6 @@
 			.succeed(function(appCfgs) {
 				// broadcast that the loaded apps have changed
 				self.broadcasts.apps.emit('update', appCfgs);
-
-				// write all of them back to storage, in case this is a new session
-				for (var appId in appCfgs)
-					self.storageHost.apps.item(appId).put(appCfgs[appId], 'application/json');
-
 				return appCfgs;
 			});
 	};
@@ -100,17 +96,23 @@
 
 				// load workers
 				if (Array.isArray(appCfg.workers)) {
+					var workerLoads = [];
 					appCfg.workers.forEach(function(workerCfg) {
-						// :TODO: mix in app common
 						workerCfg = deepClone(workerCfg);
 						var errors = validateWorkerConfig(workerCfg);
 						if (errors) return console.error('Invalid worker config:', errors, workerCfg);
 						prepWorkerConfig(workerCfg, appCfg);
-						local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
+						workerLoads.push(self.getWorkerUserConfig(workerCfg.domain)
+							.succeed(function(userCfg) {
+								workerCfg.usr = userCfg;
+								local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
+							}));
 					});
+					return local.promise.bundle(workerLoads).then(function() { return appCfg; });
 				}
 
 				// :TODO: broadcast update or open event on the app?
+				return appCfg;
 			});
 	};
 
@@ -120,13 +122,13 @@
 				// close all workers
 				if (Array.isArray(appCfg.workers)) {
 					appCfg.workers.forEach(function(workerCfg) {
-						console.log(workerCfg);
-						var server = local.env.servers[workerCfg.id+'.'+appId+'.usr'];
+						var server = local.env.servers[makeWorkerDomain(workerCfg, appId)];
 						if (server instanceof local.env.WorkerServer)
 							local.env.killServer(server.config.domain);
 					});
 				}
 				// :TODO: broadcast update or close event on the app?
+				return appCfg;
 			});
 	};
 
@@ -145,80 +147,67 @@
 				self.broadcasts.activeApp.emit('update', appCfg);
 			},
 			function() {
-				console.log('Failed to set active app to "'+appId+'": not found');
+				console.error('Failed to set active app to "'+appId+'": not found');
 			});
 	};
 
-	ConfigServer.prototype.getEnvConfig = function(appId) {
-		var config = deepClone(this.hostEnvConfig);
-
-		// mix in the .host config from the user storage
+	ConfigServer.prototype.getEnvConfig = function() {
+		var self = this;
 		return this.storageHost.apps.item('.host').getJson()
-			.then(function(res) { return res.body; }, function() { return {}; })
-			.succeed(function(userConfig) {
-				config = patch(config, userConfig);
-				if (!config) config = {};
-				if (!config.applications) config.applications = [];
-				return config;
-			});
+			.then(
+				function(res) {	return res.body; },
+				function() { return deepClone(self.hostEnvConfig); }
+			);
 	};
 
 	ConfigServer.prototype.getAppIds = function() {
 		var self = this;
+		var appIds = Object.keys(self.hostAppConfigs);
 		// read the user's apps collection
 		return this.storageHost.apps.getJson()
 			.succeed(function(res) {
-				if (!res.body || res.body.length === 0)
-					return Object.keys(self.hostAppConfigs); // fall back to host-defined
-				return res.body.map(function(cfg) { return cfg.id; });
+				var userApps = res.body;
+				if (userApps && userApps.length > 0)
+					return appIds.concat(userApps.map(function(app) { return app.id; }));
+				return appIds;
 			})
 			.fail(function() {
-				return Object.keys(self.hostAppConfigs); // fall back to host-defined
+				return appIds;
 			});
 	};
 
 	ConfigServer.prototype.getAppConfigs = function() {
 		var self = this;
-		var envAppIds;
-		var hostAppConfigs = deepClone(this.hostAppConfigs);
-		// get env app ids
-		return this.getAppIds()
-			.succeed(function(appIds) {
-				envAppIds = appIds;
-				self.defaultAppId = appIds[1]; // let the first in the list (after "_apps") be the default
-				// get user storage app configs
-				var appConfigGETs = appIds.map(function(appId) { return self.storageHost.apps.item(appId).getJson(); });
-				return local.promise.bundle(appConfigGETs);
-			})
-			.succeed(function(userCfgResponses) {
-				var appConfigs = {
-				};
+		var appConfigs = deepClone(this.hostAppConfigs);
+		// read the user's apps collection
+		return this.storageHost.apps.getJson()
+			.then(function(res) { return res.body || []; }, function() { return []; })
+			.succeed(function(userAppConfigs) {
 				// mix user app config & host app config
-				userCfgResponses.forEach(function (userCfgResponse, i) {
-					var appId = envAppIds[i];
-					appConfigs[appId] = patch(hostAppConfigs[appId], userCfgResponse.body || {});
+				userAppConfigs.forEach(function (app, i) {
+					appConfigs[app.id] = app;
 				});
 				return appConfigs;
 			});
 	};
 
 	ConfigServer.prototype.getAppConfig = function(appId) {
-		var self = this;
-		var hostCfg;
-
 		// given a config object?
-		if (appId && typeof appId == 'object') {
-			hostCfg = deepClone(appId);
-			appId = hostCfg.id;
-		} else
-			hostCfg = (this.hostAppConfigs[appId]) ? deepClone(this.hostAppConfigs[appId]) : {};
+		if (appId && typeof appId == 'object')
+			return local.promise(deepClone(appId));
 
-		// get user cfg and mix with host cfg
+		// host app?
+		if (appId in this.hostAppConfigs)
+			return local.promise(deepClone(this.hostAppConfigs[appId]));
+
+		// user app?
 		return this.storageHost.apps.item(appId).getJson()
-			.then(function(res) { return res.body; }, function() { return {}; })
-			.succeed(function(userCfg) {
-				return patch(hostCfg, userCfg);
-			});
+			.succeed(function(res) { return res.body; });
+	};
+
+	ConfigServer.prototype.getWorkerUserConfig = function(domain) {
+		return this.storageHost.workerCfgs.item(domain).getJson()
+				.then(function(res) { return res.body; }, function() { return {}; });
 	};
 
 	// handlers
@@ -270,8 +259,8 @@
 		if (/html/.test(request.headers.accept)) {
 			headers['content-type'] = 'text/html';
 			var html;
-			var iface = request.query.interface;
-			if (iface == 'kill') {
+			var view = request.query.view;
+			if (view == 'kill') {
 				html = '<form action="httpl://config.env/workers/'+server.config.domain+'" method="delete">'+
 						'<p><strong>Shut down this worker?</strong></p>'+
 						'<p>Workers are pieces of Grimwire applications. Shutting this one down will affect the "'+server.config.appTitle+'" app.</p>'+
@@ -299,33 +288,30 @@
 			return response.writeHead(404, 'not found').end();
 
 		if (/json|form/.test(request.headers['content-type'])) {
-			var workerCfg;
-			if (/PATCH/i.test(request.method)) workerCfg = patch(deepClone(server.config), request.body);
-			else workerCfg = request.body;
+			var self = this;
+			this.getWorkerUserConfig(domain)
+				.succeed(function(workerUserCfg) {
+					var workerCfg = server.config;
+					if (/PATCH/i.test(request.method))
+						workerUserCfg = patch(workerUserCfg, request.body);
+					else
+						workerUserCfg = request.body;
+					workerCfg.usr = workerUserCfg;
 
-			var errors = validateWorkerConfig(workerCfg);
-			if (errors)
-				return response.writeHead(422, 'semantic errors').end(errors);
-
-			this.getAppConfig(workerCfg.appId).then(
-				function(appCfg) {
-					prepWorkerConfig(workerCfg, appCfg);
+					self.storageHost.workerCfgs.item(domain).put(workerUserCfg);
 
 					// :NOTE: replace in-place so that ordering is maintained in the Workers page
-					// local.env.killServer(workerCfg.domain);
-					local.http.unregisterLocal(workerCfg.domain);
+					// :TODO: can we simplify this to recycling the worker inside the WorkerServer?
+					// local.env.killServer(domain);
+					local.http.unregisterLocal(domain);
 					server.terminate();
-					// local.env.addServer(workerCfg.domain, new local.env.WorkerServer(workerCfg));
-					server = local.env.servers[workerCfg.domain] = new local.env.WorkerServer(workerCfg);
+					// local.env.addServer(domain, new local.env.WorkerServer(server.config));
+					server = local.env.servers[domain] = new local.env.WorkerServer(workerCfg);
 					server.loadUserScript();
-					local.http.registerLocal(workerCfg.domain, server.handleHttpRequest, server);
+					local.http.registerLocal(domain, server.handleHttpRequest, server);
 
 					response.writeHead(204, 'no content').end();
-				},
-				function() {
-					response.writeHead(422, 'semantic errors').end({ appId:'invalid app id' });
-				}
-			);
+				});
 		} else
 			response.writeHead(415, 'bad content type').end();
 	};
@@ -352,26 +338,12 @@
 		}
 		else if (/html/.test(request.headers.accept)) {
 			headers['content-type'] = 'text/html';
-			/*this.getAppIds().then(
-				function(appIds) {
-					var html = appIds
-						.filter(function(appId) { return appId.charAt(0) != '_'; })
-						.map(function(appId) {
-							return '<div id="cfg-'+appId+'" data-grim-layout="replace httpl://config.env/apps/'+appId+'"></div>';
-						})
-						.join('<hr/>');
-					response.writeHead(200, 'ok', headers).end('<hr/>'+html+'<hr/>');
-				},
-				function() { response.writeHead(500).end(); }
-			);*/
 			var view = request.query.view;
 			this.getAppConfigs()
 				.succeed(function(appCfgs) {
 					var html;
-					if (view == 'summary')
-						html = views.appsSummary(appCfgs);
-					else
-						html = views.appsMain(appCfgs);
+					if (view == 'summary') html = views.appsSummary(appCfgs);
+					else html = views.appsMain(appCfgs);
 
 					headers['content-type'] = 'text/html';
 					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
@@ -443,6 +415,12 @@
 			if (request.body.config) {
 				var self = this;
 				this.getAppConfig(appId).then(function(cfg) {
+					// allow reconfigure of user apps only
+					if (appId in self.hostAppConfigs) {
+						return response.writeHead(403, 'forbidden', { 'content-type':'text/html' })
+							.end(views.appCfg(cfg, request.body.config, { _body:'Host applications are read-only. Please copy the app into Your Applications first.' }));
+					}
+
 					var newCfg;
 					try { newCfg = JSON.parse(request.body.config); }
 					catch (e) {
@@ -500,23 +478,27 @@
 	}
 
 	function prepWorkerConfig(workerCfg, appCfg) {
+		if (appCfg.common && typeof appCfg.common == 'object')
+			patch(workerCfg, appCfg.common);
 		workerCfg.appId = appCfg.id;
 		workerCfg.appTitle = appCfg.title;
 		workerCfg.appIcon = appCfg.icon;
 		workerCfg.scriptUrl = workerCfg.src;
-		workerCfg.domain = workerCfg.id+'.'+appCfg.id+'.usr';
+		workerCfg.domain = makeWorkerDomain(workerCfg, appCfg);
+	}
+
+	function makeWorkerDomain(workerId, appId) {
+		if (appId && typeof appId == 'object')
+			appId = appId.id;
+		else if (!appId && workerId && typeof workerId == 'object')
+			appId = workerId.appId;
+		if (workerId && typeof workerId == 'object')
+			workerId = workerId.id;
+		return workerId+'.'+appId+'.usr';
 	}
 
 	var views = {
 		appsMain: function(appCfgs) {
-			var getDomain = function(workerCfg) { return workerCfg.id+'.'+appCfg.id+'.usr'; };
-			var getConfig = function(domain) { return (domain in local.env.servers) ? local.env.servers[domain].config : null; };
-			var removeNulls = function(cfg) { return !!cfg; };
-			var makeWorkerHtml = function(cfg) {
-				var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+cfg.appId+'.usr';
-				return '<li><a href="'+cfgUrl+'" target="cfgappsmain">'+cfg.title+'</a></li>';
-			};
-
 			var html = '<div class="row-fluid"><div class="well well-small span2"><ul class="nav nav-list">';
 			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain"><strong>Applications</strong></a></li>';
 			for (var appId in appCfgs) {
@@ -527,10 +509,10 @@
 						'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
 					'</li>';
 				html += appCfgs[appId].workers
-					.map(getDomain)
-					.map(getConfig)
-					.filter(removeNulls)
-					.map(makeWorkerHtml)
+					.map(function(cfg) {
+						var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+appId+'.usr';
+						return '<li><a href="'+cfgUrl+'" target="cfgappsmain">'+cfg.title+'</a></li>';
+					})
 					.join('');
 			}
 			html += '</ul></div>'+
@@ -553,7 +535,7 @@
 			html += '<br/><br/>'+
 				'<h4>Your Applications <small><a href=#><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
 				'<hr/>';
-			for (var id in appCfgs) {
+			/*for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
 				var cfg = appCfgs[id];
 				html += '<h2 class="muted"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> <span class="label">inactive</span></h2>'+
@@ -563,8 +545,8 @@
 						'<li><a href="#"><i class="icon-remove-sign"></i> Uninstall</a></li>'+
 						'<li><a href="#"><i class="icon-ok"></i> Enable</a></li>'+
 					'</ul><hr/>';
-			}
-			//<p class=muted>Nothing yet!</p>'
+			}*/
+			html += '<p class=muted>Nothing yet!</p>';
 			return html;
 		},
 		appCfg: function(cfg, cfgText, errors, msg) {
@@ -604,7 +586,7 @@
 				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
-				'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?interface=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
+				'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?view=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
 			'</ul>'+
 			'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
 			'<hr/>';

@@ -1,6 +1,6 @@
 var config = local.worker.config;
-var mainUrl = config.mainUrl || 'httpl://lunr.index.usr';
-var sidenavUrl = config.sidenavUrl || 'httpl://layout.index.usr/filters';
+var mainUrl = config.usr.mainUrl || config.mainUrl || 'httpl://lunr.index.usr';
+var sidenavUrl = config.usr.sidenavUrl || config.sidenavUrl || 'httpl://layout.index.usr/filters';
 function main(request, response) {
 	if (!request.path || request.path == '/' || request.path == '/2column') {
 		respondHTML(

@@ -1,6 +1,6 @@
 // we use yahoo pipes to deal with single-origin policy
 // http://www.badlydrawntoy.com/2008/07/08/yahoo-pipes-and-jquery-same-origin-policy/
-var yahooPipeId = local.worker.config.yahooPipeId || 'c2d940db8f6853ecebe1a522ba11ead5';
+var yahooPipeId = local.worker.config.usr.yahooPipeId || local.worker.config.yahooPipeId || 'c2d940db8f6853ecebe1a522ba11ead5';
 var yahooPipeTemplate = local.http.UriTemplate.parse('http://pipes.yahoo.com/pipes/pipe.run?_id='+yahooPipeId+'{&_render,url}');
 function getFeed(url, format) {
 	var opts = {

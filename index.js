@@ -73,10 +73,12 @@ configServer.loadFromHost()
 		// open the apps
 		var opens = [];
 		for (var appId in appCfgs)
-			configServer.openApp(appCfgs[appId]);
+			opens.push(configServer.openApp(appCfgs[appId]));
 
 		// set active app by hash
-		configServer.setActiveApp(window.location.hash.slice(1));
+		local.promise.bundle(opens).then(function() {
+			configServer.setActiveApp(window.location.hash.slice(1));
+		});
 	});
 
 
