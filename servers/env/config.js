@@ -384,6 +384,63 @@
 			response.writeHead(406, 'not acceptable').end();
 	};
 
+	ConfigServer.prototype.httpAddToApps = function(request, response) {
+		var headers = {
+			link: [
+				{ rel:'up via service', href:'/' },
+				{ rel:'self', href:'/apps' },
+				{ rel:'item', href:'/apps/{title}' }
+			]
+		};
+
+		var sendErrResponse = function(errs) {
+			if (/html/.test(request.headers.accept))
+				return response.writeHead(422, 'request errors', {'content-type':'text/html'})
+								.end(views.appInstallNew(errs));
+			return response.writeHead(422, 'request errors').end(errs);
+		};
+
+		if (!request.body || !request.body.config)
+			return sendErrResponse({ config:'Required.' });
+
+		var cfg = request.body.config.content;
+		if (typeof cfg == 'string') {
+			if (cfg.indexOf('data:') === 0) {
+				if (cfg.indexOf('data:application/json') !== 0)
+					return sendErrResponse({ config:'Invalid file-type - must be JSON.' });
+
+				cfg = atob(cfg.split(',')[1]);
+				if (!cfg) // :TODO: not sure this is the right error message
+					return sendErrResponse({ config:'Invalid file-type - must be JSON.' });
+
+				try { cfg = JSON.parse(cfg); }
+				catch (e) {
+					return sendErrResponse({ config:'Failed parsing JSON - '+e.message });
+				}
+			}
+		}
+
+		var errors = validateAppConfig(cfg);
+		if (errors)
+			return sendErrResponse({ config:errors });
+
+		var self = this;
+		this.installUserApp(cfg)
+			.then(function() {
+				self.openApp(cfg.id);
+				if (/html/.test(request.headers.accept)) {
+					headers['content-type'] = 'text/html';
+					self.getAppConfigs().succeed(function(appCfgs) {
+						response.writeHead(201, 'created', headers);
+						response.end(views.appsSummary(appCfgs));
+					});
+				} else
+					response.writeHead(201, 'created', headers).end();
+			}, function() {
+				response.writeHead(500, 'internal error').end();
+			});
+	};
+
 	ConfigServer.prototype.httpGetApp = function(request, response, appId) {
 		var headers = {
 			link: [
@@ -404,6 +461,16 @@
 			appId = this.activeAppId; // give the correct id and let handle below
 		}
 
+		// "new app" special item
+		if (appId == '.new') {
+			if (/html/.test(request.headers.accept)) {
+				headers['content-type'] = 'text/html';
+				return response.writeHead(200, 'ok', headers).end(views.appInstallNew());
+			} else
+				return response.writeHead(406, 'not acceptable').end();
+		}
+
+		// standard app item
 		if (/json/.test(request.headers.accept)) {
 			headers['content-type'] = 'application/json';
 			this.getAppConfig(appId).then(
@@ -593,7 +660,7 @@
 				html += views._appHeader(appCfgs[id])+'<hr/>';
 			}
 			html += '<br/><br/>'+
-				'<h4>Your Applications <small><a href=#><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
+				'<h4>Your Applications <small><a href="httpl://config.env/apps/.new"><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
 				'<hr/>';
 			var userHasApps = false;
 			for (var id in appCfgs) {
@@ -640,6 +707,27 @@
 					'</ul>';
 			}
 			html += '</form>';
+			return html;
+		},
+		appInstallNew: function(errors) {
+			var errMsg = '';
+			if (errors) {
+				if (typeof errors.config == 'string')
+					errMsg = '<div class="alert alert-error">Application file: '+errors.config+'</div>';
+				else {
+					errMsg = '<div class="alert alert-error"><strong>Mistakes were found in the application file:</strong><br/><ul>';
+					for (var k in errors.config) {
+						errMsg += '<li>`'+k+'`: '+errors.config[k]+'</li>';
+					}
+					errMsg += '</ul></div>';
+				}
+			}
+			var html = '<h2>Install New Application</h2><hr/>'+
+				'<form action="httpl://config.env/apps" method="post">'+
+					errMsg+
+					'<input type="file" name="config" required />'+
+					'<button class="btn"><i class="icon-ok"></i> Install</button>'+
+				'</form>';
 			return html;
 		}
 	};
