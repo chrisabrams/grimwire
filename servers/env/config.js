@@ -179,6 +179,8 @@
 	ConfigServer.prototype.getAppConfigs = function() {
 		var self = this;
 		var appConfigs = deepClone(this.hostAppConfigs);
+		for (var id in appConfigs)
+			appConfigs[id]._readonly = true;
 		// read the user's apps collection
 		return this.storageHost.apps.getJson()
 			.then(function(res) { return res.body || []; }, function() { return []; })
@@ -198,11 +200,36 @@
 
 		// host app?
 		if (appId in this.hostAppConfigs)
-			return local.promise(deepClone(this.hostAppConfigs[appId]));
+			return local.promise(patch(deepClone(this.hostAppConfigs[appId]), { _readonly:true }));
 
 		// user app?
 		return this.storageHost.apps.item(appId).getJson()
 			.succeed(function(res) { return res.body; });
+	};
+
+	ConfigServer.prototype.installUserApp = function(cfg) {
+		var self = this;
+		return this.getAppConfig(cfg.id)
+			.succeed(function(collidingAppCfg) {
+				// app id in use, increment the trailing # and try again
+				cfg.id = (''+cfg.id).replace(/(\d+)?$/, function(v) { return (+v || 1)+1; });
+				return self.installUserApp(cfg);
+			})
+			.fail(function() {
+				// app id free, save
+				// strip private variables
+				for (var k in cfg) {
+					if (k.charAt(0) == '_')
+						delete cfg[k];
+				}
+				return self.storageHost.apps.item(cfg.id).put(cfg, 'application/json')
+					.succeed(function() {
+						// broadcast that the loaded apps have changed
+						self.getAppConfigs().then(function(appCfgs) {
+							self.broadcasts.apps.emit('update', appCfgs);
+						});
+					});
+			});
 	};
 
 	ConfigServer.prototype.getWorkerUserConfig = function(domain) {
@@ -342,7 +369,8 @@
 			this.getAppConfigs()
 				.succeed(function(appCfgs) {
 					var html;
-					if (view == 'summary') html = views.appsSummary(appCfgs);
+					if (view == 'summary') html = views.appsSummary(appCfgs, request.query.inner);
+					else if (view == 'sidenav') html = views.appsSidenav(appCfgs);
 					else html = views.appsMain(appCfgs);
 
 					headers['content-type'] = 'text/html';
@@ -396,6 +424,35 @@
 			response.writeHead(200, 'ok', headers).end();
 		else
 			response.writeHead(406, 'not acceptable').end();
+	};
+
+	ConfigServer.prototype.httpDuplicateApp = function(request, response, appId) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/apps' },
+				{ rel:'self', href:'/apps/'+appId }
+			]
+		};
+
+		// "active app" special item
+		if (appId == '.active')
+			appId = this.activeAppId;
+
+		var self = this;
+		this.getAppConfig(appId).then(
+			function(cfg) {
+				self.installUserApp(cfg)
+					.then(function() {
+						self.openApp(cfg.id);
+						response.writeHead(201, 'created').end();
+					}, function() {
+						response.writeHead(500, 'internal error').end();
+					});
+			},
+			function() {
+				response.writeHead(404, 'not found').end();
+			});
 	};
 
 	ConfigServer.prototype.httpAddToApp = function(request, response, appId) {
@@ -499,7 +556,14 @@
 
 	var views = {
 		appsMain: function(appCfgs) {
-			var html = '<div class="row-fluid"><div class="well well-small span2"><ul class="nav nav-list">';
+			var html = '<div class="row-fluid">'+
+					'<div class="well well-small span2" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs)+'</div>'+
+					'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div>'+
+				'</div>';
+			return html;
+		},
+		appsSidenav: function(appCfgs) {
+			var html = '<ul class="nav nav-list">';
 			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain"><strong>Applications</strong></a></li>';
 			for (var appId in appCfgs) {
 				var appCfg = appCfgs[appId];
@@ -510,61 +574,73 @@
 					'</li>';
 				html += appCfgs[appId].workers
 					.map(function(cfg) {
-						var cfgUrl = 'httpl://config.env/workers/'+cfg.id+'.'+appId+'.usr';
+						var cfgUrl = 'httpl://config.env/workers/'+makeWorkerDomain(cfg, appId);
 						return '<li><a href="'+cfgUrl+'" target="cfgappsmain">'+cfg.title+'</a></li>';
 					})
 					.join('');
 			}
-			html += '</ul></div>'+
-				'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div></div>';
+			html += '</ul>';
 			return html;
 		},
-		appsSummary: function(appCfgs) {
-			var html = '<h4>Applications on '+toUpperFirst(window.location.hostname)+'</h4><hr/>';
+		appsSummary: function(appCfgs, inner) {
+			var html = '';
+			if (!inner)
+				html += '<div data-subscribe="httpl://config.env/apps?view=summary&inner=1">';
+			html += '<h4>Applications on '+toUpperFirst(window.location.hostname)+'</h4><hr/>';
 			for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
-				var cfg = appCfgs[id];
-				html += '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
-					'<ul class="inline">'+
-						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
-						'<li><a href="#"><i class="icon-download-alt"></i> Copy to Your Applications</a></li>'+
-						'<li><a href="#"><i class="icon-remove"></i> Disable</a></li>'+
-					'</ul>'+
-					'<hr/>';
+				if (!appCfgs[id]._readonly) continue; // readonly only
+				html += views._appHeader(appCfgs[id])+'<hr/>';
 			}
 			html += '<br/><br/>'+
 				'<h4>Your Applications <small><a href=#><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
 				'<hr/>';
-			/*for (var id in appCfgs) {
+			var userHasApps = false;
+			for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
-				var cfg = appCfgs[id];
-				html += '<h2 class="muted"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> <span class="label">inactive</span></h2>'+
-					'<ul class="inline">'+
-						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
-						'<li><a href="#"><i class="icon-edit"></i> Edit</a></li>'+
-						'<li><a href="#"><i class="icon-remove-sign"></i> Uninstall</a></li>'+
-						'<li><a href="#"><i class="icon-ok"></i> Enable</a></li>'+
-					'</ul><hr/>';
-			}*/
-			html += '<p class=muted>Nothing yet!</p>';
+				if (appCfgs[id]._readonly) continue; // writeable only
+				html += views._appHeader(appCfgs[id])+'<hr/>';
+				userHasApps = true;
+			}
+			//<h2 class="muted"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> <span class="label">inactive</span></h2>
+			if (!userHasApps)
+				html += '<p class=muted>Nothing yet!</p>';
+			if (!inner)
+				html += '</div>';
 			return html;
 		},
 		appCfg: function(cfg, cfgText, errors, msg) {
 			errors = errors || {};
 			msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
-			return '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>'+
+			return views._appHeader(cfg) +
 				'<form action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
 					msg+
 					((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
-					'<ul class="inline">'+
-						'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
-						'<li><i class="icon-repeat"></i> <a href="#">Restore from Host</a></li>'+
-					'</ul>'+
-					'<textarea name="config" class="span8" rows="15">'+
-						cfgText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+
-					'</textarea><br/>'+
-					'<button class="btn">Update</button>'+
+					// '<textarea name="config" class="span8" rows="15">'+
+					// 	cfgText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+					// '</textarea><br/>'+
+					// '<button class="btn">Update</button>'+
 				'</form>';
+		},
+		_appHeader: function(cfg) {
+			var html = '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>';
+			html += '<form action="httpl://config.env/apps/'+cfg.id+'">';
+			if (cfg._readonly) {
+				html += '<ul class="inline">'+
+						'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
+						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Copy to Your Applications</button></li>'+
+						'<li><a href="#"><i class="icon-remove"></i> Disable</a></li>'+
+					'</ul>';
+			} else {
+				html += '<ul class="inline">'+
+						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
+						'<li><a href="#"><i class="icon-edit"></i> Edit</a></li>'+
+						'<li><a href="#"><i class="icon-remove-sign"></i> Uninstall</a></li>'+
+						'<li><a href="#"><i class="icon-ok"></i> Enable</a></li>'+
+					'</ul>';
+			}
+			html += '</form>';
+			return html;
 		}
 	};
 

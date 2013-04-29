@@ -27,7 +27,41 @@
 			}
 		}
 
-		local.client.handleResponse(requestTarget, this.element, response);
+		// react to the response
+		switch (response.status) {
+			case 204:
+				// no content
+				break;
+			case 205:
+				// reset form
+				// :TODO: should this try to find a parent form to requestTarget?
+				if (requestTarget.tagName === 'FORM')
+					requestTarget.reset();
+				break;
+			case 303:
+				// dispatch for contents
+				var request2 = { method:'get', url:response.headers.location, headers:{ accept:'text/html' }};
+				this.dispatchRequest(request2);
+				break;
+			default:
+				if (response.headers['content-type']) {
+					// replace target innards
+					local.client.renderResponse(requestTarget, this.element, response);
+				} else {
+					// render a notice of the response
+					var noticeType = 'success';
+					if (response.status >= 400)
+						noticeType = 'info';
+					if (response.status >= 500)
+						noticeType = 'error';
+					$.pnotify({
+						title: response.status + ' ' + response.reason,
+						text: request.method.toUpperCase() + ' ' + request.url,
+						type: noticeType,
+						styling: 'bootstrap'
+					});
+				}
+		}
 	};
 
 	// adds to local's region behaviors:
