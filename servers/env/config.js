@@ -232,6 +232,18 @@
 			});
 	};
 
+	ConfigServer.prototype.uninstallUserApp = function(appId) {
+		if (appId && typeof appId == 'object')
+			appId = appId.id;
+		var self = this;
+		return this.storageHost.apps.item(appId).delete()
+			.succeed(function() {
+				self.getAppConfigs().then(function(appCfgs) {
+					self.broadcasts.apps.emit('update', appCfgs);
+				});
+			});
+	};
+
 	ConfigServer.prototype.getWorkerUserConfig = function(domain) {
 		return this.storageHost.workerCfgs.item(domain).getJson()
 				.then(function(res) { return res.body; }, function() { return {}; });
@@ -287,14 +299,14 @@
 			headers['content-type'] = 'text/html';
 			var html;
 			var view = request.query.view;
-			if (view == 'kill') {
+			/*if (view == 'kill') {
 				html = '<form action="httpl://config.env/workers/'+server.config.domain+'" method="delete">'+
 						'<p><strong>Shut down this worker?</strong></p>'+
 						'<p>Workers are pieces of Grimwire applications. Shutting this one down will affect the "'+server.config.appTitle+'" app.</p>'+
 						'<button class="btn btn-danger"><i class="icon-ok icon-white"></i> Remove</button>'+
 					'</form>';
 			}
-			else
+			else*/
 				html = workerHtmlToptabs(server.config);
 			response.writeHead(200, 'ok', headers).end(html);
 		} else
@@ -522,6 +534,43 @@
 			});
 	};
 
+	ConfigServer.prototype.httpDeleteApp = function(request, response, appId) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/apps' },
+				{ rel:'self', href:'/apps/'+appId }
+			]
+		};
+
+		// "active app" special item
+		if (appId == '.active')
+			appId = this.activeAppId;
+
+		var self = this;
+		this.getAppConfig(appId).then(
+			function(cfg) {
+				if (cfg._readonly)
+					return response.writeHead(403, 'forbidden').end();
+				self.closeApp(appId);
+				self.uninstallUserApp(appId);
+				response.writeHead(200, 'ok').end();
+			},
+			function() {
+				response.writeHead(404, 'not found').end();
+			});
+	};
+
+	ConfigServer.prototype.httpEnableApp = function(request, response, appId) {
+		response.writeHead(501, 'not implemented').end();
+	};
+	ConfigServer.prototype.httpDisableApp = function(request, response, appId) {
+		response.writeHead(501, 'not implemented').end();
+	};
+	ConfigServer.prototype.httpDownloadApp = function(request, response, appId) {
+		response.writeHead(501, 'not implemented').end();
+	};
+
 	ConfigServer.prototype.httpAddToApp = function(request, response, appId) {
 		var headers = {
 			link: [
@@ -548,13 +597,13 @@
 					var newCfg;
 					try { newCfg = JSON.parse(request.body.config); }
 					catch (e) {
-						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
+						return response.writeHead(422, 'request errors', { 'content-type':'text/html' })
 							.end(views.appCfg(cfg, request.body.config, { _body:'Unable to parse JSON -'+e }));
 					}
 
 					var errors = validateAppConfig(newCfg);
 					if (errors)
-						return response.writeHead(422, 'semantic errors', { 'content-type':'text/html' })
+						return response.writeHead(422, 'request errors', { 'content-type':'text/html' })
 								.end(views.appCfg(cfg, request.body.config, errors));
 
 					self.storageHost.apps.item(appId).put(newCfg, 'application/json').then(
@@ -576,7 +625,7 @@
 					);
 				});
 			} else
-				return response.writeHead(422, 'semantic errors').end('`config` is required');
+				return response.writeHead(422, 'request errors').end('`config` is required');
 		}
 		else
 			response.writeHead(415, 'bad content-type').end();
@@ -693,17 +742,19 @@
 			var html = '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>';
 			html += '<form action="httpl://config.env/apps/'+cfg.id+'">';
 			if (cfg._readonly) {
-				html += '<ul class="inline">'+
-						'<li><i class="icon-download"></i> <a href="#">Save as File</a></li>'+
+				html +=
+					'<ul class="inline">'+
+						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
 						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Copy to Your Applications</button></li>'+
-						'<li><a href="#"><i class="icon-remove"></i> Disable</a></li>'+
+						'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>'+
 					'</ul>';
 			} else {
-				html += '<ul class="inline">'+
-						'<li><a href="#"><i class="icon-download"></i> Save as File</a></li>'+
-						'<li><a href="#"><i class="icon-edit"></i> Edit</a></li>'+
-						'<li><a href="#"><i class="icon-remove-sign"></i> Uninstall</a></li>'+
-						'<li><a href="#"><i class="icon-ok"></i> Enable</a></li>'+
+				html +=
+					'<ul class="inline">'+
+						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
+						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Duplicate</button></li>'+
+						'<li><button class="btn btn-link" formmethod="delete"><i class="icon-remove-sign"></i> Uninstall</button></li>'+
+						'<li><button class="btn btn-link" formmethod="enable"><i class="icon-ok"></i> Enable</button></li>'+
 					'</ul>';
 			}
 			html += '</form>';
@@ -750,7 +801,7 @@
 				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
 				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
-				'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?view=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
+				// '<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?view=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
 			'</ul>'+
 			'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
 			'<hr/>';

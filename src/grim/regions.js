@@ -19,12 +19,13 @@
 		if (targetRegion) {
 			targetRegion.__updateContext(request, response);
 
-			if (requestTarget.id != 'layout' && !response.body && response.status == 200) {
+			// :TODO: is there a better way to handle this?
+			/*if (requestTarget.id != 'layout' && !response.body && response.status == 200) {
 				// destroy region if it's served blank html
 				local.env.removeClientRegion(requestTarget.id);
 				targetRegion.element.parentNode.removeChild(targetRegion.element);
 				return;
-			}
+			}*/
 		}
 
 		// react to the response
