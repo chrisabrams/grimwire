@@ -213,6 +213,8 @@
 			.succeed(function(collidingAppCfg) {
 				// app id in use, increment the trailing # and try again
 				cfg.id = (''+cfg.id).replace(/(\d+)?$/, function(v) { return (+v || 1)+1; });
+				if (cfg.startpage)
+					cfg.startpage = cfg.startpage.replace(/\.([^\/]*)\.usr/, '.'+cfg.id+'.usr');
 				return self.installUserApp(cfg);
 			})
 			.fail(function() {
@@ -693,7 +695,7 @@
 			var html = '';
 			if (!inner)
 				html += '<div data-subscribe="httpl://config.env/apps?view=summary&inner=1">';
-			html += '<h4>Applications on '+toUpperFirst(window.location.hostname)+'</h4><hr/>';
+			html += '<h4>Applications on '+toUpperFirst(window.location.host)+'</h4><hr/>';
 			for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
 				if (!appCfgs[id]._readonly) continue; // readonly only
