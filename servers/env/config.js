@@ -52,7 +52,7 @@
 	// -
 
 	ConfigServer.prototype.loadFromHost = function(url) {
-		url = url || '/.host.json';
+		url = url || '.host.json';
 		var self = this;
 		// load json at given url
 		return local.http.navigator(url).getJson()
