@@ -5,6 +5,7 @@ Changes
 
  - Added app enable/disable
  - Standardized worker storage, given in `local.worker.config.storageHref`
+ - Added data-toggle="nav"
 
 
 2013/04/30 pfraze
