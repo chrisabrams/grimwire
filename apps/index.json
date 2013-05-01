@@ -3,9 +3,7 @@
 	"title": "Search",
 	"icon": "search",
 	"startpage": "httpl://layout.index.usr",
-	"common": {
-		"storageHost": "httpl://storage.env"
-	},
+	"common": {},
 	"workers": [
 		{
 			"id": "layout",

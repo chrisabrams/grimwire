@@ -4,6 +4,7 @@ Changes
 2013/05/01 pfraze
 
  - Added app enable/disable
+ - Standardized worker storage, given in `local.worker.config.storageHref`
 
 
 2013/04/30 pfraze
