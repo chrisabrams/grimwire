@@ -1,10 +1,10 @@
-var $layoutContainerEl = $('#layout');
+var $layoutContainerEl = $('#grim-layout');
 var $topbarEl = $('#grim-topbar');
 var $topbarAppsEl = $('#grim-topbar-apps');
-if ($layoutContainerEl.length === 0) throw "#layout element not found";
+if ($layoutContainerEl.length === 0) throw "#grim-layout element not found";
 if ($topbarEl.length === 0) throw "#grim-topbar element not found";
 if ($topbarAppsEl.length === 0) throw "#grim-topbar-apps element not found";
-var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('layout'));
+var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('grim-layout'));
 
 // request wrapper
 // -

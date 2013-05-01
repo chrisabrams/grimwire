@@ -4,7 +4,7 @@ var sidenavUrl = config.usr.sidenavUrl || config.sidenavUrl || 'httpl://layout.i
 function main(request, response) {
 	if (!request.path || request.path == '/' || request.path == '/2column') {
 		respondHTML(
-		'<p><a class="btn btn-mini active" href="httpl://'+config.domain+'/1column" target="layout">Filters</a></p>'+
+		'<p><a class="btn btn-mini active" href="httpl://'+config.domain+'/1column">Filters</a></p>'+
 		'<div class="row-fluid">'+
 			'<div id="sidenav" data-grim-layout="replace '+sidenavUrl+'" class="span2"></div>'+
 			'<div id="main" data-grim-layout="replace '+mainUrl+'" class="span10"></div>'+
@@ -12,7 +12,7 @@ function main(request, response) {
 		);
 	} else if (request.path == '/1column') {
 		respondHTML(
-		'<p><a class="btn btn-mini" href="httpl://'+config.domain+'/2column" target="layout">Filters</a></p>'+
+		'<p><a class="btn btn-mini" href="httpl://'+config.domain+'/2column">Filters</a></p>'+
 		'<div class="row-fluid">'+
 			'<div id="main" data-grim-layout="replace '+mainUrl+'" class="span12"></div>'+
 		'</div>'

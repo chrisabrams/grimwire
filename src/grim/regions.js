@@ -73,7 +73,6 @@
 
 		var el = document.getElementById(request.target);
 		if (el) {
-			if (el.id == 'layout') return el;
 			if (el.dataset.grimLayout) {
 				var subEl;
 				var behavior = el.dataset.grimLayout.split(' ')[0];
@@ -85,7 +84,7 @@
 						subEl = el.querySelector('.client-region');
 						if (subEl)
 							return subEl;
-					case 'share': // when targeted, create a new region in the container
+					case 'flow': // when targeted, create a new region in the container
 						subEl = makeClientRegionEl();
 						local.env.addClientRegion(subEl.id);
 						return subEl;
