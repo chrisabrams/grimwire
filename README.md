@@ -6,20 +6,21 @@ Apps on Grimwire (including their source code) can be shared and modified in-ses
 
 **Completed Features**
 
- - Multi-threaded Web applications with well-structured, strongly-encapsulated programs
+ - Multi-threaded Web applications with well-structured, strongly-encapsulated Worker programs
  - Unified HTTP messaging (links, forms, and Ajax calls) for software running locally or remotely
  - Promises-based API
+ - JSON-configurable applications
+ - In-browser Worker editing
 
 **In Development**
 
- - JSON-configurable applications
  - Core applications (search, rss, email, chat)
 
 **Roadmap**
 
+ - User remote sessions and credential management
  - Permissions policies
  - sessionStorage export/import to file
- - In-browser Worker editing
  - Peer-to-peer Ajax over WebRTC
 
 
