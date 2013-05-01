@@ -1,0 +1,66 @@
+{
+	"id": "index",
+	"title": "Search",
+	"icon": "search",
+	"startpage": "httpl://layout.index.usr",
+	"common": {
+		"storageHost": "httpl://storage.env"
+	},
+	"workers": [
+		{
+			"id": "layout",
+			"title": "Layout",
+			"src": "servers/worker/index/layout.js"
+		},
+		{
+			"id": "lunr",
+			"title": "Lunr.js Index",
+			"src": "servers/worker/index/lunr.js",
+			"seed": [
+				{
+					"title":"Reader",
+					"href":"#rss",
+					"tags":["reader","rss","feed","app"],
+					"desc":"feed-reader application",
+					"target":"_top"
+				},{
+					"title":"Active Workers",
+					"href":"#_workers",
+					"tags":["workers","env","app"],
+					"desc":"active workers sys application",
+					"target":"_top"
+				},{
+					"title":"Grimwire Repo",
+					"href":"https://github.com/grimwire/grimwire",
+					"tags":["code","git","repo"],
+					"desc":"github repository for grimwire",
+					"target":"_top"
+				},{
+					"title":"LocalJS Repo",
+					"href":"https://github.com/grimwire/local",
+					"tags":["code","git","repo"],
+					"desc":"github repository for grimwire's supporting library, local",
+					"target":"_top"
+				},{
+					"title":"LocalJS Docs",
+					"href":"http://grimwire.com/local",
+					"tags":["documentation","local","help"],
+					"desc":"documentation on grimwire's supporting library, local",
+					"target":"_top"
+				},{
+					"title":"Twitter Bootstrap Docs",
+					"href":"http://twitter.github.com/bootstrap/index.html",
+					"tags":["documentation","bootstrap","help"],
+					"desc":"documentation on the twitter bootstrap css library",
+					"target":"_top"
+				},{
+					"title":"APIHub",
+					"href":"http://www.apihub.com/",
+					"tags":["documentation","api","help"],
+					"desc":"web api listing for finding backend services",
+					"target":"_top"
+				}
+			]
+		}
+	]
+}

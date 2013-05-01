@@ -1,0 +1,21 @@
+{
+  "id": "rss",
+  "title": "Reader",
+  "icon": "th-list",
+  "startpage": "httpl://feed.rss.usr",
+  "common": {
+    "storageHost": "httpl://storage.env"
+  },
+  "workers": [
+    {
+      "id": "feed",
+      "title": "Feed Interface",
+      "src": "servers/worker/reader/feed.js"
+    },
+    {
+      "id": "rssproxy",
+      "title": "RSS Feed Proxy",
+      "src": "servers/worker/reader/rssproxy.js"
+    }
+  ]
+}

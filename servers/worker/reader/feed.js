@@ -1,43 +1,30 @@
-importScripts('lib/local/linkjs-ext/responder.js');
-importScripts('lib/local/linkjs-ext/router.js');
-
 // setup config
-var defaultSources = [
-	'httpl://rss.proxy?url=http://lambda-the-ultimate.org/rss.xml',
-	'httpl://rss.proxy?url=http://googleresearch.blogspot.co.uk/feeds/posts/default'
-].join("\n");
-
-Link.navigator('httpl://config.env').collection('schemas').item('feed').put({
-	sources : { type:'url', label:'Sources', fallback:defaultSources, control:'textarea' }
-}, 'application/json');
-var feedConfig = Link.navigator('httpl://config.env').collection('values').item('feed');
+var feedSources =
+	local.worker.config.usr.sources ||
+	local.worker.config.sources ||
+	[
+		'http://lambda-the-ultimate.org/rss.xml',
+		'http://googleresearch.blogspot.co.uk/feeds/posts/default'
+	];
 
 var feeds = null;
 function getAllFeeds() {
-	var p = Local.promise();
-	if (feeds) {
-		p.fulfill(feeds);
-		return p;
-	}
+	if (feeds)
+		return local.promise(feeds);
 	feeds = {};
-	feedConfig.getJson().then(function(res) {
-		var feedUrls = res.body.sources.split("\n");
-		if (!Array.isArray(feedUrls) || feedUrls.length === 0)
-			return p.fulfill({});
 
-		var numFeedsFetched = 0;
-		var inc = function() { if (++numFeedsFetched === feedUrls.length) { p.fulfill(feeds); } };
-		feedUrls.forEach(function(url) {
-			Link.navigator(url).getJson().then(
-				function(res) {
-					feeds[url] = res.body;
-					inc();
-				},
-				inc
-			);
-		});
-	});
-	return p;
+	return local.promise.bundle(
+		feedSources.map(function(url) {
+			return local.http.dispatch({ method:'get', url:'httpl://rssproxy.rss.usr?url='+url, headers:{ accept:'application/json' }})
+				.then(
+					function(res) {
+						feeds[url] = res.body;
+						return res.body;
+					},
+					function() { return null; }
+				);
+		})
+	).then(function() { return feeds; });
 }
 
 var mergedItems = null;
@@ -73,12 +60,12 @@ function formatDate(date) {
 function buildListInterface(items) {
 	return [
 		'<table class="table table-striped">',
-			'<thead><tr><th>Source</th><th>Article</th><th>Published</th></tr></thead>',
+			'<thead><tr><th width=220>Source</th><th>Article</th><th width=160>Published</th></tr></thead>',
 			items.map(function(item, index) {
 				return [
 					'<tr>',
-						'<td>',Link.parseUri(item.link).host,'</td>',
-						'<td><div id="item-',index,'"><a href="/',index,'/desc" target="item-',index,'">',item.title,'</a></div></td>',
+						'<td>',local.http.parseUri(item.link).host,'</td>',
+						'<td><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
 						'<td>',formatDate(item.date),'</td>',
 					'</tr>'
 				].join('');
@@ -87,35 +74,66 @@ function buildListInterface(items) {
 	].join('');
 }
 
-localApp.onHttpRequest(function(request, response) {
-	var router = Link.router(request);
-	router.pma('/', /GET/i, /html/, function() {
-		getAllFeeds()
+function main(request, response) {
+	if (/^\/?$/.test(request.path) && /GET/i.test(request.method)) {
+		return getAllFeeds()
 			.then(mergeFeeds)
 			.then(function(items) {
-				Link.responder(response).ok('html').end(buildListInterface(items));
+				response.writeHead(200, 'ok', {'content-type':'text/html'}).end(buildListInterface(items));
 			});
-	}).pma(RegExp('^/([\\d]+)/(desc|link)/?','i'), /GET/i, /html/, function(match) {
-		getAllFeeds()
+	}
+	var match = RegExp('^/([\\d]+)/(desc|link)/?','i').exec(request.path);
+	if (match && /GET/i.test(request.method)) {
+		return getAllFeeds()
 			.then(mergeFeeds)
 			.then(function(items) {
-				var index = +(match.path[1]);
+				var index = +(match[1]);
 				var item = items[index];
 				if (!item)
-					return Link.responder(response).notFound().end();
-				
-				var link;
-				if (match.path[2] == 'link') {
-					link = ['<a href="/',index,'/desc" target="item-',index,'">',item.title,'</a>'].join('');
-					Link.responder(response).ok('html').end(link);
+					return response.writeHead(404, 'not found').end();
+
+				var replace = {};
+				if (match[2] == 'link') {
+					replace['#item-'+match[1]] = '<a href="/'+index+'/desc">'+item.title+'</a>';
+					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				} else {
-					link = [
+					replace['#item-'+match[1]] = [
 						'<strong>',item.title,'</strong>',
-						' (<a href="/',index,'/link" target="item-',index,'">close</a>)',
-						' <a href="',item.link,'" target="_blank">permalink</a>'
+						' (<a href="/',index,'/link">close</a>)',
+						' <a href="',item.link,'" target="_blank">permalink</a>',
+						'<br/>', item.description
 					].join('');
-					Link.responder(response).ok('html').end(link + '<br/>' + item.description);
+					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				}
 			});
-	}).error(response);
-});
+	}
+	if (request.path == '/.grim/config') {
+		var msg = '';
+		if (/POST/i.test(request.method)) {
+			feedSources = (request.body.sources && typeof request.body.sources == 'string') ?
+				request.body.sources.split("\n").filter(function(i) { return i; }) :
+				[];
+			local.http.dispatch({
+				method: 'put',
+				url: 'httpl://config.env/workers/'+local.worker.config.domain,
+				body: { sources:feedSources },
+				headers: { 'content-type':'application/json' }
+			});
+			msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
+		}
+
+		response.writeHead(200, 'ok', {'content-type':'text/html'});
+		response.end(
+			'<form action="httpl://'+local.worker.config.domain+'/.grim/config" method="post">'+
+				msg+
+				'<label for="reader-feed-sources">Feed Sources</label>'+
+				'<textarea id="reader-feed-sources" name="sources" rows="5" class="span8">'+
+					feedSources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+				'</textarea><br/>'+
+				'<button class="btn">Submit</button>'+
+			'</form>'
+		);
+		return;
+	}
+	response.writeHead(404, 'not found').end();
+}

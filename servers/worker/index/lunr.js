@@ -1,91 +1,131 @@
 // index/lunr.js
 // ==============
 // Clientside search with lunr.js
+var lunr = require('vendor/lunr.min.js');
 
-importScripts('lib/lunr/lunr.min.js');
-// importScripts('lib/local/linkjs-ext/broadcaster.js');
-importScripts('lib/local/linkjs-ext/router.js');
-importScripts('lib/local/linkjs-ext/responder.js');
+var docs = [];
+var nDocs = 0;
+var idx = lunr(function () {
+	this.ref('__searchIndex');
+	this.field('title', 10);
+	this.field('href');
+	this.field('tags', 100);
+	this.field('desc');
+});
 
-function LunrServer(configService) {
-	this.docs = [];
-	this.nDocs = 0;
-	this.idx = lunr(function () {
-		this.ref('__searchIndex');
-		this.field('title', 10);
-		this.field('href');
-		this.field('tags', 100);
-		this.field('desc');
-	});
+if (local.worker.config.seed)
+	local.worker.config.seed.forEach(addDoc);
+
+function main(request, response) {
+	if (/^\/?$/.test(request.path)) {
+		if (/HEAD|GET/i.test(request.method))
+			getInterface(request, response);
+		else
+			response.writeHead(405, 'bad method').end();
+	}
+	else if (request.path == '/docs') {
+		if (/HEAD|GET/i.test(request.method))
+			getDocuments(request, response);
+		else if (/POST/i.test(request.method))
+			addDocument(request, response);
+		else
+			response.writeHead(405, 'bad method').end();
+	}
+	else if (request.path == '/.grim/config') {
+		response.writeHead(200, 'ok', {'content-type':'text/html'});
+		response.end('<span class="muted">No configuration needed.</span>');
+	}
+	else
+		response.writeHead(404, 'not found').end();
 }
-LunrServer.prototype = Object.create(localApp.Server.prototype);
 
-// request router
-LunrServer.prototype.handleHttpRequest = function(request, response) {
-	var self = this;
-	var router = Link.router(request);
-	router.pm ('/',     /HEAD/i,              this.handler('getInterface', request, response));
-	router.pma('/',     /GET/i,  /html/,      this.handler('getInterface', request, response));
-	router.pm ('/docs', /HEAD/i,              this.handler('getDocuments', request, response));
-	router.pma('/docs', /GET/i,  /html|json/, this.handler('getDocuments', request, response));
-	router.pmt('/docs', /POST/i, /json/,      this.handler('addDocument', request, response));
-	router.error(response);
-};
+function getInterface(request, response) {
+	var headers = {
+		link:[
+			{ rel:'self', href:'/' },
+			{ rel:'collection', href:'/docs', title:'docs' }
+		]
+	};
 
-LunrServer.prototype.handler = function(handlerName, request, response) {
-	var self = this;
-	var handler = this[handlerName];
-	return function(match) { handler.call(self, request, response, match); };
-};
-
-LunrServer.prototype.getInterface = function(request, response) {
-	// build headers
-	var headerer = Link.headerer();
-	headerer.addLink('/', 'self current');
-	headerer.addLink('/docs', 'collection', { title:'docs' });
-	
 	if (/head/i.test(request.method))
-		return Link.responder(response).ok(null, headerer).end();
+		return response.writeHead(200, 'ok', headers).end();
 
-	var html = [
-		'<form class="form-search" method="get" action="httpl://',this.config.domain,'/docs" target="search-results">',
-			'<input type="text" placeholder="Search..." class="input-xxlarge search-query" name="q">',
+	// :DEBUG: temporary show of function while refining layouts system
+	var subset = docs;
+	var subjectDesc = '';
+	if (request.query.subject) {
+		var q;
+		switch (request.query.subject) {
+			case 'apps':
+				subjectDesc = ' Applications';
+				q = 'app';
+				break;
+			case 'workers':
+				subjectDesc = ' Workers';
+				q = 'worker';
+				break;
+			case 'docs':
+				subjectDesc = ' Documentation';
+				q = 'doc';
+				break;
+			default:
+				subjectDesc = ' '+request.query.subject;
+				q = rqeuest.query.subject;
+				break;
+		}
+		subset = getDocsByResultset(idx.search(q));
+	}
+
+	headers['content-type'] = 'text/html';
+	response.writeHead(200, 'ok', headers).end([
+		'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'/docs" accept="application/html-deltas+json">',
+			'<input type="text" placeholder="Search',subjectDesc,'..." class="input-xxlarge" name="q">',
 			'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
 		'</form>',
-		'<div id="search-results">',this._buildDocsHtml(this.docs),'</div>'
-	].join('');
+		'<div id="search-results">',buildDocsHtml(subset),'</div>'
+	].join(''));
+}
 
-	Link.responder(response).ok('html', headerer).end(html);
-};
+function getDocuments(request, response) {
+	var headers = {
+		link:[
+			{ rel:'up via service', href:'/' },
+			{ rel:'self', href:'/docs' }
+		]
+	};
 
-LunrServer.prototype.getDocuments = function(request, response) {
-	// build headers
-	var headerer = Link.headerer();
-	headerer.addLink('/docs', 'self current');
-	headerer.addLink('/', 'up via service');
-	
 	if (/head/i.test(request.method))
-		return Link.responder(response).ok(null, headerer).end();
+		return response.writeHead(200, 'ok', headers).end();
 
-	var docIds = (request.query.q) ? this.idx.search(request.query.q) : undefined;
-	var docs = this._getDocsByResultset(docIds);
+	var docIds = (request.query.q) ? idx.search(request.query.q) : undefined;
+	var subset = getDocsByResultset(docIds);
 
-	if (/html/.test(request.headers.accept))
-		Link.responder(response).ok('html', headerer).end(this._buildDocsHtml(docs));
-	else
-		Link.responder(response).ok('json', headerer).end(docs);
-};
+	if (/html-deltas/.test(request.headers.accept)) {
+		headers['content-type'] = 'application/html-deltas+json';
+		response.writeHead(200, 'ok', headers).end({ replace:{ '#search-results':buildDocsHtml(subset) }});
+	} else if (/html/.test(request.headers.accept)) {
+		headers['content-type'] = 'text/html';
+		response.writeHead(200, 'ok', headers).end(buildDocsHtml(subset));
+	} else {
+		headers['content-type'] = 'application/json';
+		response.writeHead(200, 'ok', headers).end(subset);
+	}
+}
 
-LunrServer.prototype.addDocument = function(request, response) {
-	// build headers
-	var headerer = Link.headerer();
-	headerer.addLink('/docs', 'self current');
-	headerer.addLink('/', 'up via service');
-	var respond = Link.responder(response);
+function addDocument(request, response) {
+	if (/form|json/.test(request.headers['content-type']) === false)
+		return response.writeHead(415, 'bad content type').end();
+
+	var headers = {
+		link:[
+			{ rel:'up via service', href:'/' },
+			{ rel:'self', href:'/docs' }
+		]
+	};
 
 	var docs = request.body;
 	if (!docs)
-		return respond.unprocessableEntity(null, headerer).end('request body required');
+		return response.writeHead(422, 'bad request body', headers).end('request body required');
 	if (Array.isArray(docs) === false)
 		docs = [docs];
 
@@ -95,32 +135,33 @@ LunrServer.prototype.addDocument = function(request, response) {
 		if (!doc.title) { results.push('Error: request body `title` required'); continue; }
 		if (!doc.href) { results.push('Error: request body `href` required'); continue; }
 		if (!doc.desc) { results.push('Error: request body `desc` required'); continue; }
-		results.push(this._addDoc(doc));
+		results.push(addDoc(doc));
 	}
 
-	respond.ok('json', headerer).end(results);
-};
+	headers['content-type'] = 'application/json';
+	response.writeHead(200, 'ok', headers).end(results);
+}
 
-LunrServer.prototype._addDoc = function(doc) {
-	doc.__searchIndex = this.nDocs;
-	this.docs.push(doc);
-	this.idx.add(doc);
-	this.nDocs++;
+function addDoc(doc) {
+	doc.__searchIndex = nDocs;
+	docs.push(doc);
+	idx.add(doc);
+	nDocs++;
 	return doc.__searchIndex;
-};
+}
 
-LunrServer.prototype._getDocsByResultset = function(resultset) {
+function getDocsByResultset(resultset) {
 	if (!resultset)
-		return this.docs;
-	var docs = [];
+		return docs;
+	var subset = [];
 	for (var i=0, ii=resultset.length; i < ii; i++) {
-		if (this.docs[resultset[i].ref])
-			docs.push(this.docs[resultset[i].ref]);
+		if (docs[resultset[i].ref])
+			subset.push(docs[resultset[i].ref]);
 	}
-	return docs;
-};
+	return subset;
+}
 
-LunrServer.prototype._buildDocsHtml = function(docs) {
+function buildDocsHtml(docs) {
 	var html = [];
 	html.push([
 		'<table class="table table-striped">',
@@ -134,6 +175,4 @@ LunrServer.prototype._buildDocsHtml = function(docs) {
 		'<div id="search-results"></div>'
 	].join(''));
 	return html;
-};
-
-localApp.setServer(LunrServer);
+}
