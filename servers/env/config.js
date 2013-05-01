@@ -40,6 +40,7 @@
 				'/': [this, 'Service'],
 				'/workers': [this, 'Workers'],
 				'/workers/:domain': [this, 'Worker'],
+				'/workers/:domain/src': [this, 'WorkerSource'],
 				'/apps': [this, 'Apps'],
 				'/apps/:id': [this, 'App']
 			}
@@ -204,7 +205,7 @@
 
 		// user app?
 		return this.storageHost.apps.item(appId).getJson()
-			.succeed(function(res) { return res.body; });
+			.succeed(function(res) { console.log(res); return res.body; });
 	};
 
 	ConfigServer.prototype.installUserApp = function(cfg) {
@@ -299,8 +300,7 @@
 
 		if (/html/.test(request.headers.accept)) {
 			headers['content-type'] = 'text/html';
-			var html = workerHtmlToptabs(server.config);
-			response.writeHead(200, 'ok', headers).end(html);
+			response.writeHead(200, 'ok', headers).end(views.workerCfg(server.config));
 		} else
 			response.writeHead(406, 'bad accept type').end();
 	};
@@ -315,7 +315,7 @@
 		};
 
 		var server = local.env.servers[domain];
-		if (!server) // :TODO: should we create the worker in this case?
+		if (!server)
 			return response.writeHead(404, 'not found').end();
 
 		if (/json|form/.test(request.headers['content-type'])) {
@@ -330,18 +330,85 @@
 					workerCfg.usr = workerUserCfg;
 
 					self.storageHost.workerCfgs.item(domain).put(workerUserCfg);
-
-					// :NOTE: replace in-place so that ordering is maintained in the Workers page
-					// :TODO: can we simplify this to recycling the worker inside the WorkerServer?
-					// local.env.killServer(domain);
-					local.http.unregisterLocal(domain);
-					server.terminate();
-					// local.env.addServer(domain, new local.env.WorkerServer(server.config));
-					server = local.env.servers[domain] = new local.env.WorkerServer(workerCfg);
-					server.loadUserScript();
-					local.http.registerLocal(domain, server.handleHttpRequest, server);
+					reloadWorker(server, workerCfg);
 
 					response.writeHead(204, 'no content').end();
+				});
+		} else
+			response.writeHead(415, 'bad content type').end();
+	};
+
+	ConfigServer.prototype.httpGetWorkerSource = function(request, response, domain) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/workers/'+domain },
+				{ rel:'self', href:'/workers/'+domain+'/src' }
+			]
+		};
+
+		var server = local.env.servers[domain];
+		if (!server)
+			return response.writeHead(404, 'not found').end();
+
+		if (/html/.test(request.headers.accept)) {
+			headers['content-type'] = 'text/html';
+			this.getAppConfig(server.config.appId).then(function(appCfg) {
+				server.getSource().then(function(src) {
+					response.writeHead(200, 'ok', headers).end(views.workerSource(server.config, src, appCfg));
+				});
+			});
+		} else
+			response.writeHead(406, 'bad accept type').end();
+	};
+
+	ConfigServer.prototype.httpSetWorkerSource = function(request, response, domain) {
+		var headers = {
+			link: [
+				{ rel:'via service', href:'/' },
+				{ rel:'up', href:'/workers/'+domain },
+				{ rel:'self', href:'/workers/'+domain+'/src' }
+			]
+		};
+
+		var server = local.env.servers[domain];
+		if (!server)
+			return response.writeHead(404, 'not found').end();
+
+		if (/json|form/.test(request.headers['content-type'])) {
+			var self = this;
+			var appId = server.config.appId;
+			this.getAppConfig(appId)
+				.succeed(function(appCfg) {
+					// validate and prepare
+					var src = request.body.src;
+					if (!src)
+						return response.writeHead(422, 'request errors').end();
+					if (/^http/.test(src) === false) {
+						// actual source code - convert to a data uri
+						src = 'data:application/javascript;base64,'+btoa(src);
+					}
+
+					// find the worker object in the app's config
+					var workerCfg;
+					for (var i=0; i < appCfg.workers.length; i++) {
+						if (appCfg.workers[i].id == server.config.id) {
+							workerCfg = appCfg.workers[i];
+							break;
+						}
+					}
+					if (!workerCfg)
+						return response.writeHead(404, 'not found').end();
+
+					// update the app config
+					workerCfg.src = src;
+					self.storageHost.apps.item(appId).put(appCfg, 'application/json');
+
+					// update the worker
+					server.config.src = src;
+					reloadWorker(server, server.config);
+
+					response.writeHead(200, 'ok').end();
 				});
 		} else
 			response.writeHead(415, 'bad content type').end();
@@ -663,6 +730,17 @@
 		return workerId+'.'+appId+'.usr';
 	}
 
+	function reloadWorker(server, cfg) {
+		// local.env.killServer(domain);
+		local.http.unregisterLocal(server.config.domain);
+		server.terminate();
+		// local.env.addServer(domain, new local.env.WorkerServer(server.config));
+		server = local.env.servers[cfg.domain] = new local.env.WorkerServer(cfg);
+		server.loadUserScript();
+		local.http.registerLocal(cfg.domain, server.handleHttpRequest, server);
+		return server;
+	}
+
 	var views = {
 		appsMain: function(appCfgs) {
 			var html = '<div class="row-fluid">'+
@@ -758,6 +836,24 @@
 				'</form>';
 			return html;
 		},
+		workerCfg: function(cfg) {
+			return '<h3>'+cfg.domain+'</h3>'+
+				'<ul class="nav nav-tabs">'+
+					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'/src" title="Edit Source"><i class="icon-edit"></i></a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
+				'</ul>'+
+				'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
+				'<hr/>';
+		},
+		workerSource: function(cfg, src, appCfg) {
+			var readonly = (appCfg._readonly) ? 'readonly' : '';
+			return '<form action="httpl://config.env/workers/'+cfg.domain+'/src" method="patch">'+
+					(appCfg._readonly ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Copy the app to Your Applications to edit the worker source.</div>' : '')+
+					'<textarea name="src" class="span10" rows="20" '+readonly+'>'+src.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</textarea><br/>'+
+					'<button class="btn">Update</button>'+
+				'</form>';
+		},
 		_appHeader: function(cfg) {
 			var html = '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>';
 			html += '<form action="httpl://config.env/apps/'+cfg.id+'">';
@@ -810,30 +906,6 @@
 				'</div>';
 		}
 	};
-
-	// :DEBUG: choose one of these
-	function workerHtmlSidetabs(cfg) {
-		return '<h2>'+cfg.title+' <small>'+cfg.domain+'</small></h2>'+
-			'<div class="tabbable tabs-left">'+
-				'<ul class="nav nav-tabs">'+
-					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i> Configure</a></li>'+
-					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i> Edit</a></li>'+
-					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="View Worker Interface"><i class="icon-hand-right"></i> Execute</a></li>'+
-				'</ul>'+
-				'<div id="cfg-'+cfg.domain+'" class="tab-content" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
-			'</div>';
-	}
-	function workerHtmlToptabs(cfg) {
-		return '<h3>'+cfg.domain+'</h3>'+
-			'<ul class="nav nav-tabs">'+
-				'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
-				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Edit Source"><i class="icon-edit"></i></a></li>'+
-				'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
-				// '<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'?view=kill" title="Remove Worker"><i class="icon-remove-sign"></i></a></li>'+
-			'</ul>'+
-			'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
-			'<hr/>';
-	}
 
 	exports.ConfigServer = ConfigServer;
 })(window);
