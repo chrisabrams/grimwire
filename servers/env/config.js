@@ -716,7 +716,6 @@
 		workerCfg.appId = appCfg.id;
 		workerCfg.appTitle = appCfg.title;
 		workerCfg.appIcon = appCfg.icon;
-		workerCfg.scriptUrl = workerCfg.src;
 		workerCfg.domain = makeWorkerDomain(workerCfg, appCfg);
 	}
 
