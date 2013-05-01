@@ -18,7 +18,7 @@
 		// ^ to get config with user settings mixed in, use getAppConfig()
 		this.activeAppId = null;
 		this.openAppIds = []; // list of apps which are open
-		this.defaultAppId = 'rss'; // :TODO:
+		this.defaultAppId = null; // set to the first enabled app by openEnabledApps
 
 		// add special environment apps
 		this.hostAppConfigs['_apps'] = {
@@ -194,8 +194,10 @@
 			.succeed(function(appIds) {
 				var opens = [];
 				appIds.forEach(function(id) {
-					if (envCfg.disabled.indexOf(id) === -1)
+					if (id.charAt(0) != '_' && envCfg.disabled.indexOf(id) === -1) {
+						if (!self.defaultAppId) self.defaultAppId = id;
 						opens.push(self.openApp(id));
+					}
 				});
 				return local.promise.bundle(opens);
 			});
