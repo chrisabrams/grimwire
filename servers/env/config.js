@@ -17,6 +17,7 @@
 		this.hostAppConfigs = {}; // :NOTE: as provided by the host
 		// ^ to get config with user settings mixed in, use getAppConfig()
 		this.activeAppId = null;
+		this.openAppIds = []; // list of apps which are open
 		this.defaultAppId = 'rss'; // :TODO:
 
 		// add special environment apps
@@ -78,11 +79,6 @@
 				});
 				// use the getter so we can mix in config from userdata
 				return self.getAppConfigs();
-			})
-			.succeed(function(appCfgs) {
-				// broadcast that the loaded apps have changed
-				self.broadcasts.apps.emit('update', appCfgs);
-				return appCfgs;
 			});
 	};
 
@@ -94,6 +90,10 @@
 					var errors = validateAppConfig(appCfg);
 					if (errors) throw "Invalid application config for '"+appId+"': "+JSON.stringify(errors);
 				}
+
+				if (self.openAppIds.indexOf(appId) !== -1)
+					return appCfg; // dont open twice
+				self.openAppIds.push(appId);
 
 				// load workers
 				if (Array.isArray(appCfg.workers)) {
@@ -118,8 +118,14 @@
 	};
 
 	ConfigServer.prototype.closeApp = function(appId) {
+		var self = this;
 		return this.getAppConfig(appId)
 			.succeed(function(appCfg) {
+				var index = self.openAppIds.indexOf(appId);
+				if (index === -1)
+					return appCfg; // dont close twice
+				self.openAppIds.splice(index, 1);
+
 				// close all workers
 				if (Array.isArray(appCfg.workers)) {
 					appCfg.workers.forEach(function(workerCfg) {
@@ -152,13 +158,65 @@
 			});
 	};
 
+	ConfigServer.prototype.setAppEnabled = function(appId, enabled) {
+		var self = this;
+		return this.getEnvConfig()
+			.succeed(function(envCfg) {
+				if (!envCfg.disabled || !Array.isArray(envCfg.disabled))
+					envCfg.disabled = [];
+
+				var index = envCfg.disabled.indexOf(appId);
+				if (enabled) {
+					if (index !== -1)
+						envCfg.disabled.splice(index, 1);
+				} else {
+					if (index === -1)
+						envCfg.disabled.push(appId);
+				}
+
+				return self.setEnvConfig(envCfg);
+			});
+	};
+	ConfigServer.prototype.enableApp = function(appId) { return this.setAppEnabled(appId, true); };
+	ConfigServer.prototype.disableApp = function(appId) { return this.setAppEnabled(appId, false); };
+
+	ConfigServer.prototype.openEnabledApps = function() {
+		var self = this;
+		var envCfg;
+		return this.getEnvConfig()
+			.succeed(function(cfg) {
+				envCfg = cfg;
+				if (!envCfg.disabled || !Array.isArray(envCfg.disabled))
+					envCfg.disabled = [];
+
+				return self.getAppIds();
+			})
+			.succeed(function(appIds) {
+				var opens = [];
+				appIds.forEach(function(id) {
+					if (envCfg.disabled.indexOf(id) === -1)
+						opens.push(self.openApp(id));
+				});
+				return local.promise.bundle(opens);
+			});
+	};
+
 	ConfigServer.prototype.getEnvConfig = function() {
 		var self = this;
 		return this.storageHost.apps.item('.host').getJson()
 			.then(
 				function(res) {	return res.body; },
 				function() { return deepClone(self.hostEnvConfig); }
-			);
+			)
+			.succeed(function(cfg) {
+				if (!cfg.disabled || !Array.isArray(cfg.disabled))
+					cfg.disabled = [];
+				return cfg;
+			});
+	};
+
+	ConfigServer.prototype.setEnvConfig = function(cfg) {
+		return this.storageHost.apps.item('.host').put(cfg, 'application/json');
 	};
 
 	ConfigServer.prototype.getAppIds = function() {
@@ -177,6 +235,19 @@
 			});
 	};
 
+	ConfigServer.prototype.getOpenAppIds = function() {
+		var self = this;
+		var envCfg;
+		return this.getEnvConfig()
+			.succeed(function(cfg) {
+				envCfg = cfg;
+				return self.getAppIds();
+			})
+			.succeed(function(appIds) {
+				return appIds.filter(function(id) { return (envCfg.disabled.indexOf(id) === -1); });
+			});
+	};
+
 	ConfigServer.prototype.getAppConfigs = function() {
 		var self = this;
 		var appConfigs = deepClone(this.hostAppConfigs);
@@ -188,24 +259,59 @@
 			.succeed(function(userAppConfigs) {
 				// mix user app config & host app config
 				userAppConfigs.forEach(function (app, i) {
+					if (app.id == '.host')
+						return;
 					appConfigs[app.id] = app;
 				});
+				return appConfigs;
+			})
+			.succeed(function(appConfigs) {
+				// add _active flag
+				for (var id in appConfigs)
+					appConfigs[id]._active = (self.openAppIds.indexOf(id) !== -1);
 				return appConfigs;
 			});
 	};
 
+	ConfigServer.prototype.getOpenAppConfigs = function() {
+		var self = this;
+		var appCfgs;
+		return this.getAppConfigs()
+			.succeed(function(cfgs) {
+				appCfgs = cfgs;
+				return self.getEnvConfig();
+			})
+			.succeed(function(envCfg) {
+				envCfg.disabled.forEach(function(id) {
+					if (id in appCfgs)
+						delete appCfgs[id];
+				});
+				return appCfgs;
+			});
+	};
+
 	ConfigServer.prototype.getAppConfig = function(appId) {
+		var promise;
+
 		// given a config object?
 		if (appId && typeof appId == 'object')
-			return local.promise(deepClone(appId));
-
+			promise = local.promise(deepClone(appId));
 		// host app?
-		if (appId in this.hostAppConfigs)
-			return local.promise(patch(deepClone(this.hostAppConfigs[appId]), { _readonly:true }));
-
+		else if (appId in this.hostAppConfigs)
+			promise = local.promise(patch(deepClone(this.hostAppConfigs[appId]), { _readonly:true }));
 		// user app?
-		return this.storageHost.apps.item(appId).getJson()
-			.succeed(function(res) { console.log(res); return res.body; });
+		else {
+			promise = this.storageHost.apps.item(appId).getJson()
+				.succeed(function(res) { return res.body; });
+		}
+
+		// add _active flag
+		var self = this;
+		return promise
+			.succeed(function(cfg) {
+				cfg._active = (self.openAppIds.indexOf(cfg.id) !== -1);
+				return cfg;
+			});
 	};
 
 	ConfigServer.prototype.installUserApp = function(cfg) {
@@ -227,10 +333,7 @@
 				}
 				return self.storageHost.apps.item(cfg.id).put(cfg, 'application/json')
 					.succeed(function() {
-						// broadcast that the loaded apps have changed
-						self.getAppConfigs().then(function(appCfgs) {
-							self.broadcasts.apps.emit('update', appCfgs);
-						});
+						self.broadcastOpenApps();
 					});
 			});
 	};
@@ -241,15 +344,20 @@
 		var self = this;
 		return this.storageHost.apps.item(appId).delete()
 			.succeed(function() {
-				self.getAppConfigs().then(function(appCfgs) {
-					self.broadcasts.apps.emit('update', appCfgs);
-				});
+				self.broadcastOpenApps();
 			});
 	};
 
 	ConfigServer.prototype.getWorkerUserConfig = function(domain) {
 		return this.storageHost.workerCfgs.item(domain).getJson()
 				.then(function(res) { return res.body; }, function() { return {}; });
+	};
+
+	ConfigServer.prototype.broadcastOpenApps = function() {
+		var self = this;
+		self.getOpenAppConfigs().then(function(appCfgs) {
+			self.broadcasts.apps.emit('update', appCfgs);
+		});
 	};
 
 	// handlers
@@ -620,12 +728,37 @@
 			});
 	};
 
-	ConfigServer.prototype.httpEnableApp = function(request, response, appId) {
-		response.writeHead(501, 'not implemented').end();
-	};
-	ConfigServer.prototype.httpDisableApp = function(request, response, appId) {
-		response.writeHead(501, 'not implemented').end();
-	};
+	function httpEnableDisableApp(enabled) {
+		return function (request, response, appId) {
+			var headers = {
+				link: [
+					{ rel:'via service', href:'/' },
+					{ rel:'up', href:'/apps' },
+					{ rel:'self', href:'/apps/'+appId }
+				]
+			};
+
+			// "active app" special item
+			if (appId == '.active')
+				appId = this.activeAppId;
+
+			var self = this;
+			this.getAppConfig(appId).then(
+				function(cfg) {
+					self.setAppEnabled(appId, enabled);
+					if (enabled) self.openApp(appId);
+					else self.closeApp(appId);
+					self.broadcastOpenApps();
+					response.writeHead(200, 'ok').end();
+				},
+				function() {
+					response.writeHead(404, 'not found').end();
+				});
+		};
+	}
+	ConfigServer.prototype.httpEnableApp = httpEnableDisableApp(true);
+	ConfigServer.prototype.httpDisableApp = httpEnableDisableApp(false);
+
 	ConfigServer.prototype.httpDownloadApp = function(request, response, appId) {
 		response.writeHead(501, 'not implemented').end();
 	};
@@ -670,11 +803,7 @@
 				self.storageHost.apps.item(appId).put(newCfg, 'application/json').then(
 					function() {
 						self.reloadApp(appId);
-
-						self.getAppConfigs().then(function(appCfgs) {
-							// broadcast that the loaded apps have changed
-							self.broadcasts.apps.emit('update', appCfgs);
-						});
+						self.broadcastOpenApps();
 
 						response.writeHead(200, 'ok', { 'content-type':'text/html' })
 							.end(views.appCfg(newCfg, newCfg, null, '<i class="icon-ok"></i> <strong>Updated!</strong>'));
@@ -854,14 +983,19 @@
 				'</form>';
 		},
 		_appHeader: function(cfg) {
-			var html = '<h2><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small></h2>';
+			var muted = (cfg._active) ? '' : 'muted';
+			var inactive = (cfg._active) ? '' : '<span class="label">inactive</span>';
+			var html = '<h2 class="'+muted+'"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> '+inactive+'</h2>';
 			html += '<form action="httpl://config.env/apps/'+cfg.id+'">';
 			if (cfg._readonly) {
 				html +=
 					'<ul class="inline">'+
 						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
 						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Copy to Your Applications</button></li>'+
-						'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>'+
+						((cfg._active) ?
+							'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>' :
+							'<li><button class="btn btn-link" formmethod="enable"><i class="icon-plus"></i> Enable</button></li>'
+						)+
 					'</ul>';
 			} else {
 				html +=
@@ -869,7 +1003,10 @@
 						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
 						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Duplicate</button></li>'+
 						'<li><button class="btn btn-link" formmethod="delete"><i class="icon-remove-sign"></i> Uninstall</button></li>'+
-						'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>'+
+						((cfg._active) ?
+							'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>' :
+							'<li><button class="btn btn-link" formmethod="enable"><i class="icon-plus"></i> Enable</button></li>'
+						)+
 					'</ul>';
 			}
 			html += '</form>';

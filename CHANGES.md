@@ -1,6 +1,11 @@
 Changes
 =======
 
+2013/05/01 pfraze
+
+ - Added app enable/disable
+
+
 2013/04/30 pfraze
  
  - Added app editing & uninstall

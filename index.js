@@ -69,16 +69,10 @@ local.env.addServer('config.env', configServer);
 // host config load
 // -
 configServer.loadFromHost()
-	.succeed(function(appCfgs) {
-		// open the apps
-		var opens = [];
-		for (var appId in appCfgs)
-			opens.push(configServer.openApp(appCfgs[appId]));
-
-		// set active app by hash
-		local.promise.bundle(opens).then(function() {
-			configServer.setActiveApp(window.location.hash.slice(1));
-		});
+	.succeed(function() { return configServer.openEnabledApps(); })
+	.succeed(function() {
+		configServer.setActiveApp(window.location.hash.slice(1));
+		configServer.broadcastOpenApps();
 	});
 
 
