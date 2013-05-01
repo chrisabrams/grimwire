@@ -194,7 +194,7 @@
 			.succeed(function(appIds) {
 				var opens = [];
 				appIds.forEach(function(id) {
-					if (id.charAt(0) != '_' && envCfg.disabled.indexOf(id) === -1) {
+					if (id.charAt(0) != '_' && id != '.host' && envCfg.disabled.indexOf(id) === -1) {
 						if (!self.defaultAppId) self.defaultAppId = id;
 						opens.push(self.openApp(id));
 					}
@@ -347,6 +347,14 @@
 		return this.storageHost.apps.item(appId).delete()
 			.succeed(function() {
 				self.broadcastOpenApps();
+				return self.getEnvConfig();
+			})
+			.succeed(function(envCfg) {
+				// remove from disableds - the id might get reused later
+				var index = envCfg.disabled.indexOf(appId);
+				if (appId !== -1)
+					envCfg.disabled.splice(index, 1);
+				return self.setEnvConfig(envCfg);
 			});
 	};
 
@@ -663,9 +671,11 @@
 			headers['content-type'] = 'text/html';
 			this.getAppConfig(appId).then(
 				function(cfg) {
-					response.writeHead(200, 'ok', headers).end(views.appCfg(cfg, cfg));
+					response.writeHead(200, 'ok', headers).end(views.appCfg(cfg, cfg, null, null, request.query.inner));
 				},
-				function() { response.writeHead(404, 'not found').end(); }
+				function() {
+					response.writeHead(404, 'not found', headers).end('<h2 class="muted">App Not Found</h2>');
+				}
 			);
 		}
 		else if (/head/i.test(request.method))
@@ -926,24 +936,26 @@
 				html += '</div>';
 			return html;
 		},
-		appCfg: function(cfg, values, errors, msg) {
+		appCfg: function(cfg, values, errors, msg, inner) {
 			errors = errors || {};
 			msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
 			var commonValue = (typeof values.common == 'string') ? values.common : JSON.stringify(values.common,null,4);
 			var workersValue = (typeof values.workers == 'string') ? values.workers : JSON.stringify(values.workers,null,4);
-			return views._appHeader(cfg)+'<hr/>'+
-				((cfg._readonly) ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Click "Copy to Your Applications" to make changes.</div>' : '')+
-				'<form class="form-horizontal" action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
-					msg+
-					((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
-					'<input type="hidden" name="id" value="'+cfg.id+'" />'+
-					views._formControl('title', 'Title', 'text', values.title, errors.title, {readonly:cfg._readonly,required:true})+
-					views._formControl('icon', 'Icon', 'text', values.icon, errors.icon, {readonly:cfg._readonly,required:true,help:'via <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Glyphicons</a>'})+
-					views._formControl('startpage', 'Startpage', 'url', values.startpage, errors.startpage, {width:'span6',required:true,readonly:cfg._readonly})+
-					views._formControl('common', 'Common Config', 'textarea', commonValue, errors.common, {width:'span6',readonly:cfg._readonly,help:'^ Settings given to every worker'})+
-					views._formControl('workers', 'Workers', 'textarea', workersValue, errors.workers, {width:'span6',rows:15,required:true,readonly:cfg._readonly})+
-					((cfg._readonly) ? '' : '<div class="control-group"><div class="controls"><button class="btn">Update</button></div></div>')+
-				'</form>';
+			return ((!inner) ? '<div data-subscribe="httpl://config.env/apps httpl://config.env/apps/'+cfg.id+'?inner=1">' : '')+
+					views._appHeader(cfg)+'<hr/>'+
+					((cfg._readonly) ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Click "Copy to Your Applications" to make changes.</div>' : '')+
+					'<form class="form-horizontal" action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
+						msg+
+						((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
+						'<input type="hidden" name="id" value="'+cfg.id+'" />'+
+						views._formControl('title', 'Title', 'text', values.title, errors.title, {readonly:cfg._readonly,required:true})+
+						views._formControl('icon', 'Icon', 'text', values.icon, errors.icon, {readonly:cfg._readonly,required:true,help:'via <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Glyphicons</a>'})+
+						views._formControl('startpage', 'Startpage', 'url', values.startpage, errors.startpage, {width:'span6',required:true,readonly:cfg._readonly})+
+						views._formControl('common', 'Common Config', 'textarea', commonValue, errors.common, {width:'span6',readonly:cfg._readonly,help:'^ Settings given to every worker'})+
+						views._formControl('workers', 'Workers', 'textarea', workersValue, errors.workers, {width:'span6',rows:15,required:true,readonly:cfg._readonly})+
+						((cfg._readonly) ? '' : '<div class="control-group"><div class="controls"><button class="btn">Update</button></div></div>')+
+					'</form>'+
+				((!inner) ? '</div>' : '');
 		},
 		appInstallNew: function(errors) {
 			var errMsg = '';
