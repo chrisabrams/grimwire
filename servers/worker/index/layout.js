@@ -20,10 +20,10 @@ function main(request, response) {
 	} else if (request.path == '/filters') {
 		respondHTML(
 		'<ul class="nav nav-pills nav-stacked">'+
-			'<li class="active"><a href="httpl://lunr.index.usr/" target="main" data-toggle="pill">Everything</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=apps" target="main" data-toggle="pill">Applications</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=workers" target="main" data-toggle="pill">Workers</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=docs" target="main" data-toggle="pill">Documentation</a></li>'+
+			'<li class="active"><a href="httpl://lunr.index.usr/" target="main" data-toggle="nav">Everything</a></li>'+
+			'<li><a href="httpl://lunr.index.usr/?subject=apps" target="main" data-toggle="nav">Applications</a></li>'+
+			'<li><a href="httpl://lunr.index.usr/?subject=workers" target="main" data-toggle="nav">Workers</a></li>'+
+			'<li><a href="httpl://lunr.index.usr/?subject=docs" target="main" data-toggle="nav">Documentation</a></li>'+
 		'</ul>'
 		);
 	} else if (request.path == '/.grim/config') {

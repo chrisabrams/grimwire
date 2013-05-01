@@ -23,8 +23,17 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 // client post-processor
 // -
 local.env.setRegionPostProcessor(function(el) {
+	// grim widgets
 	lifespanPostProcess(el);
 	grimLayoutPostProcess(el);
+	$("[data-toggle=nav]", el).on('request', function(e) {
+		$('.active', $(this).parent().parent()).removeClass('active');
+		$(this).parent().addClass('active');
+	});
+	// bootstrap widgets
+	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
+	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
+	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
 });
 
 

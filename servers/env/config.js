@@ -892,18 +892,18 @@
 		},
 		appsSidenav: function(appCfgs) {
 			var html = '<ul class="nav nav-list">';
-			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain"><strong>Applications</strong></a></li>';
+			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain" data-toggle="nav"><strong>Applications</strong></a></li>';
 			for (var appId in appCfgs) {
 				var appCfg = appCfgs[appId];
 				if (!appCfg.workers) continue;
 				html +=
 					'<li class="nav-header">'+
-						'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
+						'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain" data-toggle="nav"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
 					'</li>';
 				html += appCfgs[appId].workers
 					.map(function(cfg) {
 						var cfgUrl = 'httpl://config.env/workers/'+makeWorkerDomain(cfg, appId);
-						return '<li><a href="'+cfgUrl+'" target="cfgappsmain">'+cfg.title+'</a></li>';
+						return '<li><a href="'+cfgUrl+'" target="cfgappsmain" data-toggle="nav">'+cfg.title+'</a></li>';
 					})
 					.join('');
 			}
@@ -982,9 +982,9 @@
 		workerCfg: function(cfg) {
 			return '<h3>'+cfg.domain+'</h3>'+
 				'<ul class="nav nav-tabs">'+
-					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure"><i class="icon-cog"></i></a></li>'+
-					'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'/src" title="Edit Source"><i class="icon-edit"></i></a></li>'+
-					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute"><i class="icon-hand-right"></i></a></li>'+
+					'<li class="active"><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/.grim/config" title="Configure" data-toggle="nav"><i class="icon-cog"></i></a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'/src" title="Edit Source" data-toggle="nav"><i class="icon-edit"></i></a></li>'+
+					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute" data-toggle="nav"><i class="icon-hand-right"></i></a></li>'+
 				'</ul>'+
 				'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
 				'<hr/>';
