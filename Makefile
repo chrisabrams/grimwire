@@ -1,12 +1,14 @@
 src = src/
 local = ${src}local/lib
 local-worker-files =\
-	${src}local/lib/worker.min.js
+	${src}local/lib/worker.min.js\
+	${src}local/lib/worker.js
 
 lib = lib/
 lib-local = ${lib}local/
 lib-local-worker-files =\
-	worker.min.js
+	worker.min.js\
+	worker.js
 
 setup: clean concat
 

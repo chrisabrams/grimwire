@@ -8,8 +8,14 @@ var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('grim-l
 
 // request wrapper
 // -
-local.env.config.workerBootstrapUrl = 'worker.min.js';
+local.env.config.workerBootstrapUrl = 'worker.js';
 local.env.setDispatchWrapper(function(request, origin, dispatch) {
+	// attach origin information
+	if (request.urld.protocol == 'httpl') {
+		local.http.reqheader(request, 'link', { href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/storage' });
+		// ^ when multiple peers' servers enter the namespace, this will direct the Worker to the correct user's storage
+	}
+
 	// allow request
 	var response = dispatch(request);
 	response.then(

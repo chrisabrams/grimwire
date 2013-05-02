@@ -4,7 +4,7 @@ Changes
 2013/05/01 pfraze
 
  - Added app enable/disable
- - Standardized worker storage, given in `local.worker.config.storageHref`
+ - Added request link header to user storage
  - Added data-toggle="nav"
 
 

@@ -858,7 +858,6 @@
 		workerCfg.appTitle = appCfg.title;
 		workerCfg.appIcon = appCfg.icon;
 		workerCfg.domain = makeWorkerDomain(workerCfg, appCfg);
-		workerCfg.storageHref = 'httpl://storage.env/'+workerCfg.domain;
 	}
 
 	function makeWorkerDomain(workerId, appId) {

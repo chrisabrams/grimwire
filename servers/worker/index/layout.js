@@ -2,6 +2,9 @@ var config = local.worker.config;
 var mainHref = config.usr.mainHref || config.mainHref || 'httpl://lunr.index.usr';
 var sidenavHref = config.usr.sidenavHref || config.sidenavHref || 'httpl://layout.index.usr/filters';
 function main(request, response) {
+	var storageHost = local.http.reqapi(request, 'storage');
+	storageHost.item('foobar').getJson().then(console.log, console.log);
+	storageHost.item('foobar').put({a:'sdf'}, 'applicat/json').then(console.log, console.log);
 	if (!request.path || request.path == '/' || request.path == '/2column') {
 		respondHTML(
 		'<p><a class="btn btn-mini active" href="httpl://'+config.domain+'/1column">Filters</a></p>'+
