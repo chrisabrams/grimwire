@@ -5,6 +5,7 @@ Changes
  
  - Added request link header with user 'storage' href
  - Added cookie support
+ - Added data-value-[class|id|value]of widgets
 
 
 2013/05/01 pfraze

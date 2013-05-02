@@ -71,6 +71,22 @@ local.env.setRegionPostProcessor(function(el) {
 		$('.active', $(this).parent().parent()).removeClass('active');
 		$(this).parent().addClass('active');
 	});
+	$(el).on('request', function(e) {
+		$("[data-value-valueof]", el).each(function(i, inputEl) {
+			var $target = $(inputEl.dataset.valueValueof, el);
+			if ($target.tagName == 'INPUT' || $target.tagName == 'TEXTAREA')
+				inputEl.value = $target.val();
+			else
+				inputEl.value = $target.attr('value');
+		});
+		$("[data-value-idof]", el).each(function(i, inputEl) {
+			inputEl.value = $(inputEl.dataset.valueIdof, el).getAttribute('id');
+		});
+		$("[data-value-classof]", el).each(function(i, inputEl) {
+			inputEl.value = $(inputEl.dataset.valueClassof, el).attr('class');
+			console.log(inputEl);
+		});
+	});
 	// bootstrap widgets
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });

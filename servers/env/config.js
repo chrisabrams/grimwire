@@ -559,11 +559,11 @@
 				.succeed(function(appCfgs) {
 					var html;
 					if (view == 'summary') html = views.appsSummary(appCfgs, request.query.inner);
-					else if (view == 'sidenav') html = views.appsSidenav(appCfgs);
+					else if (view == 'sidenav') html = views.appsSidenav(appCfgs, request.query.selection);
 					else html = views.appsMain(appCfgs);
 
 					headers['content-type'] = 'text/html';
-					response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
+					response.writeHead(200, 'ok', headers).end(html);
 				})
 				.fail(function() { response.writeHead(500, 'internal error').end(); });
 		}
@@ -882,31 +882,41 @@
 	}
 
 	var views = {
-		appsMain: function(appCfgs) {
+		appsMain: function(appCfgs, selection) {
 			var html = '<div class="row-fluid">'+
-					'<div class="well well-small span2" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs)+'</div>'+
+					'<div class="well well-small span2 nosidepadding"><form class="nomargin" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs, selection)+'</form></div>'+
 					'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div>'+
 				'</div>';
 			return html;
 		},
-		appsSidenav: function(appCfgs) {
-			var html = '<ul class="nav nav-list">';
-			html += '<li class="active"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain" data-toggle="nav"><strong>Applications</strong></a></li>';
+		appsSidenav: function(appCfgs, selection) {
+			selection = selection || '';
+			var appIds = Object.keys(appCfgs).join(',');
+			var html = '<input type="hidden" name="selection" data-value-valueof=".active">'+
+				'<ul class="nav nav-list">';
+			html += '<li class="'+((!selection||selection=='undefined') ? 'active' : '')+'"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain" data-toggle="nav"><strong>Applications</strong></a></li>';
 			for (var appId in appCfgs) {
 				var appCfg = appCfgs[appId];
 				if (!appCfg.workers) continue;
-				html +=
-					'<li class="nav-header">'+
-						'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain" data-toggle="nav"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
-					'</li>';
-				html += appCfgs[appId].workers
-					.map(function(cfg) {
-						var cfgUrl = 'httpl://config.env/workers/'+makeWorkerDomain(cfg, appId);
-						return '<li><a href="'+cfgUrl+'" target="cfgappsmain" data-toggle="nav">'+cfg.title+'</a></li>';
-					})
-					.join('');
+				html += views._appsSidenavItem(appCfg, selection);
 			}
 			html += '</ul>';
+			return html;
+		},
+		_appsSidenavItem: function(appCfg, selection) {
+			var appActiveClass = (selection == appCfg.id) ? ' active' : '';
+			var html =
+				'<li class="nav-header'+appActiveClass+'" value="'+appCfg.id+'">'+
+					'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain" data-toggle="nav"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
+				'</li>';
+			html += appCfg.workers
+				.map(function(cfg) {
+					var domain = makeWorkerDomain(cfg, appCfg.id);
+					var cfgUrl = 'httpl://config.env/workers/'+domain;
+					var workerActiveClass = (selection == domain) ? 'class="active"' : '';
+					return '<li '+workerActiveClass+' value="'+domain+'"><a href="'+cfgUrl+'" target="cfgappsmain" data-toggle="nav">'+cfg.title+'</a></li>';
+				})
+				.join('');
 			return html;
 		},
 		appsSummary: function(appCfgs, inner) {
