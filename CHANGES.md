@@ -1,6 +1,12 @@
 Changes
 =======
 
+2013/05/02 pfraze
+ 
+ - Added request link header with user 'storage' href
+ - Added cookie support
+
+
 2013/05/01 pfraze
 
  - Added app enable/disable

@@ -12,16 +12,51 @@ local.env.config.workerBootstrapUrl = 'worker.js';
 local.env.setDispatchWrapper(function(request, origin, dispatch) {
 	// attach origin information
 	if (request.urld.protocol == 'httpl') {
+		// attach links
 		local.http.reqheader(request, 'link', { href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/storage' });
 		// ^ when multiple peers' servers enter the namespace, this will direct the Worker to the correct user's storage
+
+		// attach cookies
+		var storedCookies = storageServer.getItem(request.urld.host, '.cookies');
+		var reqCookies = {}; // extract cookie values
+		if (storedCookies && storedCookies.items) {
+			for (var k in storedCookies.items) {
+				reqCookies[k] = storedCookies.items[k].value || storedCookies.items[k];
+				// ^ cookies may be given as a single value or as an object with {value:...}
+
+				// add flagged values to the query object
+				if (storedCookies.items[k].query)
+					request.query[k] = request.query[k] || storedCookies.items[k].value;
+			}
+		}
+		local.http.reqheader(request, 'cookie', reqCookies);
 	}
 
 	// allow request
 	var response = dispatch(request);
-	response.then(
-		function(res) { console.log(res.status, request.method, request.url); },
-		function(res) { console.log(res.status, request.method, request.url); }
-	);
+	response.then(handleResponse, handleResponse);
+	function handleResponse(res) {
+		// log
+		if (Object.keys(request.query).length)
+			console.log(res.status, request.method, request.url, JSON.stringify(request.query));
+		else
+			console.log(res.status, request.method, request.url);
+
+		// update cookies
+		var cookies = local.http.resheader(res, 'cookie');
+		if (cookies) {
+			var storedCookies = storageServer.getItem(request.urld.host, '.cookies') || {id:'.cookies',items:{}};
+			if (!storedCookies.items || typeof storedCookies.items != 'object')
+				storedCookies.items = {}; // save us from corruption
+			for (var k in cookies) {
+				if (cookies[k] === null)
+					delete storedCookies.items[k];
+				else
+					storedCookies.items[k] = cookies[k];
+			}
+			storageServer.setItem(request.urld.host, storedCookies);
+		}
+	}
 	return response;
 });
 
