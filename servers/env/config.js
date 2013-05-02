@@ -671,7 +671,7 @@
 			headers['content-type'] = 'text/html';
 			this.getAppConfig(appId).then(
 				function(cfg) {
-					response.writeHead(200, 'ok', headers).end(views.appCfg(cfg, cfg, null, null, request.query.inner));
+					response.writeHead(200, 'ok', headers).end(views.appCfg(cfg, cfg, null, null));
 				},
 				function() {
 					response.writeHead(404, 'not found', headers).end('<h2 class="muted">App Not Found</h2>');
@@ -703,7 +703,10 @@
 				self.installUserApp(cfg)
 					.then(function() {
 						self.openApp(cfg.id);
-						response.writeHead(201, 'created').end();
+						if (/html/.test(request.headers.accept))
+							response.writeHead(201, 'created', {'content-type':'text/html'}).end(views.appCfg(cfg, cfg, null, null));
+						else
+							response.writeHead(201, 'created').end();
 					}, function() {
 						response.writeHead(500, 'internal error').end();
 					});
@@ -733,7 +736,14 @@
 					return response.writeHead(403, 'forbidden').end();
 				self.closeApp(appId);
 				self.uninstallUserApp(appId);
-				response.writeHead(200, 'ok').end();
+
+				if (/html/.test(request.headers.accept)) {
+					self.getAppConfigs().succeed(function(appCfgs) {
+						headers['content-type'] = 'text/html';
+						response.writeHead(200, 'ok', headers).end(views.appsSummary(appCfgs));
+					});
+				} else
+					response.writeHead(200, 'ok', headers).end();
 			},
 			function() {
 				response.writeHead(404, 'not found').end();
@@ -761,7 +771,12 @@
 					if (enabled) self.openApp(appId);
 					else self.closeApp(appId);
 					self.broadcastOpenApps();
-					response.writeHead(200, 'ok').end();
+
+					cfg._active = enabled;
+					if (/html/.test(request.headers.accept))
+						response.writeHead(200, 'ok', {'content-type':'text/html'}).end(views.appCfg(cfg, cfg, null, null));
+					else
+						response.writeHead(200, 'ok').end();
 				},
 				function() {
 					response.writeHead(404, 'not found').end();
@@ -818,7 +833,7 @@
 						self.broadcastOpenApps();
 
 						response.writeHead(200, 'ok', { 'content-type':'text/html' })
-							.end(views.appCfg(newCfg, newCfg, null, '<i class="icon-ok"></i> <strong>Updated!</strong>'));
+							.end(views.appCfg(cfg, newCfg, null, '<i class="icon-ok"></i> <strong>Updated!</strong>'));
 					},
 					function() {
 						response.writeHead(502, 'bad gateway', { 'content-type':'text/html' })
@@ -892,7 +907,7 @@
 		appsSidenav: function(appCfgs, selection) {
 			selection = selection || '';
 			var appIds = Object.keys(appCfgs).join(',');
-			var html = '<input type="hidden" name="selection" data-value-valueof=".active">'+
+			var html = '<input type="hidden" name="selection" data-value-valueof=".active" value="'+selection+'">'+
 				'<ul class="nav nav-list">';
 			html += '<li class="'+((!selection||selection=='undefined') ? 'active' : '')+'"><a href="httpl://config.env/apps?view=summary" target="cfgappsmain" data-toggle="nav"><strong>Applications</strong></a></li>';
 			for (var appId in appCfgs) {
@@ -909,14 +924,16 @@
 				'<li class="nav-header'+appActiveClass+'" value="'+appCfg.id+'">'+
 					'<a href="httpl://config.env/apps/'+appCfg.id+'" target="cfgappsmain" data-toggle="nav"><i class="icon-'+appCfg.icon+'"></i> '+appCfg.title+'</a></li>'+
 				'</li>';
-			html += appCfg.workers
-				.map(function(cfg) {
-					var domain = makeWorkerDomain(cfg, appCfg.id);
-					var cfgUrl = 'httpl://config.env/workers/'+domain;
-					var workerActiveClass = (selection == domain) ? 'class="active"' : '';
-					return '<li '+workerActiveClass+' value="'+domain+'"><a href="'+cfgUrl+'" target="cfgappsmain" data-toggle="nav">'+cfg.title+'</a></li>';
-				})
-				.join('');
+			if (appCfg._active) {
+				html += appCfg.workers
+					.map(function(cfg) {
+						var domain = makeWorkerDomain(cfg, appCfg.id);
+						var cfgUrl = 'httpl://config.env/workers/'+domain;
+						var workerActiveClass = (selection == domain) ? 'class="active"' : '';
+						return '<li '+workerActiveClass+' value="'+domain+'"><a href="'+cfgUrl+'" target="cfgappsmain" data-toggle="nav">'+cfg.title+'</a></li>';
+					})
+					.join('');
+			}
 			return html;
 		},
 		appsSummary: function(appCfgs, inner) {
@@ -927,7 +944,7 @@
 			for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
 				if (!appCfgs[id]._readonly) continue; // readonly only
-				html += views._appHeader(appCfgs[id])+'<hr/>';
+				html += views._appHeader(appCfgs[id], { nohtml:true })+'<hr/>';
 			}
 			html += '<br/><br/>'+
 				'<h4>Your Applications <small><a href="httpl://config.env/apps/.new"><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
@@ -936,7 +953,7 @@
 			for (var id in appCfgs) {
 				if (id.charAt(0) == '_') continue;
 				if (appCfgs[id]._readonly) continue; // writeable only
-				html += views._appHeader(appCfgs[id])+'<hr/>';
+				html += views._appHeader(appCfgs[id], { nohtml:true })+'<hr/>';
 				userHasApps = true;
 			}
 			//<h2 class="muted"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> <span class="label">inactive</span></h2>
@@ -946,26 +963,24 @@
 				html += '</div>';
 			return html;
 		},
-		appCfg: function(cfg, values, errors, msg, inner) {
+		appCfg: function(cfg, values, errors, msg) {
 			errors = errors || {};
 			msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
 			var commonValue = (typeof values.common == 'string') ? values.common : JSON.stringify(values.common,null,4);
 			var workersValue = (typeof values.workers == 'string') ? values.workers : JSON.stringify(values.workers,null,4);
-			return ((!inner) ? '<div data-subscribe="httpl://config.env/apps httpl://config.env/apps/'+cfg.id+'?inner=1">' : '')+
-					views._appHeader(cfg)+'<hr/>'+
-					((cfg._readonly) ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Click "Copy to Your Applications" to make changes.</div>' : '')+
-					'<form class="form-horizontal" action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
-						msg+
-						((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
-						'<input type="hidden" name="id" value="'+cfg.id+'" />'+
-						views._formControl('title', 'Title', 'text', values.title, errors.title, {readonly:cfg._readonly,required:true})+
-						views._formControl('icon', 'Icon', 'text', values.icon, errors.icon, {readonly:cfg._readonly,required:true,help:'via <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Glyphicons</a>'})+
-						views._formControl('startpage', 'Startpage', 'url', values.startpage, errors.startpage, {width:'span6',required:true,readonly:cfg._readonly})+
-						views._formControl('common', 'Common Config', 'textarea', commonValue, errors.common, {width:'span6',readonly:cfg._readonly,help:'^ Settings given to every worker'})+
-						views._formControl('workers', 'Workers', 'textarea', workersValue, errors.workers, {width:'span6',rows:15,required:true,readonly:cfg._readonly})+
-						((cfg._readonly) ? '' : '<div class="control-group"><div class="controls"><button class="btn">Update</button></div></div>')+
-					'</form>'+
-				((!inner) ? '</div>' : '');
+			return views._appHeader(cfg)+'<hr/>'+
+				((cfg._readonly) ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Click "Copy to Your Applications" to make changes.</div>' : '')+
+				'<form class="form-horizontal" action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
+					msg+
+					((errors._body) ? '<div class="alert alert-error">'+errors._body+'</div>' : '')+
+					'<input type="hidden" name="id" value="'+cfg.id+'" />'+
+					views._formControl('title', 'Title', 'text', values.title, errors.title, {readonly:cfg._readonly,required:true})+
+					views._formControl('icon', 'Icon', 'text', values.icon, errors.icon, {readonly:cfg._readonly,required:true,help:'via <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Glyphicons</a>'})+
+					views._formControl('startpage', 'Startpage', 'url', values.startpage, errors.startpage, {width:'span6',required:true,readonly:cfg._readonly})+
+					views._formControl('common', 'Common Config', 'textarea', commonValue, errors.common, {width:'span6',readonly:cfg._readonly,help:'^ Settings given to every worker'})+
+					views._formControl('workers', 'Workers', 'textarea', workersValue, errors.workers, {width:'span6',rows:15,required:true,readonly:cfg._readonly})+
+					((cfg._readonly) ? '' : '<div class="control-group"><div class="controls"><button class="btn">Update</button></div></div>')+
+				'</form>';
 		},
 		appInstallNew: function(errors) {
 			var errMsg = '';
@@ -1006,11 +1021,13 @@
 					'<button class="btn">Update</button>'+
 				'</form>';
 		},
-		_appHeader: function(cfg) {
+		_appHeader: function(cfg, options) {
+			options = options || {};
 			var muted = (cfg._active) ? '' : 'muted';
 			var inactive = (cfg._active) ? '' : '<span class="label">inactive</span>';
+			var accept = (options.nohtml) ? 'accept="none"' : 'accept="text/html"';
 			var html = '<h2 class="'+muted+'"><i class="icon-'+cfg.icon+'"></i> '+cfg.title+' <small>*.'+cfg.id+'.usr</small> '+inactive+'</h2>';
-			html += '<form action="httpl://config.env/apps/'+cfg.id+'">';
+			html += '<form action="httpl://config.env/apps/'+cfg.id+'" '+accept+'>';
 			if (cfg._readonly) {
 				html +=
 					'<ul class="inline">'+
