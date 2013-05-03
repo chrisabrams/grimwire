@@ -123,7 +123,7 @@ function main(request, response) {
 					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				} else {
 					replace['#item-'+match[1]] = [
-						'<p><a href="/',index,'/link"><strong data-style-text-decoration="underline">',item.title,'</strong></a>',
+						'<p><a href="/',index,'/link"><strong style="text-decoration:underline">',item.title,'</strong></a>',
 						' <a href="',item.link,'" target="_blank">permalink</a></p>',
 						item.description
 					].join('');
