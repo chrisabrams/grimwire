@@ -1032,7 +1032,7 @@
 				html +=
 					'<ul class="inline">'+
 						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
-						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Copy to Your Applications</button></li>'+
+						'<li><button class="btn btn-link" formmethod="duplicate" formaccept="none"><i class="icon-download-alt"></i> Copy to Your Applications</button></li>'+
 						((cfg._active) ?
 							'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>' :
 							'<li><button class="btn btn-link" formmethod="enable"><i class="icon-plus"></i> Enable</button></li>'
@@ -1042,7 +1042,7 @@
 				html +=
 					'<ul class="inline">'+
 						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
-						'<li><button class="btn btn-link" formmethod="duplicate"><i class="icon-download-alt"></i> Duplicate</button></li>'+
+						'<li><button class="btn btn-link" formmethod="duplicate" formaccept="none"><i class="icon-download-alt"></i> Duplicate</button></li>'+
 						'<li><button class="btn btn-link" formmethod="delete"><i class="icon-remove-sign"></i> Uninstall</button></li>'+
 						((cfg._active) ?
 							'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>' :
