@@ -93,13 +93,11 @@ local.env.setRegionPostProcessor(function(el) {
 		for (var j=0; j < nStyles; j++) {
 			var k = styledElem.style[j];
 
-			if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1) {
-				styledElem.style[k] = clampSpacingStyles(styledElem.style[k]);
-				continue;
-			}
+			if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
+				styledElem.style.setProperty(k, clampSpacingStyles(styledElem.style[k]));
 
-			if (styleWhitelist.indexOf(k) === -1)
-				styledElem.style.removeProperty(k);
+			else if (styleWhitelist.indexOf(k) === -1)
+				styledElem.style.removeProperty(k), console.log(k);
 		}
 	});
 	// bootstrap widgets
@@ -108,10 +106,11 @@ local.env.setRegionPostProcessor(function(el) {
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
 });
 
+//http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules
 var styleWhitelist = [
-	'color','background','font','fontStyle','fontSize','fontWeight','lineHeight','lineSpacing','textAlign',
-	'textDecoration','verticalAlign','border','borderLeft','borderTop','borderRight','borderBottom',
-	'boxShadow','overflow','cursor'
+	'color','background','font','font-style','font-size','font-weight','line-height','line-spacing','text-align',
+	'text-decoration','vertical-align','border','border-left','border-top','border-right','border-bottom',
+	'box-shadow','overflow','cursor','width','height','white-space'
 ];
 function clampSpacingStyles(value) {
 	return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
@@ -125,7 +124,6 @@ function clampSpacingStyles(value) {
 		return org;
 	});
 }
-
 
 // environment services
 // -

@@ -4,7 +4,7 @@ Changes
 2013/05/03 pfraze
 
  - Added inline style sanitization/whitelisting
-   - supports padding/padding-* (clamped), margin/margin-* (clamped), color, background, font, font-size, font-style, font-weight, line-height, letter-spacing, text-align, text-decoration, border/border-*, box-shadow, vertical-align, overflow
+   - supports padding/padding-* (clamped), margin/margin-* (clamped), width, height, color, background, font, font-size, font-style, font-weight, line-height, letter-spacing, text-align, text-decoration, border/border-*, box-shadow, vertical-align, overflow, white-space
 
 
 2013/05/02 pfraze

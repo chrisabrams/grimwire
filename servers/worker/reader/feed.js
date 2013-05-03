@@ -7,7 +7,11 @@ var feedSources =
 		'http://googleresearch.blogspot.co.uk/feeds/posts/default'
 	];
 
+// feed data
 var feeds = null;
+var cachedItems = [], nCachedItems=0;
+var feedBroadcast = local.http.broadcaster();
+
 function getAllFeeds() {
 	if (feeds)
 		return local.promise(feeds);
@@ -15,10 +19,16 @@ function getAllFeeds() {
 
 	return local.promise.bundle(
 		feedSources.map(function(url) {
-			return local.http.dispatch({ method:'get', url:'httpl://rssproxy.rss.usr?url='+url, headers:{ accept:'application/json' }})
+			feeds[url] = null; // set the key, for progress-tracking
+			var getUrl = url;
+			if (getUrl.indexOf('httpl') === -1)
+				getUrl = 'httpl://rssproxy.rss.usr?url='+url; // use the proxy on remote urls (solves CORS)
+			return local.http.dispatch({ method:'get', url:getUrl, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {
 						feeds[url] = res.body;
+						mergeFeedIntoCache(url);
+						feedBroadcast.emit('update');
 						return res.body;
 					},
 					function() { return null; }
@@ -27,26 +37,39 @@ function getAllFeeds() {
 	).then(function() { return feeds; });
 }
 
-var mergedItems = null;
-function mergeFeeds(feeds) {
-	if (mergedItems)
-		return mergedItems;
-	mergedItems = []; var itemCount = 0;
+function getFetchProgress() {
+	if (!feeds) { return 100; }
+	var nFetched=0, nFeeds=0;
+	for (var k in feeds) {
+		if (feeds[k]) nFetched++;
+		nFeeds++;
+	}
+	var prog = Math.round((nFetched / nFeeds) * 100);
+	if (prog === 0) prog = 5; // so we have something to look at
+	return prog;
+}
+
+function mergeFeedIntoCache(feedUrl) {
 	var insert = function(item) {
 		item.date = new Date(item.date);
-		for (var i=0; i < itemCount; i++) {
-			if (item.date > mergedItems[i].date) {
-				mergedItems.splice(i, 0, item);
-				itemCount++;
+		for (var i=0; i < nCachedItems; i++) {
+			if (item.date > cachedItems[i].date) {
+				cachedItems.splice(i, 0, item);
+				nCachedItems++;
 				return;
 			}
 		}
-		mergedItems.push(item);
-		itemCount++;
+		cachedItems.push(item);
+		nCachedItems++;
 	};
-	for (var url in feeds)
-		feeds[url].items.forEach(insert);
-	return mergedItems;
+	feeds[feedUrl].items.forEach(insert);
+	return cachedItems;
+}
+
+function clearCache() {
+	feeds = null;
+	cachedItems = [];
+	nCachedItems = 0;
 }
 
 function pad2(v) {
@@ -82,58 +105,88 @@ function formatDate(date) {
 	return d;
 }
 
-function buildListInterface(items) {
+function buildFetchProgressbar() {
+	var progress = getFetchProgress();
+	if (progress == 100)
+		return '<div style="height:40px">&nbsp;</div>';
+	return '<div class="progress progress-striped active" style="width:40%"><div class="bar" style="width: '+progress+'%;"></div></div>';
+}
+
+function buildFeedInterface() {
+	return '<thead><tr><th width=220>Source</th><th>Article</th><th width=220>Published</th></tr></thead>'+
+		cachedItems.map(function(item, index) {
+			return [
+				'<tr>',
+					'<td class="muted" style="padding:20px 10px">',local.http.parseUri(item.link).host,'</td>',
+					'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
+					'<td style="padding:20px 10px">',formatDate(item.date),'</td>',
+				'</tr>'
+			].join('');
+		}).join('');
+}
+
+function buildMainInterface() {
 	return [
-		'<table class="table">',
-			'<thead><tr><th width=220>Source</th><th>Article</th><th width=220>Published</th></tr></thead>',
-			items.map(function(item, index) {
-				return [
-					'<tr>',
-						'<td class="muted" style="padding:20px 10px">',local.http.parseUri(item.link).host,'</td>',
-						'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
-						'<td style="padding:20px 10px">',formatDate(item.date),'</td>',
-					'</tr>'
-				].join('');
-			}).join(''),
-		'</table>'
+		'<div id="grimreader-app" data-subscribe="httpl://',local.worker.config.domain,'/feeds">',
+			'<div class="btn-group pull-right">',
+				'<a class="btn btn-small" title="refresh" href="/?refresh=1"><i class="icon-refresh"></i> Refresh</a>',
+			'</div>',
+			'<div id="fetchprogress">'+buildFetchProgressbar()+'</div>',
+			'<br/>',
+			'<table class="table">',
+				buildFeedInterface(),
+			'</table>',
+		'</div>'
 	].join('');
 }
 
 function main(request, response) {
-	if (/^\/?$/.test(request.path) && /GET/i.test(request.method)) {
-		return getAllFeeds()
-			.then(mergeFeeds)
-			.then(function(items) {
-				response.writeHead(200, 'ok', {'content-type':'text/html'}).end(buildListInterface(items));
-			});
+	if (request.method == 'GET' && request.path == '/') {
+		if (request.query.refresh)
+			clearCache();
+		getAllFeeds(); // initiate the fetch, but send down the interface now
+		// ^ will broadcast updates to the interface
+		response.writeHead(200, 'ok', {'content-type':'text/html'}).end(buildMainInterface());
+		return;
 	}
-	var match = RegExp('^/([\\d]+)/(desc|link)/?','i').exec(request.path);
-	if (match && /GET/i.test(request.method)) {
-		return getAllFeeds()
-			.then(mergeFeeds)
-			.then(function(items) {
-				var index = +(match[1]);
-				var item = items[index];
-				if (!item)
-					return response.writeHead(404, 'not found').end();
-
-				var replace = {};
-				if (match[2] == 'link') {
-					replace['#item-'+match[1]] = '<a href="/'+index+'/desc">'+item.title+'</a>';
-					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
-				} else {
-					replace['#item-'+match[1]] = [
-						'<p><a href="/',index,'/link"><strong style="text-decoration:underline">',item.title,'</strong></a>',
-						' <a href="',item.link,'" target="_blank">permalink</a></p>',
-						item.description
-					].join('');
-					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
+	if (request.method == 'GET' && request.path == '/feeds') {
+		if (/event-stream/.test(request.headers.accept)) {
+			feedBroadcast.addStream(response);
+			response.writeHead(200, 'ok', {'content-type':'text/event-stream'});
+		} else {
+			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({
+				replace: {
+					'#grimreader-app > table': buildFeedInterface(),
+					'#fetchprogress': buildFetchProgressbar()
 				}
 			});
+		}
+		return;
+	}
+	var match = RegExp('^/([\\d]+)/(desc|link)/?','i').exec(request.path);
+	if (match && request.method == 'GET') {
+		var index = +(match[1]);
+		var item = cachedItems[index];
+		if (!item)
+			return response.writeHead(404, 'not found').end();
+
+		var replace = {};
+		if (match[2] == 'link') {
+			replace['#item-'+match[1]] = '<a href="/'+index+'/desc">'+item.title+'</a>';
+			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
+		} else {
+			replace['#item-'+match[1]] = [
+				'<p><a href="/',index,'/link"><strong style="text-decoration:underline">',item.title,'</strong></a>',
+				' <a href="',item.link,'" target="_blank">permalink</a></p>',
+				item.description
+			].join('');
+			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
+		}
+		return;
 	}
 	if (request.path == '/.grim/config') {
 		var msg = '';
-		if (/POST/i.test(request.method)) {
+		if (request.method == 'POST') {
 			feedSources = (request.body.sources && typeof request.body.sources == 'string') ?
 				request.body.sources.split("\n").filter(function(i) { return i; }) :
 				[];

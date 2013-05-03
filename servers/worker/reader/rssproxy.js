@@ -63,6 +63,9 @@ function main(request, response) {
 			'</form>'
 		);
 	}
-	else
-		local.http.pipe(response, getFeed(request.query.url, 'json').then(normalizeSchema));
+	else {
+		setTimeout(function() {
+			local.http.pipe(response, getFeed(request.query.url, 'json').then(normalizeSchema));
+		}, Math.random() * 1000);
+	}
 }
