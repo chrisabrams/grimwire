@@ -899,7 +899,7 @@
 	var views = {
 		appsMain: function(appCfgs, selection) {
 			var html = '<div class="row-fluid">'+
-					'<div class="well well-small span2 nosidepadding"><form class="nomargin" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs, selection)+'</form></div>'+
+					'<div class="well well-small span2" data-style-padding="9px 0"><form data-style-margin="0" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs, selection)+'</form></div>'+
 					'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div>'+
 				'</div>';
 			return html;

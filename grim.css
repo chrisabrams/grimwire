@@ -1,22 +1,7 @@
+/* style changes */
 a { color:rgb(20, 110, 201) }
 a[target="_top"], a[target="_blank"] {
   background: url(assets/external_link.png) center left no-repeat;
   padding-left: 16px;
 }
-
-/* style helpers */
-.nomargin { margin:0 !important; }
-.nosidemargin { margin-left:0 !important; margin-right:0 !important; }
-.noendmargin { margin-top:0 !important; margin-bottom:0 !important; }
-.notopmargin { margin-top:0 !important; }
-.nobottommargin { margin-bottom:0 !important; }
-.noleftmargin { margin-left:0 !important; }
-.norightmargin { margin-right:0 !important; }
-
-.nopadding { padding:0 !important; }
-.nosidepadding { padding-left:0 !important; padding-right:0 !important; }
-.noendpadding { padding-top:0 !important; padding-bottom:0 !important; }
-.notoppadding { padding-top:0 !important; }
-.nobottompadding { padding-bottom:0 !important; }
-.noleftpadding { padding-left:0 !important; }
-.norightpadding { padding-right:0 !important; }
+#grimwire blockquote p { font-size:14px; line-height:20px; }

@@ -53,20 +53,45 @@ function pad2(v) {
 	if ((''+v).length === 2) return v;
 	return '0'+v;
 }
+function to12hr(hours) {
+	if (hours > 12)
+		return hours - 12;
+	if (hours === 0)
+		return 12;
+	return hours;
+}
+function AMPM(hours) {
+	if (hours >= 12)
+		return 'pm';
+	return 'am';
+}
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function toMonth(month, abbrev) {
+	month = MONTHS[month] || '';
+	if (abbrev)
+		return month.slice(0,3);
+	return month;
+}
+var TODAY = new Date();
 function formatDate(date) {
-	return date.getFullYear()+'/'+pad2(date.getMonth()+1)+'/'+pad2(date.getDate())+' '+date.getHours()+':'+pad2(date.getMinutes())+':'+pad2(date.getSeconds());
+	var d = toMonth(date.getMonth())+' '+pad2(date.getDate());
+	if (date.getYear() != TODAY.getYear()) {
+		d += ' '+date.getFullYear();
+	}
+	d += ' <span class="muted">'+to12hr(date.getHours())+':'+pad2(date.getMinutes())+AMPM(date.getHours())+'</span>';
+	return d;
 }
 
 function buildListInterface(items) {
 	return [
-		'<table class="table table-striped">',
-			'<thead><tr><th width=220>Source</th><th>Article</th><th width=160>Published</th></tr></thead>',
+		'<table class="table">',
+			'<thead><tr><th width=220>Source</th><th>Article</th><th width=220>Published</th></tr></thead>',
 			items.map(function(item, index) {
 				return [
 					'<tr>',
-						'<td>',local.http.parseUri(item.link).host,'</td>',
-						'<td><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
-						'<td>',formatDate(item.date),'</td>',
+						'<td class="muted" style="padding:20px 10px">',local.http.parseUri(item.link).host,'</td>',
+						'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
+						'<td style="padding:20px 10px">',formatDate(item.date),'</td>',
 					'</tr>'
 				].join('');
 			}).join(''),
@@ -98,10 +123,9 @@ function main(request, response) {
 					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				} else {
 					replace['#item-'+match[1]] = [
-						'<strong>',item.title,'</strong>',
-						' (<a href="/',index,'/link">close</a>)',
-						' <a href="',item.link,'" target="_blank">permalink</a>',
-						'<br/>', item.description
+						'<p><a href="/',index,'/link"><strong data-style-text-decoration="underline">',item.title,'</strong></a>',
+						' <a href="',item.link,'" target="_blank">permalink</a></p>',
+						item.description
 					].join('');
 					response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
 				}

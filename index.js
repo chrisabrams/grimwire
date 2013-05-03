@@ -87,11 +87,44 @@ local.env.setRegionPostProcessor(function(el) {
 			console.log(inputEl);
 		});
 	});
+	// sanitize and whitelist styles
+	$("[style]", el).each(function(i, styledElem) {
+		var nStyles = styledElem.style.length;
+		for (var j=0; j < nStyles; j++) {
+			var k = styledElem.style[j];
+
+			if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1) {
+				styledElem.style[k] = clampSpacingStyles(styledElem.style[k]);
+				continue;
+			}
+
+			if (styleWhitelist.indexOf(k) === -1)
+				styledElem.style.removeProperty(k);
+		}
+	});
 	// bootstrap widgets
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
 });
+
+var styleWhitelist = [
+	'color','background','font','fontStyle','fontSize','fontWeight','lineHeight','lineSpacing','textAlign',
+	'textDecoration','verticalAlign','border','borderLeft','borderTop','borderRight','borderBottom',
+	'boxShadow','overflow','cursor'
+];
+function clampSpacingStyles(value) {
+	return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
+		var n = +v;
+		if (n < 0) return 0;
+		if (unit == 'em') {
+			if (n > 2) { return '2em'; }
+			return org;
+		}
+		if (n > 20) { return '20'+unit; }
+		return org;
+	});
+}
 
 
 // environment services
