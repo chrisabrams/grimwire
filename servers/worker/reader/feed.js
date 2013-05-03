@@ -118,7 +118,7 @@ function buildFeedInterface() {
 			return [
 				'<tr>',
 					'<td class="muted" style="padding:20px 10px">',local.http.parseUri(item.link).host,'</td>',
-					'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/',index,'/desc">',item.title,'</a></div></td>',
+					'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/items/',index,'/desc?deltas=1">',item.title,'</a></div></td>',
 					'<td style="padding:20px 10px">',formatDate(item.date),'</td>',
 				'</tr>'
 			].join('');
@@ -127,7 +127,7 @@ function buildFeedInterface() {
 
 function buildMainInterface() {
 	return [
-		'<div id="grimreader-app" data-subscribe="httpl://',local.worker.config.domain,'/feeds">',
+		'<div id="grimreader-app" data-subscribe="httpl://',local.worker.config.domain,'/items">',
 			'<div class="btn-group pull-right">',
 				'<a class="btn btn-small" title="refresh" href="/?refresh=1"><i class="icon-refresh"></i> Refresh</a>',
 			'</div>',
@@ -148,10 +148,28 @@ function main(request, response) {
 		response.writeHead(200, 'ok', {'content-type':'text/html'}).end(buildMainInterface());
 		return;
 	}
-	if (request.method == 'GET' && request.path == '/feeds') {
+	if (request.method == 'GET' && request.path == '/items') {
 		if (/event-stream/.test(request.headers.accept)) {
 			feedBroadcast.addStream(response);
 			response.writeHead(200, 'ok', {'content-type':'text/event-stream'});
+		} else if (/application\/json/.test(request.headers.accept)) {
+			response.writeHead(200, 'ok', {'content-type':'application/json'});
+			if (request.query.schema == 'grimsearch') {
+				var docs = [];
+				cachedItems.forEach(function(item, index) {
+					docs.push({
+						icon: 'list',
+						category: 'Blog Posts',
+						title: item.title,
+						desc: item.description,
+						href: item.link,
+						target: '_blank'
+					});
+				});
+				response.end(docs);
+			} else {
+				response.end(cachedItems);
+			}
 		} else {
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({
 				replace: {
@@ -162,24 +180,33 @@ function main(request, response) {
 		}
 		return;
 	}
-	var match = RegExp('^/([\\d]+)/(desc|link)/?','i').exec(request.path);
+	var match = RegExp('^/items/([\\d]+)/(desc|link)/?','i').exec(request.path);
 	if (match && request.method == 'GET') {
 		var index = +(match[1]);
 		var item = cachedItems[index];
 		if (!item)
 			return response.writeHead(404, 'not found').end();
 
-		var replace = {};
-		if (match[2] == 'link') {
-			replace['#item-'+match[1]] = '<a href="/'+index+'/desc">'+item.title+'</a>';
-			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
-		} else {
-			replace['#item-'+match[1]] = [
-				'<p><a href="/',index,'/link"><strong style="text-decoration:underline">',item.title,'</strong></a>',
+		var html;
+		var deltas = (request.query.deltas) ? '?deltas=1' : '';
+		if (match[2] == 'link')
+			html = '<a href="/items/'+index+'/desc'+deltas+'">'+item.title+'</a>';
+		else {
+			html = [
+				'<p><a href="/items/',index,'/link'+deltas+'"><strong style="text-decoration:underline">',item.title,'</strong></a>',
 				' <a href="',item.link,'" target="_blank">permalink</a></p>',
 				item.description
 			].join('');
+		}
+
+		if (request.query.deltas) {
+			// html deltas
+			var replace = {};
+			replace['#item-'+index] = html;
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
+		} else {
+			// html
+			response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
 		}
 		return;
 	}

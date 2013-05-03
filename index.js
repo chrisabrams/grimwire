@@ -96,8 +96,8 @@ local.env.setRegionPostProcessor(function(el) {
 			if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
 				styledElem.style.setProperty(k, clampSpacingStyles(styledElem.style[k]));
 
-			else if (styleWhitelist.indexOf(k) === -1)
-				styledElem.style.removeProperty(k), console.log(k);
+			else if (isStyleAllowed(k) == false)
+				styledElem.style.removeProperty(k);
 		}
 	});
 	// bootstrap widgets
@@ -108,10 +108,17 @@ local.env.setRegionPostProcessor(function(el) {
 
 //http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules
 var styleWhitelist = [
-	'color','background','font','font-style','font-size','font-weight','line-height','line-spacing','text-align',
-	'text-decoration','vertical-align','border','border-left','border-top','border-right','border-bottom',
-	'box-shadow','overflow','cursor','width','height','white-space'
+	'color','background','font','line-height','line-spacing','text-align','text-decoration','vertical-align',
+	'border','box-shadow','overflow','cursor','width','height','max-width','max-height','white-space'
 ];
+var nStyleWhitelist = styleWhitelist.length;
+function isStyleAllowed(style) {
+	for (var i=0; i < nStyleWhitelist; i++) {
+		if (style.indexOf(styleWhitelist[i]) === 0)
+			return true;
+	}
+	return false;
+}
 function clampSpacingStyles(value) {
 	return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
 		var n = +v;

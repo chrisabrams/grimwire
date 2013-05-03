@@ -1,35 +1,69 @@
 // index/lunr.js
 // ==============
-// Clientside search with lunr.js
+// Search index with lunr.js
 var lunr = require('vendor/lunr.min.js');
 
-var docs = [];
-var nDocs = 0;
+var indexSources =
+	local.worker.config.usr.sources ||
+	local.worker.config.sources ||
+	[
+		'httpl://config.env/apps?schema=grimsearch',
+		'httpl://feed.rss.usr/items?schema=grimsearch'
+	];
+
+// init index
+var indexedCategories = [];
+var indexedDocs = {};
 var idx = lunr(function () {
-	this.ref('__searchIndex');
+	this.ref('href');
 	this.field('title', 10);
 	this.field('href');
-	this.field('tags', 100);
 	this.field('desc');
 });
 
-if (local.worker.config.seed)
-	local.worker.config.seed.forEach(addDoc);
+// read sources and populate index
+var buildIndexPromise = local.promise.bundle(
+	indexSources.map(function(url) {
+		return local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
+			.then(function(res) { return res.body; }, function() { return []; });
+	})
+);
+buildIndexPromise.succeed(function(sourcesDocs) {
+	sourcesDocs.forEach(function(sourceDocs) { sourceDocs.forEach(addDoc); });
+});
+
+// subscribe to sources for updates
+indexSources.forEach(function(url) {
+	var channel = local.http.subscribe(url);
+	channel.on('update', function() {
+		local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
+			.then(function(res) { return res.body; }, function() { return []; })
+			.succeed(function(docs) {
+				docs.forEach(addDoc);
+			});
+	});
+});
 
 function main(request, response) {
 	if (/^\/?$/.test(request.path)) {
-		if (/HEAD|GET/i.test(request.method))
-			getInterface(request, response);
-		else
-			response.writeHead(405, 'bad method').end();
+		buildIndexPromise.succeed(function() {
+			if (/HEAD|GET/i.test(request.method))
+				getInterface(request, response);
+			else
+				response.writeHead(405, 'bad method').end();
+		});
 	}
 	else if (request.path == '/docs') {
-		if (/HEAD|GET/i.test(request.method))
-			getDocuments(request, response);
-		else if (/POST/i.test(request.method))
-			addDocument(request, response);
-		else
-			response.writeHead(405, 'bad method').end();
+		buildIndexPromise.succeed(function() {
+			if (request.method == 'POST')
+				addDocument(request, response);
+			else
+				response.writeHead(405, 'bad method').end();
+		});
+	}
+	else if (request.path == '/filters') {
+		response.writeHead(200, 'ok', {'content-type':'text/html'});
+		response.end(buildFiltersHtml());
 	}
 	else if (request.path == '/.grim/config') {
 		response.writeHead(200, 'ok', {'content-type':'text/html'});
@@ -50,65 +84,26 @@ function getInterface(request, response) {
 	if (/head/i.test(request.method))
 		return response.writeHead(200, 'ok', headers).end();
 
-	// :DEBUG: temporary show of function while refining layouts system
-	var subset = docs;
-	var subjectDesc = '';
-	if (request.query.subject) {
-		var q;
-		switch (request.query.subject) {
-			case 'apps':
-				subjectDesc = ' Applications';
-				q = 'app';
-				break;
-			case 'workers':
-				subjectDesc = ' Workers';
-				q = 'worker';
-				break;
-			case 'docs':
-				subjectDesc = ' Documentation';
-				q = 'doc';
-				break;
-			default:
-				subjectDesc = ' '+request.query.subject;
-				q = rqeuest.query.subject;
-				break;
-		}
-		subset = getDocsByResultset(idx.search(q));
-	}
-
-	headers['content-type'] = 'text/html';
-	response.writeHead(200, 'ok', headers).end([
-		'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'/docs" accept="application/html-deltas+json">',
-			'<input type="text" placeholder="Search',subjectDesc,'..." class="input-xxlarge" name="q">',
-			'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
-		'</form>',
-		'<div id="search-results">',buildDocsHtml(subset),'</div>'
-	].join(''));
-}
-
-function getDocuments(request, response) {
-	var headers = {
-		link:[
-			{ rel:'up via service', href:'/' },
-			{ rel:'self', href:'/docs' }
-		]
-	};
-
-	if (/head/i.test(request.method))
-		return response.writeHead(200, 'ok', headers).end();
-
-	var docIds = (request.query.q) ? idx.search(request.query.q) : undefined;
-	var subset = getDocsByResultset(docIds);
+	var searchPlaceholder = (request.query.filter) ? 'Search '+request.query.filter : 'Search';
+	var resultSet = (request.query.q) ?
+		idx.search(request.query.q).map(function(hit) { return hit.ref; }) :
+		Object.keys(indexedDocs);
 
 	if (/html-deltas/.test(request.headers.accept)) {
 		headers['content-type'] = 'application/html-deltas+json';
-		response.writeHead(200, 'ok', headers).end({ replace:{ '#search-results':buildDocsHtml(subset) }});
-	} else if (/html/.test(request.headers.accept)) {
-		headers['content-type'] = 'text/html';
-		response.writeHead(200, 'ok', headers).end(buildDocsHtml(subset));
+		response.writeHead(200, 'ok', headers).end({
+			replace: { '#search-results': buildDocsHtml(resultSet, request.query.filter) }
+		});
 	} else {
-		headers['content-type'] = 'application/json';
-		response.writeHead(200, 'ok', headers).end(subset);
+		headers['content-type'] = 'text/html';
+		response.writeHead(200, 'ok', headers).end([
+			'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'" accept="application/html-deltas+json">',
+				'<input type="text" placeholder="',searchPlaceholder,'..." class="input-xxlarge" name="q" value="'+(request.query.q||'')+'" />',
+				'<input type="hidden" name="filter" value="'+(request.query.filter||'')+'" />',
+				'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
+			'</form>',
+			'<div id="search-results">',buildDocsHtml(resultSet, request.query.filter),'</div>'
+		].join(''));
 	}
 }
 
@@ -129,12 +124,12 @@ function addDocument(request, response) {
 	if (Array.isArray(docs) === false)
 		docs = [docs];
 
+	// :TODO: this is out of date
 	var results = [];
 	for (var i=0,ii=docs.length; i < ii; i++) {
 		var doc = docs[i];
 		if (!doc.title) { results.push('Error: request body `title` required'); continue; }
 		if (!doc.href) { results.push('Error: request body `href` required'); continue; }
-		if (!doc.desc) { results.push('Error: request body `desc` required'); continue; }
 		results.push(addDoc(doc));
 	}
 
@@ -143,34 +138,51 @@ function addDocument(request, response) {
 }
 
 function addDoc(doc) {
-	doc.__searchIndex = nDocs;
-	docs.push(doc);
-	idx.add(doc);
-	nDocs++;
-	return doc.__searchIndex;
-}
-
-function getDocsByResultset(resultset) {
-	if (!resultset)
-		return docs;
-	var subset = [];
-	for (var i=0, ii=resultset.length; i < ii; i++) {
-		if (docs[resultset[i].ref])
-			subset.push(docs[resultset[i].ref]);
+	if (!doc || !doc.title || !doc.href) {
+		console.log('Skipped invalid document - `title` and `href` are required', JSON.stringify(doc));
+		return;
 	}
-	return subset;
+
+	indexedDocs[doc.href] = doc;
+	idx.add(doc);
+	if (doc.category && indexedCategories.indexOf(doc.category) === -1)
+		indexedCategories.push(doc.category);
 }
 
-function buildDocsHtml(docs) {
+function getDocsByIds(docIds) {
+	return docIds.map(function(id) { return indexedDocs[id]; }).filter(function(doc) { return !!doc; });
+}
+
+function buildFiltersHtml() {
+	var html = '<li class="active"><a href="httpl://lunr.index.usr/" target="main" data-toggle="nav">Everything</a></li>';
+	indexedCategories.forEach(function(cat) {
+		html += '<li><a href="httpl://lunr.index.usr/?filter='+encodeURI(cat)+'" target="main" data-toggle="nav">'+cat+'</a></li>';
+	});
+	return '<ul class="nav nav-pills nav-stacked">'+html+'</ul>';
+}
+
+function buildDocsHtml(docIds, categoryFilter) {
 	var html = [];
 	html.push([
-		'<table class="table table-striped">',
-			docs.map(function(doc) {
-				var target = '';
-				if (doc.target == '_top')
-					target = 'target="_top"';
-				return '<tr><td><a href="'+doc.href+'" '+target+'>'+doc.title+'</a> <span>'+doc.desc+'</span></td></tr>';
-			}).join(''),
+		'<table class="table">',
+			docIds
+				.map(function(id) { return indexedDocs[id]; })
+				.filter(function(doc) {
+					if (!doc) return false;
+					if (categoryFilter && doc.category != categoryFilter) return false;
+					return true;
+				})
+				.map(function(doc) {
+					if (!doc) return '';
+					var icon = (doc.icon) ? '<i class="icon-'+doc.icon+'" style="padding-right:2px"></i> ' : '';
+					var target = (doc.target == '_top' || doc.target == '_blank') ? 'target="'+doc.target+'"' : '';
+					return '<tr><td style="padding:20px">'+
+							'<p>'+icon+'<a href="'+doc.href+'" '+target+'>'+doc.title+'</a><br/>'+
+							'<span class="muted">'+doc.href+'</span></p>'+
+							doc.desc+
+						'</td></tr>';
+				})
+				.join(''),
 		'</table>',
 		'<div id="search-results"></div>'
 	].join(''));

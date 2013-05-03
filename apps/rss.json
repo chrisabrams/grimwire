@@ -1,7 +1,7 @@
 {
   "id": "rss",
   "title": "Reader",
-  "icon": "th-list",
+  "icon": "list",
   "startpage": "httpl://feed.rss.usr",
   "common": {
     "storageHost": "httpl://storage.env"

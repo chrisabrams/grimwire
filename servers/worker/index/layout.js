@@ -1,6 +1,6 @@
 var config = local.worker.config;
 var mainHref = config.usr.mainHref || config.mainHref || 'httpl://lunr.index.usr';
-var sidenavHref = config.usr.sidenavHref || config.sidenavHref || 'httpl://layout.index.usr/filters';
+var sidenavHref = config.usr.sidenavHref || config.sidenavHref || 'httpl://lunr.index.usr/filters';
 function main(request, response) {
 	if (request.path == '/') {
 		if (request.query.columns == 1) {
@@ -28,16 +28,6 @@ function main(request, response) {
 			'</div>'
 			);
 		}
-	}
-	else if (request.path == '/filters') {
-		respondHTML(
-		'<ul class="nav nav-pills nav-stacked">'+
-			'<li class="active"><a href="httpl://lunr.index.usr/" target="main" data-toggle="nav">Everything</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=apps" target="main" data-toggle="nav">Applications</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=workers" target="main" data-toggle="nav">Workers</a></li>'+
-			'<li><a href="httpl://lunr.index.usr/?subject=docs" target="main" data-toggle="nav">Documentation</a></li>'+
-		'</ul>'
-		);
 	}
 	else if (request.path == '/.grim/config') {
 		var msg = '';

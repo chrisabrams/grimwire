@@ -548,7 +548,24 @@
 		else if (/json/.test(request.headers.accept)) {
 			headers['content-type'] = 'application/json';
 			this.getAppConfigs().then(
-				function(cfgs) { response.writeHead(200, 'ok', headers).end(cfgs); },
+				function(cfgs) {
+					if (request.query.schema == 'grimsearch') {
+						var docs = [];
+						for (var appId in cfgs) {
+							if (appId.charAt(0) == '_')
+								continue;
+							docs.push({
+								icon: 'hand-right',
+								category: 'Applications',
+								title: cfgs[appId].title,
+								desc: (cfgs[appId]._readonly) ? 'Host Application' : 'User Application',
+								href: '#'+appId
+							});
+						}
+						response.writeHead(200, 'ok', headers).end(docs);
+					} else
+						response.writeHead(200, 'ok', headers).end(cfgs);
+				},
 				function() { response.writeHead(500).end(); }
 			);
 		}
