@@ -4,7 +4,8 @@ var feedSources =
 	local.worker.config.sources ||
 	[
 		'http://lambda-the-ultimate.org/rss.xml',
-		'http://googleresearch.blogspot.co.uk/feeds/posts/default'
+		'http://googleresearch.blogspot.co.uk/feeds/posts/default',
+		'http://pfraze.blogspot.com/feeds/posts/default'
 	];
 
 // feed data
