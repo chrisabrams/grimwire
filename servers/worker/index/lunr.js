@@ -6,18 +6,11 @@ var lunr = require('vendor/lunr.min.js');
 
 // Setup
 // -
-
-var indexSources =
-	local.worker.config.usr.sources ||
-	local.worker.config.sources ||
-	[
-		'httpl://config.env/apps?schema=grimsearch',
-		'httpl://feed.rss.usr/items?schema=grimsearch'
-	];
+var indexBroadcast = local.http.broadcaster(); // notifies of new entries in the index
 
 // init index
-var indexedCategories = [];
-var indexedDocs = {};
+var indexedCategories = []; // a list of categories in the current documentset
+var indexedDocs = {}; // a map of document href -> documents
 var idx = lunr(function () {
 	this.ref('href');
 	this.field('title', 10);
@@ -25,28 +18,11 @@ var idx = lunr(function () {
 	this.field('desc');
 });
 
-// read sources and populate index
-var buildIndexPromise = local.promise.bundle(
-	indexSources.map(function(url) {
-		return local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
-			.then(function(res) { return res.body; }, function() { return []; });
-	})
-);
-buildIndexPromise.succeed(function(sourcesDocs) {
-	sourcesDocs.forEach(function(sourceDocs) { sourceDocs.forEach(addDoc); });
-});
-
-// subscribe to sources for updates
-indexSources.forEach(function(url) {
-	var channel = local.http.subscribe(url);
-	channel.on('update', function() {
-		local.http.dispatch({ method:'get', url:url, headers:{ accept:'application/json' }})
-			.then(function(res) { return res.body; }, function() { return []; })
-			.succeed(function(docs) {
-				docs.forEach(addDoc);
-			});
-	});
-});
+// listen for new applications
+var indexSources = {}; // a map of sources -> event streams
+var indexSourcesDocs = {}; // tracks the ids of documents from each source
+local.http.subscribe('httpl://config.env/apps').on('update', updateSources);
+updateSources();
 
 
 // Request Handling
@@ -55,7 +31,7 @@ indexSources.forEach(function(url) {
 function main(request, response) {
 	if (request.path == '/') {
 		if (/HEAD|GET/i.test(request.method))
-			buildIndexPromise.always(function() { getInterface(request, response); });
+			getInterface(request, response);
 		else response.writeHead(405, 'bad method').end();
 	}
 	else if (request.path == '/.grim/config') {
@@ -71,7 +47,7 @@ function getInterface(request, response) {
 	if (request.method == 'HEAD')
 		return response.writeHead(200, 'ok').end();
 
-	if (/(text\/html|html-deltas)/.test(request.headers.accept) === false)
+	if (/(text\/html|html-deltas|event-stream)/.test(request.headers.accept) === false)
 		return response.writeHead(406, 'bad accept').end();
 
 	var resultSet = (request.query.q) ?
@@ -87,6 +63,10 @@ function getInterface(request, response) {
 				'#search-filterbtn': views.filtersButton(request)
 			}
 		});
+	} else if (/event-stream/.test(request.headers.accept)) {
+		local.http.resheader(response, 'content-type', 'text/event-stream');
+		response.writeHead(200, 'ok');
+		indexBroadcast.addStream(response);
 	} else {
 		var html;
 		if (request.query.columns == 1) {
@@ -112,6 +92,85 @@ function getInterface(request, response) {
 
 // Helpers
 // -
+
+// gets the current applications in the environment and syncs the current sources to include what's active
+function updateSources() {
+	local.http.dispatch({ url:'httpl://config.env/apps', headers:{ accept:'application/json' }}).then(
+		function(res) {
+			var cfgs = res.body;
+			// add new
+			var sourceUrls = [], url;
+			for (var appId in cfgs) {
+				if (!cfgs[appId]._active || appId == local.worker.config.appId)
+					continue;
+				url = cfgs[appId].startpage;
+				addSource(url);
+				sourceUrls.push(url);
+			}
+			// remove no-longer-present
+			for (url in indexSources) {
+				if (sourceUrls.indexOf(url) === -1)
+					removeSource(url);
+			}
+		},
+		function(res) {
+			console.log('Failed to fetch active applications from config.env', res);
+		}
+	);
+}
+
+function addSource(sourceUrl) {
+	if (sourceUrl in indexSources)
+		return;
+	resolveSourceIndex(sourceUrl).succeed(function(indexUrl) {
+		// connect event-stream
+		indexSources[sourceUrl] = local.http.subscribe(indexUrl);
+		indexSources[sourceUrl].on('update', function() { getSourceDocuments(sourceUrl, indexUrl); });
+		// fetch documents
+		indexSourcesDocs[sourceUrl] = [];
+		getSourceDocuments(sourceUrl, indexUrl);
+	});
+}
+
+function removeSource(sourceUrl) {
+	if (!(sourceUrl in indexSources))
+		return;
+	// destroy stream
+	indexSources[sourceUrl].close();
+	delete indexSources[sourceUrl];
+	// remove documents
+	var doc = { href:null };
+	indexSourcesDocs[sourceUrl].forEach(function (href) {
+		doc.href = href;
+		idx.remove(doc);
+		delete indexedDocs[href];
+	});
+	delete indexSourcesDocs[sourceUrl];
+}
+
+function resolveSourceIndex(sourceUrl) {
+	return local.http.navigator(sourceUrl).relation('http://grimwire.com/rel/searchables').resolve();
+}
+
+function getSourceDocuments(sourceUrl, indexUrl) {
+	local.http.dispatch({ url:indexUrl, headers:{ accept:'application/json' }}).then(
+		function(res) {
+			if (res.body && Array.isArray(res.body)) {
+				res.body.forEach(function(doc) {
+					if (indexSourcesDocs[sourceUrl].indexOf(doc.href) != -1)
+						return; // dont add twice
+					addDoc(doc);
+					indexSourcesDocs[sourceUrl].push(doc.href);
+				});
+				indexBroadcast.emit('update');
+			}
+		},
+		function() {
+			// source doesnt export searchables
+			removeSource(url);
+		}
+	);
+}
 
 function addDoc(doc) {
 	if (!doc || !doc.title || !doc.href) {
@@ -176,7 +235,7 @@ var views = {
 	interface: function(request, resultSet) {
 		var searchPlaceholder = (request.query.filter) ? 'Search '+request.query.filter : 'Search';
 		return [
-			'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'" accept="application/html-deltas+json">',
+			'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'" accept="application/html-deltas+json" data-subscribe="httpl://',local.worker.config.domain,'">',
 				'<input type="text" placeholder="',searchPlaceholder,'..." class="input-xxlarge" name="q" value="'+(request.query.q||'')+'" />',
 				'<input type="hidden" name="filter" value="'+(request.query.filter||'')+'" />',
 				'<input type="hidden" name="columns" value="'+(request.query.columns||'')+'" />',

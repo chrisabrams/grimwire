@@ -17,7 +17,7 @@
 		this.hostAppConfigs = {}; // :NOTE: as provided by the host
 		// ^ to get config with user settings mixed in, use getAppConfig()
 		this.activeAppId = null;
-		this.openAppIds = []; // list of apps which are open
+		this.openAppIds = ['_apps']; // list of apps which are open
 		this.defaultAppId = null; // set to the first enabled app by openEnabledApps
 
 		// add special environment apps
@@ -537,7 +537,8 @@
 			link: [
 				{ rel:'up via service', href:'/' },
 				{ rel:'self', href:'/apps' },
-				{ rel:'item', href:'/apps/{title}' }
+				{ rel:'item', href:'/apps/{title}' },
+				{ rel:'http://grimwire.com/rel/searchables', href:'/apps?schema=grimsearch' }
 			]
 		};
 		if (/event-stream/.test(request.headers.accept)) {
