@@ -31,6 +31,7 @@ function normalizeSchema(res) {
 	res.body.value.items.forEach(function(item) {
 		item.link = getLink(item);
 		item.date = getDate(item);
+		item.content = (item.content) ? item.content.content : item.description;
 	});
 	res.body = { items:res.body.value.items };
 	return res;

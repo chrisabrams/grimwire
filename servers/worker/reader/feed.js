@@ -196,7 +196,7 @@ function main(request, response) {
 			html = [
 				'<p><a href="/items/',index,'/link'+deltas+'"><strong style="text-decoration:underline">',item.title,'</strong></a>',
 				' <a href="',item.link,'" target="_blank">permalink</a></p>',
-				item.description
+				item.content
 			].join('');
 		}
 
