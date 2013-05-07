@@ -4,6 +4,7 @@
 	// extends local.client.Region with some custom behaviors
 	function GrimRegion(id) {
 		local.client.Region.call(this, id);
+		this.cookies = {}; // a map of hostname -> cookie maps
 	}
 	GrimRegion.prototype = Object.create(local.client.Region.prototype);
 	local.client.GrimRegion = GrimRegion;
@@ -62,6 +63,29 @@
 						styling: 'bootstrap'
 					});
 				}
+		}
+	};
+
+	// adds to local's region behaviors:
+	// - cookies with scope=client are stored in the context
+	GrimRegion.prototype.__updateContext = function(request, response) {
+		local.client.Region.prototype.__updateContext.call(this, request, response);
+
+		var authority = this.context.urld.authority;
+		if (!(authority in this.cookies))
+			this.cookies[authority] = {};
+
+		var cookies = local.http.resheader(response, 'cookie');
+		if (cookies) {
+			for (var k in cookies) {
+				if (cookies[k].scope != 'client')
+					continue;
+
+				if (cookies[k] === null)
+					delete this.cookies[authority][k];
+				else
+					this.cookies[authority][k] = cookies[k];
+			}
 		}
 	};
 

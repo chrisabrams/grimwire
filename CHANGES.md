@@ -1,6 +1,11 @@
 Changes
 =======
 
+2013/05/07 pfraze
+
+ - Added 'scope' parameter to cookies with "session" and "client" values
+
+
 2013/05/03 pfraze
 
  - Added inline style sanitization/whitelisting

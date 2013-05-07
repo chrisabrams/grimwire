@@ -56,6 +56,7 @@ function getInterface(request, response) {
 
 	if (/html-deltas/.test(request.headers.accept)) {
 		local.http.resheader(response, 'content-type', 'application/html-deltas+json');
+		setCookies(request, response);
 		response.writeHead(200, 'ok').end({
 			replace: {
 				'#search-results': views.docs(request, resultSet),
@@ -85,8 +86,17 @@ function getInterface(request, response) {
 			);
 		}
 		local.http.resheader(response, 'content-type', 'text/html');
+		setCookies(request, response);
 		response.writeHead(200, 'ok').end(html);
 	}
+}
+
+function setCookies(request, response) {
+	local.http.resheader(response, 'cookie', {
+		q:       { value:request.query.q || '',      query:true, scope:'client' },
+		filter:  { value:request.query.filter || '', query:true, scope:'client' },
+		columns: { value:request.query.columns || 2, query:true, scope:'client' }
+	});
 }
 
 
@@ -190,18 +200,15 @@ function addDoc(doc) {
 
 var views = {
 	filtersButton: function(request) {
-		var query = encodeURIComponent(request.query.q || '');
-		var filter = encodeURIComponent(request.query.filter || '');
 		var ncolumns = (request.query.columns == 1) ? 2 : 1;
 		var active = (request.query.columns != 1) ? 'active' : '';
-		return '<a class="btn btn-mini '+active+'" href="httpl://'+local.worker.config.domain+'?columns='+ncolumns+'&filter='+filter+'&q='+query+'">Filters</a>';
+		return '<a class="btn btn-mini '+active+'" href="httpl://'+local.worker.config.domain+'?columns='+ncolumns+'">Filters</a>';
 	},
 	filtersNav: function(request) {
-		var query = encodeURIComponent(request.query.q || '');
 		var filter = request.query.filter;
-		var html = '<li '+((!filter)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?q='+query+'">Everything</a></li>';
+		var html = '<li '+((!filter)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?filter=">Everything</a></li>';
 		indexedCategories.forEach(function(cat) {
-			html += '<li '+((filter==cat)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?q='+query+'&filter='+encodeURIComponent(cat)+'">'+cat+'</a></li>';
+			html += '<li '+((filter==cat)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?filter='+encodeURIComponent(cat)+'">'+cat+'</a></li>';
 		});
 		return '<ul class="nav nav-pills nav-stacked">'+html+'</ul>';
 	},
@@ -237,8 +244,6 @@ var views = {
 		return [
 			'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'" accept="application/html-deltas+json" data-subscribe="httpl://',local.worker.config.domain,'">',
 				'<input type="text" placeholder="',searchPlaceholder,'..." class="input-xxlarge" name="q" value="'+(request.query.q||'')+'" />',
-				'<input type="hidden" name="filter" value="'+(request.query.filter||'')+'" />',
-				'<input type="hidden" name="columns" value="'+(request.query.columns||'')+'" />',
 				'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
 			'</form>',
 			'<div id="search-results">',views.docs(request, resultSet),'</div>'
