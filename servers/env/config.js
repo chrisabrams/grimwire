@@ -538,7 +538,7 @@
 				{ rel:'up via service', href:'/' },
 				{ rel:'self', href:'/apps' },
 				{ rel:'item', href:'/apps/{title}' },
-				{ rel:'http://grimwire.com/rel/searchables', href:'/apps?schema=grimsearch' }
+				{ rel:'http://grimwire.com/rel/index', href:'/apps?schema=grimsearch' }
 			]
 		};
 		if (/event-stream/.test(request.headers.accept)) {

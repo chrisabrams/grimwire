@@ -159,7 +159,7 @@ function removeSource(sourceUrl) {
 }
 
 function resolveSourceIndex(sourceUrl) {
-	return local.http.navigator(sourceUrl).relation('http://grimwire.com/rel/searchables').resolve();
+	return local.http.navigator(sourceUrl).relation('http://grimwire.com/rel/index').resolve();
 }
 
 function getSourceDocuments(sourceUrl, indexUrl) {
@@ -176,7 +176,7 @@ function getSourceDocuments(sourceUrl, indexUrl) {
 			}
 		},
 		function() {
-			// source doesnt export searchables
+			// source doesnt export index
 			removeSource(url);
 		}
 	);

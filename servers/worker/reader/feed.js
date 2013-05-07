@@ -145,7 +145,7 @@ function main(request, response) {
 		response.setHeader('link', [
 			{ rel:'self', href:'/' },
 			{ rel:'collection', href:'/items', title:'items' },
-			{ rel:'http://grimwire.com/rel/searchables', href:'/items?schema=grimsearch' }
+			{ rel:'http://grimwire.com/rel/index', href:'/items?schema=grimsearch' }
 		]);
 		if (request.query.refresh)
 			clearCache();
