@@ -504,7 +504,7 @@
 						return response.writeHead(422, 'request errors').end();
 					if (/^http/.test(src) === false) {
 						// actual source code - convert to a data uri
-						src = 'data:application/javascript;base64,'+btoa(src);
+						src = 'data:application/javascript,'+src;
 					}
 
 					// find the worker object in the app's config
@@ -984,8 +984,8 @@
 		appCfg: function(cfg, values, errors, msg) {
 			errors = errors || {};
 			msg = (msg) ? '<div class="alert alert-success" data-lifespan="5">'+msg+'</div>' : '';
-			var commonValue = (typeof values.common == 'string') ? values.common : JSON.stringify(values.common,null,4);
-			var workersValue = (typeof values.workers == 'string') ? values.workers : JSON.stringify(values.workers,null,4);
+			var commonValue = ((typeof values.common == 'string') ? values.common : JSON.stringify(values.common,null,4)).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+			var workersValue = ((typeof values.workers == 'string') ? values.workers : JSON.stringify(values.workers,null,4)).replace(/</g,'&lt;').replace(/>/g,'&gt;');
 			return views._appHeader(cfg)+'<hr/>'+
 				((cfg._readonly) ? '<div class="alert alert-info"><i class="icon-info-sign"></i> Host applications are read-only. Click "Copy to Your Applications" to make changes.</div>' : '')+
 				'<form class="form-horizontal" action="httpl://config.env/apps/'+cfg.id+'" method="post">'+
