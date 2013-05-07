@@ -13,7 +13,9 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 	// attach origin information
 	if (request.urld.protocol == 'httpl') {
 		// attach links
-		local.http.reqheader(request, 'link', { href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/storage' });
+		if (!request.headers.link)
+			request.headers.link = [];
+		request.headers.link.push({ href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/storage' });
 		// ^ when multiple peers' servers enter the namespace, this will direct the Worker to the correct user's storage
 
 		var reqCookies = {};
@@ -46,7 +48,7 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 					request.query[k] = (typeof request.query[k] == 'undefined') ? sessionCookies.items[k].value : request.query[k];
 			}
 		}
-		local.http.reqheader(request, 'cookie', reqCookies);
+		request.headers.cookie = reqCookies;
 	}
 
 	// allow request
@@ -60,7 +62,7 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 			console.log(res.status, request.method, request.url);
 
 		// update cookies
-		var cookies = local.http.resheader(res, 'cookie');
+		var cookies = res.headers['set-cookie'];
 		if (cookies) {
 			var storedCookies = storageServer.getItem(request.urld.host, '.cookies') || {id:'.cookies',items:{}};
 			if (!storedCookies.items || typeof storedCookies.items != 'object')

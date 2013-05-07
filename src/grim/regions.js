@@ -75,7 +75,7 @@
 		if (!(authority in this.cookies))
 			this.cookies[authority] = {};
 
-		var cookies = local.http.resheader(response, 'cookie');
+		var cookies = response.headers['set-cookie'];
 		if (cookies) {
 			for (var k in cookies) {
 				if (cookies[k].scope != 'client')

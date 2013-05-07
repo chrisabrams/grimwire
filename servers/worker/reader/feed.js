@@ -142,9 +142,11 @@ function buildMainInterface() {
 
 function main(request, response) {
 	if (/HEAD|GET/.test(request.method) && request.path == '/') {
-		local.http.resheader(response, 'link', { rel:'self', href:'/' });
-		local.http.resheader(response, 'link', { rel:'collection', href:'/items', title:'items' });
-		local.http.resheader(response, 'link', { rel:'http://grimwire.com/rel/searchables', href:'/items?schema=grimsearch' });
+		response.setHeader('link', [
+			{ rel:'self', href:'/' },
+			{ rel:'collection', href:'/items', title:'items' },
+			{ rel:'http://grimwire.com/rel/searchables', href:'/items?schema=grimsearch' }
+		]);
 		if (request.query.refresh)
 			clearCache();
 		getAllFeeds(); // initiate the fetch, but send down the interface now
@@ -153,8 +155,10 @@ function main(request, response) {
 		return;
 	}
 	if (/HEAD|GET/.test(request.method) && request.path == '/items') {
-		local.http.resheader(response, 'link', { rel:'self', href:'/items' });
-		local.http.resheader(response, 'link', { rel:'up via', href:'/' });
+		response.setHeader('link', [
+			{ rel:'self', href:'/items' },
+			{ rel:'up via', href:'/' }
+		]);
 		if (/event-stream/.test(request.headers.accept)) {
 			feedBroadcast.addStream(response);
 			response.writeHead(200, 'ok', {'content-type':'text/event-stream'});
@@ -188,9 +192,11 @@ function main(request, response) {
 	}
 	var match = RegExp('^/items/([\\d]+)/(desc|link)/?','i').exec(request.path);
 	if (match && request.method == 'GET') {
-		local.http.resheader(response, 'link', { rel:'self', href:request.path });
-		local.http.resheader(response, 'link', { rel:'up', href:'/items' });
-		local.http.resheader(response, 'link', { rel:'via', href:'/' });
+		response.setHeader('link', [
+			{ rel:'self', href:request.path },
+			{ rel:'up', href:'/items' },
+			{ rel:'via', href:'/' }
+		]);
 
 		var index = +(match[1]);
 		var item = cachedItems[index];

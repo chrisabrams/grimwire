@@ -42,7 +42,7 @@ function main(request, response) {
 }
 
 function getInterface(request, response) {
-	local.http.resheader(response, 'link', { rel:'self', href:'/' });
+	response.setHeader('link', [{ rel:'self', href:'/' }]);
 
 	if (request.method == 'HEAD')
 		return response.writeHead(200, 'ok').end();
@@ -55,8 +55,8 @@ function getInterface(request, response) {
 		Object.keys(indexedDocs);
 
 	if (/html-deltas/.test(request.headers.accept)) {
-		local.http.resheader(response, 'content-type', 'application/html-deltas+json');
 		setCookies(request, response);
+		response.setHeader('content-type', 'application/html-deltas+json');
 		response.writeHead(200, 'ok').end({
 			replace: {
 				'#search-results': views.docs(request, resultSet),
@@ -65,7 +65,7 @@ function getInterface(request, response) {
 			}
 		});
 	} else if (/event-stream/.test(request.headers.accept)) {
-		local.http.resheader(response, 'content-type', 'text/event-stream');
+		response.setHeader('content-type', 'text/event-stream');
 		response.writeHead(200, 'ok');
 		indexBroadcast.addStream(response);
 	} else {
@@ -85,14 +85,14 @@ function getInterface(request, response) {
 				'</div>'
 			);
 		}
-		local.http.resheader(response, 'content-type', 'text/html');
 		setCookies(request, response);
+		response.setHeader('content-type', 'text/html');
 		response.writeHead(200, 'ok').end(html);
 	}
 }
 
 function setCookies(request, response) {
-	local.http.resheader(response, 'cookie', {
+	response.setHeader('set-cookie', {
 		q:       { value:request.query.q || '',      query:true, scope:'client' },
 		filter:  { value:request.query.filter || '', query:true, scope:'client' },
 		columns: { value:request.query.columns || 2, query:true, scope:'client' }
