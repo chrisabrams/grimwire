@@ -167,7 +167,7 @@ function main(request, response) {
 						icon: 'list',
 						category: 'Blog Posts',
 						title: item.title,
-						desc: item.description,
+						desc: item.content,
 						href: item.link,
 						target: '_blank'
 					});
