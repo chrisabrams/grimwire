@@ -1,0 +1,14 @@
+{
+	"id": "docs",
+	"title": "Docs",
+	"icon": "info-sign",
+	"startpage": "httpl://main.docs.usr",
+	"common": {},
+	"workers": [
+		{
+			"id": "main",
+			"title": "Docs Main",
+			"src": "apps/docs/main.js"
+		}
+	]
+}
