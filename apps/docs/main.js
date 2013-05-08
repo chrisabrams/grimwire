@@ -50,7 +50,7 @@ var Documentation = {
 	local: {
 		_title: 'Local API',
 		_template: false,
-		promise: { _title:'Promise' },
+		promises: { _title:'Promises' },
 		http: { _title:'HTTP' },
 		worker: { _title:'Worker' },
 		client: { _title:'Client' },
