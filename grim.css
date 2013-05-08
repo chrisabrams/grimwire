@@ -5,3 +5,9 @@ a[target="_top"], a[target="_blank"] {
   padding-left: 16px;
 }
 #grimwire blockquote p { font-size:14px; line-height:20px; }
+
+/* minor improvements */
+.nav-list > li > ul > .active > a,
+.nav-list > li > ul > .active > a:hover {
+  font-weight: bold;
+}

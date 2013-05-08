@@ -90,7 +90,7 @@ local.env.setRegionPostProcessor(function(el) {
 	lifespanPostProcess(el);
 	grimLayoutPostProcess(el);
 	$("[data-toggle=nav]", el).on('request', function(e) {
-		$('.active', $(this).parent().parent()).removeClass('active');
+		$('.active', $(this).parents('.nav')[0]).removeClass('active');
 		$(this).parent().addClass('active');
 	});
 	$(el).on('request', function(e) {

@@ -98,16 +98,17 @@
 		var el = document.getElementById(request.target);
 		if (el) {
 			if (el.dataset.grimLayout) {
-				var subEl;
+				var subEl, region;
 				var behavior = el.dataset.grimLayout.split(' ')[0];
 				switch (behavior) {
 					default:
 						console.error('Unknown layout behavior "'+behavior+'" specified in #'+el.id+', defaulting to "replace".');
 					case 'replace': // when targeted, navigate the only contained region
 					case 'stack': // :DEBUG: until implemented, treat stack as replace
-						subEl = el.querySelector('.client-region');
-						if (subEl)
-							return subEl;
+						region = local.env.getClientRegion(el.id);
+						if (region)
+							return el;
+						throw "Element with data-grim-layout set to 'replace' should be a client region, but isn't.";
 					case 'flow': // when targeted, create a new region in the container
 						subEl = makeClientRegionEl();
 						local.env.addClientRegion(subEl.id);
@@ -131,8 +132,8 @@
 			var params = container.dataset.grimLayout.split(' ');
 			var initUrl = params[1];
 			if (initUrl) {
-				var el = makeClientRegionEl(container);
-				var region = new local.client.GrimRegion(el.id);
+				prepClientRegionEl(container);
+				var region = new local.client.GrimRegion(container.id);
 				local.env.addClientRegion(region);
 				region.dispatchRequest(initUrl);
 			}
@@ -143,9 +144,13 @@
 	// helpers
 	// -
 	var __crid_counter=100;
+	function prepClientRegionEl(el) {
+		if (!el.id)
+			el.id = 'client-region-'+__crid_counter++;
+	}
 	function makeClientRegionEl(parentEl) {
 		var el = document.createElement('div');
-		el.id = 'client-region-'+__crid_counter++;
+		prepClientRegionEl(el);
 		parentEl.appendChild(el);
 		return el;
 	}
