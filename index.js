@@ -145,11 +145,6 @@ function clampSpacingStyles(value) {
 	return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
 		var n = +v;
 		if (n < 0) return 0;
-		if (unit == 'em') {
-			if (n > 2) { return '2em'; }
-			return org;
-		}
-		if (n > 20) { return '20'+unit; }
 		return org;
 	});
 }

@@ -1,0 +1,14 @@
+{
+	"id": "intro",
+	"title": "Intro",
+	"icon": "info-sign",
+	"startpage": "httpl://main.intro.usr",
+	"common": {},
+	"workers": [
+		{
+			"id": "main",
+			"title": "Intro Main",
+			"src": "apps/intro/main.js"
+		}
+	]
+}

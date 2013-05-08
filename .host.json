@@ -1,5 +1,6 @@
 {
 	"applications":[
+		"apps/intro.json",
 		"apps/index.json",
 		"apps/rss.json"
 	]
