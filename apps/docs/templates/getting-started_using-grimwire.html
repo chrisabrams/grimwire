@@ -1,0 +1,16 @@
+<div class="span6">
+	<h2 class="page-header">Using Grimwire <small>Getting Started</small></h2>
+
+	<p>The nightly build of Grimwire is kept active at <a href="http://grimwire.github.io/grimwire/" target="_blank">http://grimwire.github.io/grimwire/</a>. To host your own deployment:</p>
+
+	<pre>git clone https://github.com/grimwire/grimwire.git grimwire
+cd grimwire
+python -m SimpleHTTPServer
+# open http://localhost:8000 in your browser</pre>
+
+	<p>If you plan on developing Grimwire's core libraries, you'll need to clone its submodules (the Local API) and run the build scripts. <a href="httpl://main.docs.usr/getting-started/building" type="application/html-deltas+json" title="Building Grimwire">Read the "Building" docs for detailed instructions</a>. Most developers, however (including service hosts) can use the precompiled javascript included in the Grimwire repository by default.</p>
+
+	<h3>How to Use Grimwire</h3>
+
+	<p>Grimwire is not a typical Javascript framework. In fact, it's more accurate to view it as a platform, like Wordpress (but without the backend). We recommend that you serve it statically at the root URL of your service, then host other resources at sub-URIs to 
+</div>

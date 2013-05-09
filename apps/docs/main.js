@@ -30,6 +30,11 @@ var Documentation = {
 		configuration: { _title:'Configuration' },
 		'worker-servers': { _title:'Worker Servers' },
 		'client-regions': { _title:'Client Regions' },
+		'page-env': {
+			_title: 'Page Environment',
+			'storage-server': { _title:'storage.env' },
+			'config-server': { _title:'config.env' }
+		},
 		'sessions-and-security': { _title:'Sessions &amp; Security' },
 		styling: { _title:'Styling' }
 	},
@@ -43,8 +48,10 @@ var Documentation = {
 		'data-apis': {
 			_title: 'Data-* APIs',
 			bootstrap: { _title:'Bootstrap Components' },
-			subscribe: { _title:'subscribe' },
-			'grim-layout': { _title:'grim-layout' }
+			subscribe: { _title:'Subscribe' },
+			'grim-layout': { _title:'Grim-Layout' },
+			value: { _title:'Value-*Of' },
+			lifepsan: { _title:'Lifespan' }
 		}
 	},
 	local: {
@@ -68,7 +75,7 @@ function main(request, response) {
 		if (/html-deltas/.test(request.headers.accept)) {
 			var section = doc.path[0];
 			var deltas = { addClass:{}, removeClass:{} };
-			deltas.addClass['#docs-nav .item:not(.'+section+')'] = 'hidden';
+			// deltas.addClass['#docs-nav .item:not(.'+section+')'] = 'hidden';
 			deltas.removeClass['#docs-nav .item.'+section] = 'hidden';
 
 			if (doc.desc._template !== false)
