@@ -73,13 +73,18 @@ function main(request, response) {
 			return response.writeHead(404, 'not found').end();
 
 		if (/html-deltas/.test(request.headers.accept)) {
+			var url = 'httpl://'+config.domain+request.path;
 			var section = doc.path[0];
 			var deltas = { addClass:{}, removeClass:{} };
 			// deltas.addClass['#docs-nav .item:not(.'+section+')'] = 'hidden';
 			deltas.removeClass['#docs-nav .item.'+section] = 'hidden';
+			if (doc.desc._template !== false) {
+				deltas.removeClass['#docs-nav li:not([value="'+url+'"])'] = 'active';
+				deltas.addClass['#docs-nav li[value="'+url+'"]'] = 'active';
+			}
 
 			if (doc.desc._template !== false)
-				deltas.navigate = { '#docs-content':'httpl://'+config.domain+request.path };
+				deltas.navigate = { '#docs-content':url };
 
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 			response.end(deltas);
@@ -142,10 +147,10 @@ function renderSidenav() {
 		// section header
 		var active = (first) ? 'active' : '';
 		var muted = (section._template === false) ? 'class="muted"' : '';
-		var toggle = (section._template !== false) ? 'data-toggle="nav"' : '';
+		var url = 'httpl://'+config.domain+'/'+sectionSlug;
 		sidenavHtml += '<li class="divider"></li>';
-		sidenavHtml += '<li class="nav-header '+active+'">';
-		sidenavHtml += '<a '+muted+' href="httpl://'+config.domain+'/'+sectionSlug+'" type="application/html-deltas+json" '+toggle+'>';
+		sidenavHtml += '<li class="nav-header '+active+'" value="'+url+'">';
+		sidenavHtml += '<a '+muted+' href="'+url+'" type="application/html-deltas+json">';
 		sidenavHtml += section._title || sectionSlug;
 		sidenavHtml += '</a></li>';
 
@@ -163,7 +168,8 @@ function renderSidenavSection(sectionSlug, section) {
 		var item = section[itemSlug];
 		if (item._nav === false) continue;
 
-		sectionHtml += '<li class="'+sectionSlug+' item hidden"><a href="httpl://'+config.domain+'/'+sectionSlug+'/'+itemSlug+'" type="application/html-deltas+json" data-toggle="nav">';
+		var url = 'httpl://'+config.domain+'/'+sectionSlug+'/'+itemSlug;
+		sectionHtml += '<li class="'+sectionSlug+' item hidden" value="'+url+'"><a href="'+url+'" type="application/html-deltas+json">';
 		sectionHtml += item._title || itemSlug;
 		sectionHtml += '</a>';
 		sectionHtml += renderSidenavSubitems(sectionSlug, itemSlug, item);
@@ -180,9 +186,10 @@ function renderSidenavSubitems(sectionSlug, itemSlug, item) {
 		var subitem = item[subitemSlug];
 		if (subitem._nav === false) continue;
 
+		var url = 'httpl://'+config.domain+'/'+sectionSlug+'/'+itemSlug+'/'+subitemSlug;
 		if (first)
 			subitemHtml += '<ul>';
-		subitemHtml += '<li><a href="httpl://'+config.domain+'/'+sectionSlug+'/'+itemSlug+'/'+subitemSlug+'" type="application/html-deltas+json" data-toggle="nav">';
+		subitemHtml += '<li value="'+url+'"><a href="'+url+'" type="application/html-deltas+json" data-toggle="nav">';
 		subitemHtml += subitem._title || subitemSlug;
 		subitemHtml += '</a></li>';
 		first = false;
