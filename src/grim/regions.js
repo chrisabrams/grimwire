@@ -9,9 +9,21 @@
 	GrimRegion.prototype = Object.create(local.client.Region.prototype);
 	local.client.GrimRegion = GrimRegion;
 
+	// helps determine if two regions share the same owning application
+	GrimRegion.prototype.hasSameOrigin = function(region) {
+		if (!this.context.urld || !region.context.urld)
+			return false;
+		// origin is determined by primary domain and TLD
+		var mine = this.context.urld.host.split('.').slice(-2).join('.');
+		var theirs = region.context.urld.host.split('.').slice(-2).join('.');
+		return mine == theirs;
+	};
+
 	// adds to local's region behaviors:
-	// - destroy region if an empty 200
+	// - destroy region if an empty 200 :TODO: deciding this behavior
+	// - render notifications for responses with no body
 	GrimRegion.prototype.__handleResponse = function(e, request, response) {
+		var containerEl = this.element;
 		var requestTarget = this.__chooseRequestTarget(e, request);
 		if (!requestTarget)
 			return;
@@ -19,6 +31,10 @@
 		var targetRegion = local.env.getClientRegion(requestTarget.id);
 		if (targetRegion) {
 			targetRegion.__updateContext(request, response);
+
+			// if the target is owned by the app, it's safe to allow mutations
+			if (targetRegion.hasSameOrigin(this))
+				containerEl = requestTarget;
 
 			// :TODO: is there a better way to handle this?
 			/*if (requestTarget.id != 'layout' && !response.body && response.status == 200) {
@@ -47,10 +63,9 @@
 				break;
 			default:
 				if (response.headers['content-type']) {
-					// replace target innards
-					local.client.renderResponse(requestTarget, this.element, response);
+					local.client.renderResponse(requestTarget, containerEl, response);
 				} else {
-					// render a notice of the response
+					// render a notice
 					var noticeType = 'success';
 					if (response.status >= 400)
 						noticeType = 'info';
@@ -67,7 +82,7 @@
 	};
 
 	// adds to local's region behaviors:
-	// - cookies with scope=client are stored in the context
+	// - cookies with scope=client are stored in the client
 	GrimRegion.prototype.__updateContext = function(request, response) {
 		local.client.Region.prototype.__updateContext.call(this, request, response);
 
@@ -108,7 +123,8 @@
 						region = local.env.getClientRegion(el.id);
 						if (region)
 							return el;
-						throw "Element with data-grim-layout set to 'replace' should be a client region, but isn't.";
+						console.error("Element with data-grim-layout set to 'replace' should be a client region, but isn't. This means Grimwire did something wrong. Dropping response.");
+						return null;
 					case 'flow': // when targeted, create a new region in the container
 						subEl = makeClientRegionEl();
 						local.env.addClientRegion(subEl.id);
@@ -130,13 +146,13 @@
 		$('[data-grim-layout]', el).each(function(i, container) {
 			// if an initial URL is specified, create a client region and populate with response of a GET to that url
 			var params = container.dataset.grimLayout.split(' ');
+			prepClientRegionEl(container);
+			var region = new local.client.GrimRegion(container.id);
+			local.env.addClientRegion(region);
+
 			var initUrl = params[1];
-			if (initUrl) {
-				prepClientRegionEl(container);
-				var region = new local.client.GrimRegion(container.id);
-				local.env.addClientRegion(region);
+			if (initUrl)
 				region.dispatchRequest(initUrl);
-			}
 		});
 	};
 
