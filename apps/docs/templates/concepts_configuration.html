@@ -1,0 +1,62 @@
+<h2 class="page-header">Configuration <small>Key Concepts</small></h2>
+<div class="row-fluid">
+	<div class="span6">
+		<blockquote class="muted">In Grimwire, configs are used to define applications and introduce user settings.</blockquote>
+		<p>The host sets default applications with <code>.host.json</code>. The user can choose to add separate app configs, but their applications are kept separate to avoid merging complexity.</p>
+		<p>Applications are JSON files which specify one or more Web Worker to comprise the app.</p>
+		<blockquote class="muted">The schemas for <code>.host.json</code> and application configs are explained in <a href="httpl://{{domain}}/getting-started/overview" type="application/html-deltas+json" target="docs-layout" title="Intro Overview">the Intro Overview</a>.</blockquote>
+		<p>User settings work separately. They are specified per-worker and given to the worker under <code>local.worker.config.user</code>. The worker can then decide how to merge user-settings with their application settings. (As a result, user settings can be defined for host and user applications.)</p>
+	</div>
+	<div class="span6">
+		<pre>var config = local.worker.config;
+var username = config.user.username || config.username;
+var profcolors = _.extend({}, config.profcolors, config.user.profcolors);
+</pre>
+		<p class="muted">An example of a worker merging user settings with application settings</p>
+	</div>
+</div>
+
+<h3>Discoverability</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>When possible, applications should use <a href="http://en.wikipedia.org/wiki/HATEOAS" target="_blank" title="HATEOAS">Hypermedia</a> tools to coordinate with other applications. This saves users and source-files from manually setting target URLs.</p>
+		<p>Grimwire uses the <a href="http://www.w3.org/wiki/LinkHeader" target="_blank" title="Link Header">Link Header</a> to do programmatic navigation. Read about the <a href="httpl://{{domain}}/toolset/navigator" type="application/html-deltas+json" target="docs-layout" title="Navigator">Navigator</a> for more information.</p>
+		<p>To find other applications in the page's environment, workers can issue GET requests to <code>httpl://config.env/apps</code> for an object mapping app ids to their configurations. You can use the <code>startpage</code> value to find the initial URL of an app.</p>
+		<blockquote class="muted"><code>httpl://config.env/apps</code> also serves a "text/event-stream" which emits an "update" event when apps are added or removed.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>local.http.navigator(sourceUrl)
+    .relation('http://grimwire.com/rel/index')
+    .resolve();</pre>
+		<p class="muted">The search application's technique for finding indexable content on a server</p>
+		<pre>response.setHeader('link', [
+  { rel:'self', href:'/' },
+  { rel:'collection', href:'/items', title:'items' },
+  { rel:'http://grimwire.com/rel/index', href:'/items?schema=grimsearch' }
+]);</pre>
+		<p class="muted">The rss reader's exported links at its root resource</p>
+	</div>
+</div>
+
+<h3>User Config Interfaces</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>User settings can be defined within the application's UI. However, for simplicity, the "Applications" interface embeds interfaces from the <code>/.grim/config</code> resource of each worker.</p>
+		<p>To update the user settings, a worker can PUT json to <code>httpl://config.env/workers/{domain}</code>. Doing so will overwrite the current settings in <code>local.worker.config.user</code>, then trigger a reload of the worker. Because all requests are asynchronous, a worker can dispatch this request then finish responding.</p>
+	</div>
+	<div class="span6">
+		<pre>if (request.method == 'POST') {
+  feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?
+    request.body.sources.split("\n").filter(function(i) { return i; }) :
+    [];
+  local.http.dispatch({
+    method: 'put',
+    url: 'httpl://config.env/workers/'+local.worker.config.domain,
+    body: { sources:feedSources },
+    headers: { 'content-type':'application/json' }
+  });
+  msg = '&lt;div class="alert alert-success" data-lifespan="5"&gt;Updated&lt;/div&gt;';
+}</pre>
+		<p class="muted">How the rss feed worker updates its user settings</p>
+	</div>
+</div>

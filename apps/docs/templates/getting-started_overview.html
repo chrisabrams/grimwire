@@ -35,12 +35,13 @@ python -m SimpleHTTPServer
 <div class="row-fluid">
 	<div class="span6">
 		<p>Applications are created by one or more Web Workers in a JSON configuration. All active applications are persistently open, and each is given a link in the top navigation bar. Where that link goes is determined by <code>startpage</code>.</p>
-		<p>Every application must specify a unique <code>id</code>. In addition to app-management, the <code>id</code> is used to build domains for the workers. These domains follow the scheme of <code>httpl://[worker id].[app id].usr</code>.</p>
+		<p>Every application must specify a unique <code>id</code>. In addition to app-management, the <code>id</code> is used to build domains for the workers. These domains follow the scheme of <code>httpl://{worker id}.{app id}.usr</code>.</p>
 		<blockquote class="muted">If an app id collides, it will have a number appended.</blockquote>
 		<p>For use in the UI, every app should specify a <code>title</code> and <code>icon</code>. The <code>icon</code> is optional, but recommended. Its value should map to <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Bootstrap's suite of Glyphicons</a>, without the "icon-" prefix.</p>
 		<p>Workers are specified in an array of objects which must include a unique <code>id</code>, a <code>title</code>, and a <code>src</code> url.</p>
 		<blockquote class="muted">It's possible to use a "data-uri" for the <code>src</code>, allowing you to embed the javascript directly into the JSON file.</blockquote>
-		<p>Every worker has the optional <code>common</code> object mixed into its config. All values in the worker's config are given to the worker program under <code>local.worker.config</code>.</p>
+		<p>Every worker has the optional <code>common</code> object mixed into its config, as well as some values from the application's config. All values in the worker's config are given to the worker program under <code>local.worker.config</code>.</p>
+		<blockquote class="muted">The additional values from the application config are <code>appId</code>, <code>appTitle</code>, <code>appIcon</code>, and <code>domain</code>. Be sure to use <code>domain</code> whenever linking to the worker's resources.</blockquote>
 	</div>
 	<div class="span6">
 		<pre>{
