@@ -1,0 +1,118 @@
+<h2 class="page-header">Intro Overview <small>Getting Started</small></h2>
+<div class="row-fluid">
+	<div class="span6">
+
+		<blockquote class="muted">This article will get you started using Grimwire and building applications by stepping through the key concepts.</blockquote>
+
+		<p>Start by cloning a copy of grim and hosting it statically with Python's SimpleHTTPServer.</p>
+		<p>When you're ready to deploy, you can host Grimwire with Apache or nginx, or include grim in your server's public assets. All paths are relative so you can deploy grim at the root or at a sub-url.</p>
+
+		<blockquote class="muted">If you plan to work on core libraries, you'll need to clone submodules (the Local API) and run the build scripts. <a href="httpl://main.docs.usr/getting-started/building" type="application/html-deltas+json" target="docs-layout" title="Building Grimwire">Read the "Building" docs for detailed instructions</a>.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>git clone https://github.com/grimwire/grimwire.git grimwire
+cd grimwire
+python -m SimpleHTTPServer
+# open http://localhost:8000 in your browser</pre>
+		<p class="muted">Cloning and hosting Grimwire</p>
+	</div>
+</div>
+
+<h3>Hosting</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>When Grimwire is first loaded, it GETs the <code>.host.json</code> file at its root to find out what software to load. Those applications can not be removed or reconfigured by the user, but they can be disabled and/or copied for editing.</p>
+		<p>Copied applications and their configuration live in the user's <code>sessionStorage</code>. Their application choices override <code>.host.json</code>.</p>
+		<blockquote class="muted">User settings are controlled in the "Applications" interface at the top right. If you haven't seen it yet, take a moment to open Applications and look around.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>{ "applications": ["apps/docs.json", "apps/search.json", "apps/rss.json"] }</pre>
+		<p class="muted">An example .host.json file</p>
+	</div>
+</div>
+
+<h3>Creating an Application</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>Applications are created by one or more Web Workers in a JSON configuration. All active applications are persistently open, and each is given a link in the top navigation bar. Where that link goes is determined by <code>startpage</code>.</p>
+		<p>Every application must specify a unique <code>id</code>. In addition to app-management, the <code>id</code> is used to build domains for the workers. These domains follow the scheme of <code>httpl://[worker id].[app id].usr</code>.</p>
+		<blockquote class="muted">If an app id collides, it will have a number appended.</blockquote>
+		<p>For use in the UI, every app should specify a <code>title</code> and <code>icon</code>. The <code>icon</code> is optional, but recommended. Its value should map to <a href="http://twitter.github.io/bootstrap/base-css.html#icons" target="_blank">Bootstrap's suite of Glyphicons</a>, without the "icon-" prefix.</p>
+		<p>Workers are specified in an array of objects which must include a unique <code>id</code>, a <code>title</code>, and a <code>src</code> url.</p>
+		<blockquote class="muted">It's possible to use a "data-uri" for the <code>src</code>, allowing you to embed the javascript directly into the JSON file.</blockquote>
+		<p>Every worker has the optional <code>common</code> object mixed into its config. All values in the worker's config are given to the worker program under <code>local.worker.config</code>.</p>
+	</div>
+	<div class="span6">
+		<pre>{
+  "id": "rss",
+  "title": "Reader",
+  "icon": "list",
+  "startpage": "httpl://feed.rss.usr",
+  "common": {
+    "storageHost": "httpl://storage.env"
+  },
+  "workers": [
+    {
+      "id": "feed",
+      "title": "Feed Interface",
+      "src": "servers/worker/reader/feed.js"
+    },
+    {
+      "id": "rssproxy",
+      "title": "RSS Feed Proxy",
+      "src": "servers/worker/reader/rssproxy.js"
+    }
+  ]
+}</pre>
+		<p class="muted">An example app json file</p>
+	</div>
+</div>
+
+<h3>Building the Workers</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>Grimwire's Workers are Web servers with no direct access to the document. Instead, they respond to requests which populate the page and serve other programs.</p>
+		<p>Every worker must define a <code>main</code> function which takes a <code>request</code> and <code>response</code> object. This function is called on every request, and must always send and close the response.</p>
+		<p>The <a href="httpl://{{domain}}/toolset/api" type="application/html-deltas+json" target="docs-layout">Local API</a> provides a promises-based toolset for HTTP and configuration. The Worker must use <code>local</code> instead of <code>XMLHttpRequest</code>, as Grimwire nullifies XHR and other APIs which untrusted code might exploit. Local also provides the <code>require()</code> function, which uses syncronous XHR to emulate the CommonJS spec.</p>
+		<blockquote class="muted">Any javascript file can use <code>module.exports</code> to specify its exports. If the program requires a non-js file, it will receive a string with the file's contents.</blockquote>
+		<p>All workers are stateless, and may be shut down or restarted at any time (without notice). This simplifies reconfiguration. Any persistent data should be stored in external services, such as <code><a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout">storage.env</a></code>.</p>
+	</div>
+	<div class="span6">
+		<pre>var marked = require('vendor/marked.js');
+marked.setOptions({ gfm: true, tables: true });
+
+function main(request, response) {
+  local.http.dispatch({
+    method  : 'get',
+    url     : local.worker.config.baseUrl + request.path,
+    headers : { accept:'text/plain' }
+  }).succeed(function(res) {
+    response.writeHead(200, 'ok', { 'content-type':'text/html' });
+    response.end(marked(res.body||''));
+  }).fail(function() {
+    response.writeHead(502, 'bad gateway').end();
+  });
+}</pre>
+		<p class="muted">A markdown-conversion proxy</p>
+	</div>
+</div>
+
+<h3>User Interfaces</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>UIs in Grimwire never use client-side code from the applications, and only support limited inline styling.</p>
+		<blockquote class="muted">This is because client-side code and styles can not be sandboxed and composed effectively.</blockquote>
+		<p>Instead, Grimwire defines a number of behaviors for exerting real-time control in the server, and the host provides a set of styles and widgets to create rich experiences. By default, Grimwire ships with <a href="http://getbootstrap.com" target="_blank">Twitter Bootstrap</a>'s styles and components.</p>
+		<p>Interfaces in Grimwire are divided into multiple "client regions," which are elements that browse HTTP resources independently of their parents. They behave much like iframes, and are used to make security decisions.</p>
+		<blockquote class="muted">Applications can create embedded client regions with the <code><a href="httpl://{{domain}}/toolset/data-apis/grim-layout" type="application/html-deltas+json" target="docs-layout">data-grim-layout</a></code> directive.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>&lt;div class="row-fluid" id="docs-layout" data-grim-layout="replace"&gt;
+  &lt;div class="span2"&gt;
+    &lt;ul id="docs-nav" class="nav nav-list"&gt;{sidenav}&lt;/ul&gt;
+  &lt;/div&gt;
+  &lt;div id="docs-content" class="span10" data-grim-layout="replace httpl://{domain}/intro"&gt;&lt;/div&gt;
+&lt;/div&gt;</pre>
+		<p class="muted">The layout template for the docs app</p>
+	</div>
+</div>

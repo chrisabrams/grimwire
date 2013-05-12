@@ -11,7 +11,7 @@
 
 	// helps determine if two regions share the same owning application
 	GrimRegion.prototype.hasSameOrigin = function(region) {
-		if (!this.context.urld || !region.context.urld)
+		if (!this.context.urld || !this.context.urld.host || !region.context.urld || !region.context.urld.host)
 			return false;
 		// origin is determined by primary domain and TLD
 		var mine = this.context.urld.host.split('.').slice(-2).join('.');

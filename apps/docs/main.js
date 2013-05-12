@@ -6,65 +6,7 @@ var config = local.worker.config;
 // - if no `_template` is defined, will try to find one using a generated slug
 // - if `_template` is set to false, clicking the nav item will not update the content view
 // - if `_nav` is set to fase, the document will not be included in the sidenav
-// :NOTE: this could be moved into configuration
-var Documentation = {
-	_template: 'layout',
-	_template_vars: { 'sidenav':renderSidenav },
-	intro: {
-		_title: 'Introduction',
-		structured: { _nav:false },
-		'user-driven': { _nav:false },
-		'multi-threaded': { _nav:false },
-		decentralized: { _nav:false }
-	},
-	'getting-started': {
-		_title: 'Getting Started',
-		_template: false,
-		'using-grimwire': { _title:'Using Grimwire' },
-		building: { _title:'Building' },
-		contributing: { _title:'Contributing' }
-	},
-	applications: {
-		_title: 'Applications',
-		_template: false,
-		configuration: { _title:'Configuration' },
-		'worker-servers': { _title:'Worker Servers' },
-		'client-regions': { _title:'Client Regions' },
-		'page-env': {
-			_title: 'Page Environment',
-			'storage-server': { _title:'storage.env' },
-			'config-server': { _title:'config.env' }
-		},
-		'sessions-and-security': { _title:'Sessions &amp; Security' },
-		styling: { _title:'Styling' }
-	},
-	toolset: {
-		_title: 'Toolset',
-		_template: false,
-		navigator: { _title:'Navigator' },
-		sses: { _title:'Server-Sent Events' },
-		'cookies-and-storage': { _title:'Cookies &amp; Storage' },
-		'html-deltas': { _title:'HTML Deltas' },
-		'data-apis': {
-			_title: 'Data-* APIs',
-			bootstrap: { _title:'Bootstrap Components' },
-			subscribe: { _title:'Subscribe' },
-			'grim-layout': { _title:'Grim-Layout' },
-			value: { _title:'Value-*Of' },
-			lifepsan: { _title:'Lifespan' }
-		}
-	},
-	local: {
-		_title: 'Local API',
-		_template: false,
-		promises: { _title:'Promises' },
-		http: { _title:'HTTP' },
-		worker: { _title:'Worker' },
-		client: { _title:'Client' },
-		env: { _title:'Environment' },
-		util: { _title:'Utilities' }
-	}
-};
+var Documentation = config.usr.documentation || config.documentation;
 
 function main(request, response) {
 	if (request.method == 'GET') {
@@ -74,17 +16,19 @@ function main(request, response) {
 
 		if (/html-deltas/.test(request.headers.accept)) {
 			var url = 'httpl://'+config.domain+request.path;
-			var section = doc.path[0];
 			var deltas = { addClass:{}, removeClass:{} };
-			// deltas.addClass['#docs-nav .item:not(.'+section+')'] = 'hidden';
-			deltas.removeClass['#docs-nav .item.'+section] = 'hidden';
+
+			// update active nav
 			if (doc.desc._template !== false) {
 				deltas.removeClass['#docs-nav li:not([value="'+url+'"])'] = 'active';
 				deltas.addClass['#docs-nav li[value="'+url+'"]'] = 'active';
 			}
 
+			// change content
 			if (doc.desc._template !== false)
 				deltas.navigate = { '#docs-content':url };
+
+			console.log(deltas);
 
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 			response.end(deltas);
@@ -121,11 +65,10 @@ function docInterface(doc, path, request) {
 			var templateName = doc._template || request.path.slice(1).replace(/\//g, '_');
 			var template = require('templates/' + templateName + '.html') || '<h2>Error</h2><p>Template not found at <code>templates/'+templateName+'.html</code></p>';
 			template = template.replace(/\{\{domain\}\}/g, config.domain);
+			template = template.replace(/\{\{sidenav\}\}/g, renderSidenav());
 			if (doc._template_vars) {
 				for (var k in doc._template_vars) {
 					var v = doc._template_vars[k];
-					if (typeof v == 'function')
-						v = v();
 					template = template.replace(RegExp('{{'+k+'}}', 'g'), v);
 				}
 			}
@@ -133,6 +76,9 @@ function docInterface(doc, path, request) {
 		}
 	};
 }
+
+// ---From here on down is sidenav rendering---
+// :NOTE: might be simplified with templating
 
 var sidenavHtml = null;
 function renderSidenav() {
@@ -169,7 +115,7 @@ function renderSidenavSection(sectionSlug, section) {
 		if (item._nav === false) continue;
 
 		var url = 'httpl://'+config.domain+'/'+sectionSlug+'/'+itemSlug;
-		sectionHtml += '<li class="'+sectionSlug+' item hidden" value="'+url+'"><a href="'+url+'" type="application/html-deltas+json">';
+		sectionHtml += '<li value="'+url+'"><a href="'+url+'" type="application/html-deltas+json">';
 		sectionHtml += item._title || itemSlug;
 		sectionHtml += '</a>';
 		sectionHtml += renderSidenavSubitems(sectionSlug, itemSlug, item);

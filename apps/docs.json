@@ -8,7 +8,59 @@
 		{
 			"id": "main",
 			"title": "Docs Main",
-			"src": "apps/docs/main.js"
+			"src": "apps/docs/main.js",
+			"documentation": {
+				"_template": "layout",
+				"_template_vars": {},
+				"intro": {
+					"_title": "Introduction",
+					"status": { "_title": "Project Status" },
+					"credits": { "_title": "Credits" },
+					"structured": { "_nav": false },
+					"user-driven": { "_nav": false },
+					"multi-threaded": { "_nav": false },
+					"decentralized": { "_nav": false }
+				},
+				"getting-started": {
+					"_title": "Getting Started",
+					"_template": false,
+					"overview": { "_title": "Intro Overview" },
+					"building": { "_title": "Building" },
+					"contributing": { "_title": "Contributing" }
+				},
+				"concepts": {
+					"_title": "Key Concepts",
+					"_template": false,
+					"configuration": { "_title": "Configuration" },
+					"worker-servers": { "_title": "Worker Servers" },
+					"client-regions": { "_title": "Client Regions" },
+					"page-env": {
+						"_title": "Page Environment",
+						"storage-server": { "_title": "storage.env" },
+						"config-server": { "_title": "config.env" }
+					},
+					"sessions-and-security": { "_title": "Sessions &amp; Security" },
+					"state": { "_title": "Maintaining State" },
+					"styling": { "_title": "Styling" }
+				},
+				"toolset": {
+					"_title": "Toolset",
+					"_template": false,
+					"api": { "_title": "Local API" },
+					"navigator": { "_title": "Navigator" },
+					"sse": { "_title": "Server-Sent Events" },
+					"cookies-and-storage": { "_title": "Cookies &amp; Storage" },
+					"html-deltas": { "_title": "HTML Deltas" },
+					"data-apis": {
+						"_title": "Data-* APIs",
+						"bootstrap": { "_title": "Bootstrap Components" },
+						"subscribe": { "_title": "Subscribe" },
+						"grim-layout": { "_title": "Grim-Layout" },
+						"value": { "_title": "Value-*Of" },
+						"lifepsan": { "_title": "Lifespan" }
+					}
+				}
+			}
 		}
 	]
 }

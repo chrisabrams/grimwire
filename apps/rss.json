@@ -3,9 +3,7 @@
   "title": "Reader",
   "icon": "list",
   "startpage": "httpl://feed.rss.usr",
-  "common": {
-    "storageHost": "httpl://storage.env"
-  },
+  "common": {},
   "workers": [
     {
       "id": "feed",
