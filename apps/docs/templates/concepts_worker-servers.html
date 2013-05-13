@@ -1,17 +1,53 @@
 <h2 class="page-header">Worker Servers <small>Key Concepts</small></h2>
 <div class="row-fluid">
 	<div class="span6">
-		todo
+		<p>Grimwire's Workers are Web servers with no direct access to the document. Instead, they respond to requests which populate the page and serve other programs.</p>
+		<p>Every worker must define a <code>main</code> function which takes a <code>request</code> and <code>response</code> object. This function is called on every request, and must always send and close the response.</p>
+		<p>The <a href="httpl://{{domain}}/toolset/api" type="application/html-deltas+json" target="docs-layout">Local API</a> provides a promises-based toolset for HTTP and configuration. The Worker must use <code>local</code> instead of <code>XMLHttpRequest</code>, as Grimwire nullifies XHR and other APIs which untrusted code might exploit. Local also provides the <code>require()</code> function, which uses syncronous XHR to emulate the CommonJS spec.</p>
+		<blockquote class="muted">Any javascript file can use <code>module.exports</code> to specify its exports. If the program requires a non-js file, it will receive a string with the file's contents.</blockquote>
+		<p>All workers are stateless, and may be shut down or restarted at any time (without notice). This simplifies reconfiguration. Any persistent data should be stored in external services, such as <code><a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout">storage.env</a></code>.</p>
 	</div>
 	<div class="span6">
-		todo
+		<pre>var marked = require('vendor/marked.js');
+marked.setOptions({ gfm: true, tables: true });
+
+function main(request, response) {
+  local.http.dispatch({
+    method  : 'get',
+    url     : local.worker.config.baseUrl + request.path,
+    headers : { accept:'text/plain' }
+  }).succeed(function(res) {
+    response.writeHead(200, 'ok', { 'content-type':'text/html' });
+    response.end(marked(res.body||''));
+  }).fail(function() {
+    response.writeHead(502, 'bad gateway').end();
+  });
+}</pre>
+		<p class="muted">A markdown-conversion proxy</p>
+	</div>
+</div>
+
+<h3>Realtime UIs without Breaking REST</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>Maintaining REST properties has practical gains in Grimwire: it lets UIs embed, proxies compose, caches cache, and programs serve users regardless of their location &ndash; not just if they're in the same browser.</p>
+		<p>However, for security reasons, Grimwire can't allow any application Javascript into the client. Instead, it provides a number of tools for servers to create rich UIs while still being RESTful.</p>
+		<blockquote class="muted">These tools will take some time to mature, and early developers may find roadblocks. <a href="https://groups.google.com/forum/?fromgroups#!forum/grimwire" target="_blank" title="Google Groups: Grimwire">Please ask questions and provide your feedback</a> so we can improve the APIs.</blockquote>
+		<p><a href="httpl://{{domain}}/toolset/links-and-forms" type="application/html-deltas+json" target="docs-layout" title="Links and Forms">Links and forms</a> support a number of attributes (most standard, some not) for controlling the formation of the request and the interpretation of the response. <a href="httpl://{{domain}}/toolset/res-interp" type="application/html-deltas+json" target="docs-layout" title="Response Interpretation">HTTP status codes and headers</a> also provide standardized behaviors, including redirects and no-ops.</p>
+		<p>For realtime support, Grimwire uses <a href="httpl://{{domain}}/toolset/sse" type="application/html-deltas+json" target="docs-layout" title="Server-Sent Events">Server-Sent Events</a> to let programs trigger targeted refreshes in the UI. If a response needs to make specific changes &ndash; adding/removing classes, navigating client regions, or altering the innerHTML of individual elements &ndash; there's the <a href="httpl://{{domain}}/toolset/html-deltas" type="application/html-deltas+json" target="docs-layout" title="HTML Deltas">application/html-deltas+json content type</a>.</p>
+		<p>Lastly, Grimwire allows the host to add <a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data-* APIs">frontend widgets</a> to the UIs, enabling rich interfaces through data-apis. By default, Grimwire includes the <a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout" title="Twitter Bootstrap Components">Twitter Bootstrap Components</a>, along with a few custom additions.</p>
+	</div>
+	<div class="span6">
 	</div>
 </div>
 
 <h3>Maintaining State</h3>
 <div class="row-fluid">
 	<div class="span6">
-		todo
+		<p>To avoid losing information or progress, Worker Servers should keep state externally, either in their client regions (for UI flow) or in other storage servers (for user appdata).</p>
+		<p>In the case of UI state, one option is to use <a href="httpl://{{domain}}/toolset/html-deltas" type="application/html-deltas+json" target="docs-layout" title="HTML Deltas">HTML Deltas</a> to update the values of hidden inputs or link URLs. Another option is the <a href="httpl://{{domain}}/toolset/data-apis/value" type="application/html-deltas+json" target="docs-layout" title="Value-*Of">Value-*Of Data-API</a>, which uses a CSS selector to find some part of UI state and use that as its value on form submit.</p>
+		<p>For Worker Servers, Grimwire provides an <a href="httpl://{{domain}}/toolset/cookies-and-storage" type="application/html-deltas+json" target="docs-layout" title="Cookies and Storage">experimental implementation of cookies</a> which can specify whether to scope the data to a specific client region or the entire user session (aka all regions). This can be used to thread state through a UI, or to keep small amounts of user appdata, depending on the scope used.</p>
+		<p>For more extensive user data, requests to Worker Servers include a "Link" header with a "http://grimwire.com/rel/storage" relation. This link is guaranteed to be owned by the requesting user and apply only to the Worker's application. Currently, it points to a collection in <a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout" title="Session Storage">Session Storage</a>.</p>
 	</div>
 	<div class="span6">
 		todo
@@ -21,7 +57,8 @@
 <h3>Importing Code and Templates</h3>
 <div class="row-fluid">
 	<div class="span6">
-		todo
+		<p>Using module.exports TODO</p>
+		<p>Using require for templates TODO</p>
 	</div>
 	<div class="span6">
 		todo

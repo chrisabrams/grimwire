@@ -28,8 +28,6 @@ function main(request, response) {
 			if (doc.desc._template !== false)
 				deltas.navigate = { '#docs-content':url };
 
-			console.log(deltas);
-
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 			response.end(deltas);
 		}

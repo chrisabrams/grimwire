@@ -46,6 +46,8 @@
 					"api": { "_title": "Local API" },
 					"promises": { "_title": "Promises" },
 					"navigator": { "_title": "Navigator" },
+					"links-and-forms": { "_title": "Links and Forms" },
+					"res-interp": { "_title": "Response Interpretation" },
 					"sse": { "_title": "Server-Sent Events" },
 					"cookies-and-storage": { "_title": "Cookies &amp; Storage" },
 					"html-deltas": { "_title": "HTML Deltas" },
