@@ -38,6 +38,15 @@ function main(request, response) {
 		<p>Lastly, Grimwire allows the host to add <a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data-* APIs">frontend widgets</a> to the UIs, enabling rich interfaces through data-apis. By default, Grimwire includes the <a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout" title="Twitter Bootstrap Components">Twitter Bootstrap Components</a>, along with a few custom additions.</p>
 	</div>
 	<div class="span6">
+		<pre>&lt;a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout"&gt;Twitter Bootstrap Components&lt;/a&gt;</pre>
+		<p class="muted">An example of using a link to specify request &amp; response behaviors</p><br/>
+		<pre>response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
+response.end([
+  ['removeClass', '#docs-nav li.active', 'active'],
+  ['addClass', '#docs-nav li[data-url="'+url+'"]', 'active'],
+  ['navigate', '#docs-content', url]
+]);</pre>
+		<p class="muted">An example of using HTML Deltas to do navigation</p>
 	</div>
 </div>
 
@@ -50,17 +59,28 @@ function main(request, response) {
 		<p>For more extensive user data, requests to Worker Servers include a "Link" header with a "http://grimwire.com/rel/storage" relation. This link is guaranteed to be owned by the requesting user and apply only to the Worker's application. Currently, it points to a collection in <a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout" title="Session Storage">Session Storage</a>.</p>
 	</div>
 	<div class="span6">
-		todo
+		<pre>&lt;input type="hidden" name="selection" data-value-valueof=".active"&gt;</pre>
+		<p class="muted">An example of using the value-*of tool to pass the current nav item in a request</p><br/>
+		<pre>response.setHeader('set-cookie', {
+  q:       { value:request.query.q || '',      query:true, scope:'client' },
+  filter:  { value:request.query.filter || '', query:true, scope:'client' },
+  columns: { value:request.query.columns || 2, query:true, scope:'client' }
+});</pre>
+		<p class="muted">An example of using cookies to write UI state into future requests</p>
 	</div>
 </div>
 
 <h3>Importing Code and Templates</h3>
 <div class="row-fluid">
 	<div class="span6">
-		<p>Using module.exports TODO</p>
-		<p>Using require for templates TODO</p>
+		<p>Grimwire supports the <code>require</code> and <code>module.exports</code> pattern (based on CommonJS) for importing code into Web Workers. It works by issuing a syncronous XHR request, then wrapping the javascript in a closure which returns the value of <code>module.exports</code>. Relative paths (which don't start with a slash) always use the location of the main Worker file as a base path. If building a module to be included by other programs, it's best to avoid using relative paths for now.</p>
+		<p>If the content type of the fetched resource is not "application/javascript", and the extension is not ".js", Grimwire will respond the unevaluated string. You can use this characteristic to import templates.</p>
 	</div>
 	<div class="span6">
-		todo
+		<pre>var templates = {
+  home: require('templates/home.html'),
+  profile: require('templates/profile.html')
+};</pre>
+		<p class="muted">An example of using <code>require</code> to load templates</p>
 	</div>
 </div>
