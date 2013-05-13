@@ -1,9 +1,44 @@
 <h2 class="page-header">Page Environment <small>Key Concepts</small></h2>
 <div class="row-fluid">
 	<div class="span6">
-		todo
+		<p>The page environment consists of all the scripts and data within the document. It is entrusted with enforcing policies and securing the user's session, and thus should never run untrusted code.</p>
+		<blockquote class="muted">All HTTP traffic is routed through the document before beind dispatched to its destination.</blockquote>
+		<p>As a host, you are free to add new styles, widgets, and behaviors to the environment. However, it's recommended that you exercise caution when making those choices. Additional core software can open up new attack vectors, and will likely decrease compatability of your host with other Grimwire deployments and applications.</p>
+		<blockquote class="muted">The general rule of thumb is, if something can be achieved using Worker Servers ("userland") or existing configuration tools, prefer that option.</blockquote>
 	</div>
 	<div class="span6">
-		todo
+	</div>
+</div>
+
+<h3>Region Post-Processing</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>To apply additional UI behaviors, Grimwire defines a "region post-processor" which is called on elements which have their HTML modified by a response. This gives the page an opportunity to add widgets or alter the UI however it sees fit. By default, Grimwire uses this function to whitelist inline styles, add Bootstrap components, and handle the other data-apis.</p>
+		<blockquote class="muted">HTML Deltas trigger the post processor on every element that has its <code>innerHTML</code> altered.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>local.env.setRegionPostProcessor(function(el) {
+  // bootstrap widgets
+  $(el).tooltip({ selector: "[data-toggle=tooltip]" });
+  $("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
+  $("[data-loading-text]", el).click(function() { $(this).button('loading'); });
+});</pre>
+		<p class="muted">An example region post-processor</p>
+	</div>
+</div>
+
+<h3>Traffic Mediation</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>Grimwire uses a "dispatch wrapper" function to enforce permissions policies and prepare requests and responses. Generally, it's best to leave this function as-is. However, if you have additional security, logging, or request-preparation needs, this is the place to implement them.</p>
+		<blockquote class="muted">All traffic, whether originated from a Worker or environment code, is routed through this function.</blockquote>
+		<p>If you intend to create an alternative response to a request, you must return a promise that's fulfilled or rejected with a <code>local.http.ClientResponse</code> object. You can read about it in the <a href="httpl://{{domain}}/toolset/api" type="application/html-deltas+json" target="docs-layout" title="Local API">Local API docs</a>.</p>
+	</div>
+	<div class="span6">
+		<pre>local.env.setDispatchWrapper(function(request, origin, dispatch) {
+  // allow request
+  return dispatch(request);
+});</pre>
+		<p class="muted">Minimal definition of the dispatch wrapper</p>
 	</div>
 </div>
