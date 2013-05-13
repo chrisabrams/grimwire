@@ -48,6 +48,7 @@
 		// react to the response
 		switch (response.status) {
 			case 204:
+			case 304:
 				// no content
 				break;
 			case 205:
@@ -56,6 +57,7 @@
 				if (requestTarget.tagName === 'FORM')
 					requestTarget.reset();
 				break;
+			case 302:
 			case 303:
 				// dispatch for contents
 				var request2 = { method:'get', url:response.headers.location, headers:{ accept:'text/html' }};
