@@ -38,15 +38,13 @@
 						"_title": "Page Environment",
 						"storage-server": { "_title": "storage.env" },
 						"config-server": { "_title": "config.env" }
-					},
-					"sessions-and-security": { "_title": "Sessions &amp; Security" },
-					"state": { "_title": "Maintaining State" },
-					"styling": { "_title": "Styling" }
+					}
 				},
 				"toolset": {
 					"_title": "Toolset",
 					"_template": false,
 					"api": { "_title": "Local API" },
+					"promises": { "_title": "Promises" },
 					"navigator": { "_title": "Navigator" },
 					"sse": { "_title": "Server-Sent Events" },
 					"cookies-and-storage": { "_title": "Cookies &amp; Storage" },

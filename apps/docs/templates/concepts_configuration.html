@@ -45,18 +45,15 @@ var profcolors = _.extend({}, config.profcolors, config.user.profcolors);
 		<p>To update the user settings, a worker can PUT json to <code>httpl://config.env/workers/{domain}</code>. Doing so will overwrite the current settings in <code>local.worker.config.user</code>, then trigger a reload of the worker. Because all requests are asynchronous, a worker can dispatch this request then finish responding.</p>
 	</div>
 	<div class="span6">
-		<pre>if (request.method == 'POST') {
-  feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?
-    request.body.sources.split("\n").filter(function(i) { return i; }) :
-    [];
-  local.http.dispatch({
-    method: 'put',
-    url: 'httpl://config.env/workers/'+local.worker.config.domain,
-    body: { sources:feedSources },
-    headers: { 'content-type':'application/json' }
-  });
-  msg = '&lt;div class="alert alert-success" data-lifespan="5"&gt;Updated&lt;/div&gt;';
-}</pre>
+		<pre>feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?
+  request.body.sources.split("\n").filter(function(i) { return i; }) :
+  [];
+local.http.dispatch({
+  method: 'put',
+  url: 'httpl://config.env/workers/'+local.worker.config.domain,
+  body: { sources:feedSources },
+  headers: { 'content-type':'application/json' }
+});</pre>
 		<p class="muted">How the rss feed worker updates its user settings</p>
 	</div>
 </div>
