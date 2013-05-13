@@ -1,0 +1,109 @@
+<h2 class="page-header">Promises <small>Toolset</small></h2>
+<div class="row-fluid">
+	<div class="span6">
+		<p><a href="https://github.com/pfraze/promises" target="_blank" title="A custom Promises/A+ implementation">A custom Promises/A+ implementation</a> is used in all of Grimwire's async APIs. Most commonly, they are return by <code>local.http.dispatch()</code>, which fulfills the promise on 2xx and 3xx, and rejects it on 4xx and 5xx.</p>
+	</div>
+	<div class="span6">
+	</div>
+</div>
+
+<h3>Usage</h3>
+<div class="row-fluid">
+	<div class="span8">
+		<p>A promise can be created with or without a value:</p>
+
+		<pre>var p1 = new local.Promise(); // unfulfilled
+var p2 = local.promise(); // unfulfilled
+var p3 = local.promise('foobar'); // fulfilled
+var p4 = local.promise(p2); // passes through (p3 === p2)
+var p5 = local.promise(promiseFromOtherLibrary); // wraps ((p4 instanceof local.Promise) === true)
+</pre>
+
+	<p>Functions may be chained using <code>then</code>. Each function will receive the current value as the first parameter, and updates the current value with whatever is returned (including <code>undefined</code> if no return statement is made).</p>
+
+		<pre>var myPromise = local.promise();
+myPromise.then(
+  function(v) {
+    return v + 1;
+  },
+  function(err) {
+    // rejection handler, wont get hit this time
+  })
+  .then(log);
+promise.fulfill(5);
+// =&gt; logs "6"
+
+var myPromise = local.promise();
+myPromise.then(
+  function(v) {
+    // success handler, wont get hit this time
+  },
+  function(err) {
+    console.log(err);
+  });
+promise.reject("Oh nooo");
+// =&gt; logs "Oh nooo"
+</pre>
+
+		<p>Functions which throw an error will cause the next promise to be rejected. Subsequent rejection handlers can choose to rethrow to continue rejection, or return a value to indicate normal operation has resumed.</p>
+
+		<pre>var myPromise = local.promise();
+myPromise
+  .then(function(v) { throw "oh nooo"; })
+  .then(null, function(err) { console.log(err); throw "oh nooo!!!"; })
+  .then(null, function(err) { console.log(err); return "jk we're fine"; })
+  .then(log);
+promise.fulfill(true);
+// =&gt; logs "oh nooo"
+// =&gt; logs "oh nooo!!!"
+// =&gt; logs "jk we're fine"
+</pre>
+
+		<p>In addition to <code>then</code>, you can use <code>succeed</code> (for non-erroneous values) or <code>fail</code> (for erroneous values). The first parameter defines the handler function, and subsequent parameters may be provided to be passed into the handler:</p>
+
+		<pre>function add(v, x) { return v + x; }
+function subtract(v, x) { return v - x; }
+function wait(v, t) { var self = this; setTimeout(function() { self.fulfill(v); }, t); }
+function log(v) { console.log(v); }
+
+local.promise(10)
+  .succeed(add, 5)
+  .succeed(wait, 1000)
+  .succeed(subtract, 10)
+  .succeed(log);
+// =&gt; waits 1 second, then logs "5"
+</pre>
+
+		<p>Promises may be chained, to allow the fulfillment or rejection of one to be passed on to the other:</p>
+
+		<pre>var p1 = local.promise(), p2 = local.promise();
+p2.then(log, log);
+p1.chain(p2);
+p1.fulfill('foobar');
+// =&gt; logs "foobar"
+</pre>
+
+		<p>If a promise is not going to continue the chain, and wants to release the references held by downstream promises, it may call cancel:</p>
+
+<pre>mypromise
+  .then(function(canStop) {
+    if (canStop) {
+      // program logic says we're done
+      console.log('stopping');
+      this.cancel();
+    } else {
+      return 'foobar';
+    }
+  })
+  .then(function(v) {
+    console.log(v);
+  });
+mypromise.fulfill(true);
+// =&gt; logs "stopping"
+</pre>
+
+		<p>For cases where you need to support the <code>(err, result)</code> pattern, use <code>cb()</code>:</p>
+
+		<pre>require('http').request(options, mypromise.cb);</pre>
+	</div>
+</div>
