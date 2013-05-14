@@ -1,7 +1,98 @@
 <h2 class="page-header">Navigator <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p>The Navigator is an important tool in Grimwire. It's used by applications to discover functionality exported by other programs, a process known as "<a href="http://en.wikipedia.org/wiki/HATEOAS" target="_blank" title="HATEOAS">Hypermedia as the Engine of Application State</a>". You might think of it is as the <code>module.exports</code> for the Web.</p>
+		<p>As defined in <a href="http://www.rfc-editor.org/rfc/rfc5988.txt" target="_blank" title="RFC 5988">RFC 5988</a>, server responses may include a "Link" header with entries that relate directly to the current context. They behave much like links in HTML, but are used for programmatic navigation.</p>
+		<blockquote class="muted">"Context" refers to the current resource. When you browse to a page, that page becomes your context.</blockquote>
+		<p>Every Link entry must define an <code>href</code> (hypermedia reference - a URL) and a <code>rel</code> (relation type) to be valid. Additionally, for situations where a <code>rel</code> value is likely to be shared, entries should define a <code>title</code> tag. These three pieces of information, combined with the context which provided them, make it possible to locate most kinds of resources.</p>
+		<blockquote class="muted">Other attributes may be defined in Link entries, but they are rarely used in Grimwire at this time.</blockquote>
+	</div>
+	<div class="span6">
+    <pre>&gt; HEAD / HTTP/1.1
+&gt; Host: http://webhost.com
+
+&lt; HTTP/1.1 200 OK
+&lt; Link: &lt;http://webhost.com/users&gt;; rel="collection"; title="users",
+        &lt;http://webhost.com/search&gt;; rel="search",
+        &lt;http://otherhost.com/&gt;; rel="service"; title="otherhost"</pre>
+		<p class="muted">An example of a link response to a HEAD request</p><br />
+		<pre>response.setHeader('link', [
+  { href:'/users', rel:'collection', title:'users' },
+  { href:'/search', rel:'search', },
+  { href:'http://otherhost.com/', rel:'service', title:'otherhost' }
+]);</pre>
+		<p class="muted">Generating an equivalent response in Grimwire</p>
+	</div>
+</div>
+<br/>
+
+<h3>Resources and Relations</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The Web is built on interconnected resources (nouns) which each support a set of methods (verbs). It's very important in Grimwire to maintain this convention. URLs should describe "things," not actions. For example, "/users/bob" and "/transactions" are fine, but "/users/create" and "/transact" are not.</p>
+		<blockquote class="muted">Verbs may have made their way into URLs because browsers give limited control over request methods in their UIs. As Grimwire's tools mature, this should be less of an issue.</blockquote>
+		<p>Relations describe how two resources are connected. They can be short keywords (<a href="http://www.iana.org/assignments/link-relations/link-relations.xml" target="_blank" title="The IANA Link Relations Registry">collection, item, prev, next, service, and the other standarized values</a>) or URLs (eg "http://grimwire.com/rel/appstorage") in the case of custom relations. Some examples:</p>
+		<ul>
+			<li>From /, <code>rel="collection"; title="users"</code> - a collection named "users"</li>
+			<li>From /users, <code>rel="item"; title="pfraze"</code> - a user in the collection named "pfraze"</li>
+			<li>From /users?offset=10&amp;limit=10, <code>rel="next"</code> - the next page of the users collection</li>
+			<li>From /docs/3, <code>rel="prev"</code>  - the previous page in the documentation</li>
+			<li>From /, <code>rel="http://grimwire.com/rel/hostfile"</code> - the resource describing the host's configuration</li>
+		</ul>
+		<p>When creating custom relations, you can imply a particular schema and expect other services using the relation URL to conform to it. For instance, "http://grimwire.com/rel/index" indicates a resource of data which can be indexed by the Grimwire Search app. It implies a JSON array of objects that fit the <code>{ href, title, [desc] }</code> schema.</p>
 	</div>
 	<div class="span6">
 	</div>
 </div>
+<br/>
+
+<h3>local.http.Navigator</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The Navigator is a programmatic browsing agent. It takes a starting URL and a chain of links (described by <code>rel</code>, <code>title</code>, and other attribute values) then issues HEAD requests to resolve the chain to its intended endpoint.</p>
+		<blockquote class="muted"><strong><a href="http://grimwire.com/local/docs.html#lib/linkjs/navigator.md" target="_blank" target="http.local.navigator">You can find a full reference to its API in the Local.js docs</a>.</strong></blockquote>
+		<p>The Navigator is the best way to consume Web APIs in Grimwire. By following links, clients give their servers the flexibility to change exported resources without breaking compatibility. Hard-coded URIs in clients are referred to as "out of band" knowledge, and tend to make a system more brittle. Additionally, the Navigator saves you from manually constructing URLs, providing instead a simple and intuitive interface to resources.</p>
+		<p>Links exported in response headers should try to remain one "hop" away from the resource's context. That is to say, if you're writing the root resource and trying to direct the client to an item in a collection, it's better to link to the collection, then have the collection link to the item. This requires more round-trip traffic - two HEAD requests instead of one - but it keeps the Link namespaces compact and non-redundnant.</p>
+		<blockquote class="muted">If you're worried about latency, remember that much of Grimwire's traffic is local. New transports (such as WebSockets) will eventually be employed to reduce remote connection overhead.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>local.http.navigator('http://myhost.com')
+  .collection('users')
+  .item('pfraze')
+  .getJson();
+</pre>
+		<p class="muted">An example usage of the navigator</p><br/>
+		<pre>local.http.navigator('httpl://anotherhost.usr')
+  .relation('http://grimwire.com/rel/foobar')
+  .post({foo:'baz'}, 'application/json')
+</pre>
+		<p class="muted">Using a custom relation with the navigator</p>
+	</div>
+</div>
+<br/>
+
+<h3>URI Templates</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>To simplify the Link headers, Grimwire uses URI Templates (defined in <a href="http://tools.ietf.org/html/rfc6570" target="_blank" title="RFC 6570">RFC 6570</a>). These allow servers to describe the scheme for a specific <code>rel</code> types, thereby avoiding a fully-enumerated list of entries.</p>
+		<p>When searching the Link entries for a match, Grimwire uses the following algorithm:</p>
+		<ul>
+			<li>Iterate the Link entries:<ul>
+				<li>Does the <code>rel</code> tag match? If yes, make this entry the best match.</li>
+				<li>If a <code>title</code> has been specified in the search, does it match the entry's <code>title</code> tag? If yes, return this match now.</li>
+			</ul></li>
+			<li>Return the best match.</li>
+		</ul>
+		<p>When a match is found, its <code>href</code> is run through the URI Template parser using all parameters provided to the Navigator. Because the <code>title</code> tag is used commonly by the navigator, it's often most convenient to use the <code>{title}</code> token in the link. This makes it easy to explicitly title links of a certain relation if they use an atypical URI scheme, then fallback to a generic entry that uses the <code>{title}</code> token in its <code>href</code>.</p>
+	</div>
+	<div class="span6">
+		<pre>response.writeHead(200, 'ok', { link:[
+  { href:'/misc/mine', rel:'collection', title:'mine' },
+  { href:'httpl://otherhost.com/theirs', rel:'collection', title:'theirs' },
+  { href:'/{title}', rel:'collection' } // general fallback
+]});
+</pre>
+		<p class="muted">An example of URI Templates in a Link header</p>
+	</div>
+</div>
+<br/>
