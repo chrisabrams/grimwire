@@ -1,7 +1,38 @@
 <h2 class="page-header">Response Interpretation <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p>Grimwire decides to handle a response according to its status code and "Content-Type" header. Use this to dictate the behavior of the client.</p>
 	</div>
 	<div class="span6">
 	</div>
 </div>
+<br/>
+
+<h3>Status Codes</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The currently supported behaviors, based on status code, include:</p>
+		<ul>
+			<li>204/304: no content - do nothing</li>
+			<li>302/303: redirect - issue a GET request for html using the "Location" header of the response as the target URL</li>
+			<li>All others: render the response body to the target region</li>
+	</div>
+	<div class="span6">
+	</div>
+</div>
+<br/>
+
+<h3>Content Type</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The currently supported behaviors, based on the "Content-Type" header, include:</p>
+		<ul>
+			<li>text/html: replace the <code>innerHTML</code> of the target region</li>
+			<li>application/html-deltas+json: apply the operations specified within the target region</li>
+			<li>all other types: stringify if an object, convert the &lt; and &gt; symbols to character codes, then replace the <code>innerHTML</code> of the target region</li>
+			<li>no value: create a popup alert of the response status and reason</li>
+	</div>
+	<div class="span6">
+	</div>
+</div>
+<br/>
