@@ -4,6 +4,7 @@ Changes
 2013/05/15 pfraze
 
  - Changed html-deltas to use an ordered array structure
+ - Changed data-grim-layout to data-client-region
 
 
 2013/05/07 pfraze

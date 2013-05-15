@@ -107,35 +107,21 @@
 	};
 
 	// adds to local's region behaviors:
-	// - can target "data-grim-layout" containers
+	// - can target "data-client-region" containers
 	GrimRegion.prototype.__chooseRequestTarget = function(e, request) {
 		if (request.target == '_element')
 			return e.target;
 
 		var el = document.getElementById(request.target);
 		if (el) {
-			if (el.dataset.grimLayout) {
-				var subEl, region;
-				var behavior = el.dataset.grimLayout.split(' ')[0];
-				switch (behavior) {
-					default:
-						console.error('Unknown layout behavior "'+behavior+'" specified in #'+el.id+', defaulting to "replace".');
-					case 'replace': // when targeted, navigate the only contained region
-					case 'stack': // :DEBUG: until implemented, treat stack as replace
-						region = local.env.getClientRegion(el.id);
-						if (region)
-							return el;
-						console.error("Element with data-grim-layout set to 'replace' should be a client region, but isn't. This means Grimwire did something wrong. Dropping response.");
-						return null;
-					// :TODO:
-					// case 'flow': // when targeted, create a new region in the container
-						// subEl = makeClientRegionEl();
-						// local.env.addClientRegion(subEl.id);
-						// return subEl;
-				}
-				return el;
+			if (el.dataset.clientRegion) {
+				var region = local.env.getClientRegion(el.id);
+				if (region)
+					return el;
+				console.error("Element with data-client-region set to 'replace' should be a client region, but isn't. This means Grimwire did something wrong. Dropping response.");
+				return null;
 			}
-			console.error('Request targeted at #'+request.target+', which has no layout behavior specified with data-grim-layout. Dropping response.');
+			console.error('Request targeted at #'+request.target+', which has no region behavior specified with data-client-region. Dropping response.');
 			return null;
 		}
 
@@ -144,16 +130,14 @@
 
 	// post-processors
 	// -
-	window.grimLayoutPostProcess = function(el) {
-		// find any new layout containers
-		$('div[data-grim-layout]', el).each(function(i, container) {
-			// if an initial URL is specified, create a client region and populate with response of a GET to that url
-			var params = container.dataset.grimLayout.split(' ');
+	window.clientRegionPostProcess = function(el) {
+		// find any new regions
+		$('div[data-client-region]', el).each(function(i, container) {
 			prepClientRegionEl(container);
 			var region = new local.client.GrimRegion(container.id);
 			local.env.addClientRegion(region);
 
-			var initUrl = params[1];
+			var initUrl = container.dataset.clientRegion;
 			if (initUrl)
 				region.dispatchRequest(initUrl);
 		});

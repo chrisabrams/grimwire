@@ -88,7 +88,7 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 local.env.setRegionPostProcessor(function(el) {
 	// grim widgets
 	lifespanPostProcess(el);
-	grimLayoutPostProcess(el);
+	clientRegionPostProcess(el);
 	$("[data-toggle=nav]", el).on('request', function(e) {
 		$('.active', $(this).parents('.nav')[0]).removeClass('active');
 		$(this).parent().addClass('active');

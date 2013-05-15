@@ -109,14 +109,14 @@ function main(request, response) {
 		<blockquote class="muted">This is because client-side code and styles can not be sandboxed and composed effectively.</blockquote>
 		<p>Instead, Grimwire defines a number of behaviors for exerting real-time control in the server, and the host provides a set of styles and widgets to create rich experiences. By default, Grimwire ships with <a href="http://getbootstrap.com" target="_blank">Twitter Bootstrap</a>'s styles and components.</p>
 		<p>Interfaces in Grimwire are divided into multiple "client regions," which are elements that browse HTTP resources independently of their parents. They behave much like iframes, and are used to make security decisions.</p>
-		<blockquote class="muted">Applications can create embedded client regions with the <code><a href="httpl://{{domain}}/toolset/data-apis/grim-layout" type="application/html-deltas+json" target="docs-layout">data-grim-layout</a></code> directive.</blockquote>
+		<blockquote class="muted">Applications can create embedded client regions with the <code><a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data APIs">data-client-region</a></code> directive.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;div class="row-fluid" id="docs-layout" data-grim-layout="replace"&gt;
+		<pre>&lt;div class="row-fluid" id="docs-layout" data-client-region&gt;
   &lt;div class="span2"&gt;
     &lt;ul id="docs-nav" class="nav nav-list"&gt;{sidenav}&lt;/ul&gt;
   &lt;/div&gt;
-  &lt;div id="docs-content" class="span10" data-grim-layout="replace httpl://{domain}/intro"&gt;&lt;/div&gt;
+  &lt;div id="docs-content" class="span10" data-client-region="httpl://{domain}/intro"&gt;&lt;/div&gt;
 &lt;/div&gt;</pre>
 		<p class="muted">The layout template for the docs app</p>
 	</div>

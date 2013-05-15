@@ -918,7 +918,7 @@
 		appsMain: function(appCfgs, selection) {
 			var html = '<div class="row-fluid">'+
 					'<div class="well well-small span2" style="padding:9px 0"><form style="margin:0" data-subscribe="httpl://config.env/apps?view=sidenav">'+views.appsSidenav(appCfgs, selection)+'</form></div>'+
-					'<div id="cfgappsmain" class="span10" data-grim-layout="replace httpl://config.env/apps?view=summary"></div>'+
+					'<div id="cfgappsmain" class="span10" data-client-region="httpl://config.env/apps?view=summary"></div>'+
 				'</div>';
 			return html;
 		},
@@ -1028,7 +1028,7 @@
 					'<li><a target="cfg-'+cfg.domain+'" href="httpl://config.env/workers/'+cfg.domain+'/src" title="Edit Source" data-toggle="nav"><i class="icon-edit"></i></a></li>'+
 					'<li><a target="cfg-'+cfg.domain+'" href="httpl://'+cfg.domain+'/" title="Execute" data-toggle="nav"><i class="icon-hand-right"></i></a></li>'+
 				'</ul>'+
-				'<div id="cfg-'+cfg.domain+'" data-grim-layout="replace httpl://'+cfg.domain+'/.grim/config"></div>'+
+				'<div id="cfg-'+cfg.domain+'" data-client-region="httpl://'+cfg.domain+'/.grim/config"></div>'+
 				'<hr/>';
 		},
 		workerSource: function(cfg, src, appCfg) {
