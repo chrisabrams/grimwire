@@ -1,7 +1,56 @@
 <h2 class="page-header">Cookies &amp; Storage <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p>Worker Servers can not keep important data in memory, for two important reasons:</p>
+		<ol>
+			<li>it breaks the scaleability of the architecture (important for P2P)</li>
+			<li>the workers may be reloaded at any time, and are not given time to teardown</li>
+		</ol>
+		<p>As a result, it's important that you keep anything that should outlive the worker (session state, user appdata, etc) with the page environment and its storage tools.</p>
 	</div>
 	<div class="span6">
 	</div>
 </div>
+<br/>
+
+<h3>Cookies</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The simplest mechanism for storage is the cookie. Currently, cookies for remote services are handled as usual by the browser, while Grimwire implements a custom version for local servers. Use them to keep small pieces of session or client-region state.</p>
+		<p>Typically, cookies take a name, value, and then an optional expiration, domain/path scope, and an https flag. However, Grimwire's local server implementation is different. It takes:</p>
+		<ul>
+			<li><code>name</code> and <code>value</code> as expected</li>
+			<li><code>query</code> a (truthy) boolean flag which dictates whether the K/V pair should be included in the query parameters of subsequent requests</li>
+			<li><code>scope</code> a label ('client' or 'session') determining how broadly the cookie should apply</li>
+		</ul>
+		<p>The <code>query</code> attribute was added for convenience, and to assist in caching, which often uses the URL as the primary key for cache entries. The <code>scope</code> attribute tells Grim whether the cookie should apply to all client regions which target the local server ('session'), or just the region which initiated the request ('client'). It uses 'session' by default.</p>
+		<blockquote class="muted">The 'client' scope is useful for tracking data about the state of the UI.</blockquote>
+		<p>At this time, the cookies do not expire, but an be removed by assigning a null value (or directly mutating the user's appdata, as explained below). All local cookies are scoped to individual worker servers.</p>
+	</div>
+	<div class="span6">
+		<pre>response.setHeader('set-cookie', {
+  q:       { value:request.query.q || '',      query:true, scope:'client' },
+  filter:  { value:request.query.filter || '', query:true, scope:'client' },
+  columns: { value:request.query.columns || 2, query:true, scope:'client' }
+});</pre>
+		<p class="muted">An example of using cookies to write UI state into future requests</p><br/>
+	</div>
+</div>
+<br/>
+
+<h3>Application Storage</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>For more comprehensive appdata storage, Worker Servers are provided a Link header in their requests which includes a <code>rel='http://grimwire.com/rel/appstorage'</code> entry. This link points to a collection which is user-specific and isolated to the worker. Programs can use this to keep any information about the user, and (as a result) do not have to worry about authenticating and identifying the client.</p>
+		<blockquote class="muted">Providing a link in the request header ensures that Workers can serve multiple users. Remember, once Grimwire supports P2P, more users than just the host will access the program.</blockquote>
+		<p>Cookies are actually just special items (under '.cookies') in the appstorage. You can read and write to the '.cookies' item if you need more direct access to their values, but take care not to corrupt the schema in the process.</p>
+	</div>
+	<div class="span6">
+		<pre>local.http.navigator(request.headers.link, 'http://grimwire.com/rel/appstorage')
+  .item('user-profile')
+  .getJson();
+</pre>
+		<p class="muted">Using the request Link header to access app storage</p>
+	</div>
+</div>
+<br/>
