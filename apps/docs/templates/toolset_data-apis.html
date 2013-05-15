@@ -1,7 +1,85 @@
 <h2 class="page-header">Data-* APIs <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p>For situations where native HTML components and the request/response flow don't cut it, Grimwire allows widgets to add specific behaviors to elements. These behaviors are triggered using the "data-" attribute, which Grimwire detects by post-processing updates to the UI.</p>
+		<blockquote class="muted">If you are operating a host, you can add new widgets as described in <a href="httpl://{{domain}}/concepts/page-env" type="application/html-deltas+json" target="docs-layout" title="Page Environment">Page Environment</a></blockquote>
 	</div>
 	<div class="span6">
 	</div>
 </div>
+<br/>
+
+<h3>Bootstrap Components</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>Grimwire supports all of the Javascript Components from Twitter Bootstrap except for Modal, Scrollspy, and Affix. Grimwire also supports <code>data-toggle="nav"</code> which behaves like "tab" and "pill", but for the nav list component.</p>
+		<blockquote class="muted"><a href="http://twitter.github.io/bootstrap/javascript.html" target="_blank" title="Twitter Bootstrap Components">Read the Twitter Bootstrap Components API reference to learn more.</a></blockquote>
+	</div>
+	<div class="span6">
+		<pre>&lt;li class="dropdown open"&gt;
+  &lt;a class="dropdown-toggle" data-toggle="dropdown" href="#"&gt;Dropdown&lt;/a&gt;
+  &lt;ul class="dropdown-menu"&gt;
+    &lt;li&gt;&lt;a href="httpl://..."&gt;Action&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="httpl://..."&gt;Another action&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;</pre>
+		<p class="muted">An example of using the dropdown component</p><br/>
+	</div>
+</div>
+<br/>
+
+<h3>Subscribe</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>To get realtime control over the interface, servers need a way to trigger activity in the UI. <code>data-subscribe</code> provides this by subscribing the element to <a href="httpl://{{domain}}/toolset/sse" type="application/html-deltas+json" target="docs-layout" title="Server-Sent Events">Server-Sent Events</a> at a designated URL and listening for the "update" event. When that event is received, the region dispatches a GET request to the target URL and uses the response to populate the element.</p>
+		<blockquote class="muted">You might think of <code>data-subscribe</code> as enabling targeted refreshes in the document.</blockquote>
+		<p>The <code>data-subscribe</code> attribute takes one URL specifying the event source, then another optional URL specifying where to fetch the updated content. If the second URL is not specified, the element will fetch content from the event source URL.</p>
+		<p>If <code>data-subscribe</code> is used on a form element, the content fetch request will include the form's payload in its query fragment. Additionally, the request will use the form's <code>accept</code> attribute to dictate the desired content-type.</p>
+	</div>
+	<div class="span6">
+		<pre>&lt;div class="feed" data-subscribe="httpl://myhost.com/feed?output=entries"&gt;</pre>
+		<p class="muted">An example of using the subscribe behavior</p>
+	</div>
+</div>
+<br/>
+
+<h3>Client-Region</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>To create child client regions in your UI, Grimwire provides the <code>data-client-region</code> behavior. When this attribute is used on a div element, Grimwire will treat it as a client region and, if an initial URL is specified, dispatch a GET request for html to populate the region.</p>
+	</div>
+	<div class="span6">
+		<pre>&lt;div data-client-region="httpl://myhost.com/nav"&gt;&lt;/div&gt;
+&lt;div id="content" data-client-region&gt;
+  The content region
+&lt;/div&gt;</pre>
+		<p class="muted">An example of using client-region</p>
+	</div>
+</div>
+<br/>
+
+<h3>Value-*Of</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>In most cases, cookies with <code>scope=client</code> are an effective way to extract information from the UI. However, sometimes you need a more direct way to read document state into the request. For this case, Grimwire provides <code>data-value-classof</code>, <code>data-value-idof</code>, and <code>data-value-valueof</code>.</p>
+		<p>These widgets each take a selector which is executed within the client region. Any time a request is dispatched from their owning region, the elements will have their value updated with the class, id, or value (respectively) of the first element matching its selector.</p>
+		<blockquote class="muted">When combined with <code>data-toggle="nav"</code>, the value-*of behavior can be used to read the active nav selection.</blockquote>
+	</div>
+	<div class="span6">
+		<pre>&lt;input type="hidden" data-value-idof="#nav .active" /&gt;</pre>
+		<p class="muted">An example of using the value-*of behavior</p>
+	</div>
+</div>
+<br/>
+
+<h3>Lifespan</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>In some situations &ndash; typically with flash notices &ndash; you want an element to only stay on the page for a short period. For that case, you can specify <code>data-lifespan</code> with an integer delay (in seconds) to keep the element, after which it will be removed from the document.</p>
+	</div>
+	<div class="span6">
+		<pre>&lt;div class="alert" data-lifespan="5"&gt;Warning! This alert will disappear in 5 seconds.&lt;/div&gt;</pre>
+		<p class="muted">An example of using the lifespan behavior</p>
+	</div>
+</div>
+<br/>

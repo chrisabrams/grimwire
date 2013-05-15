@@ -52,14 +52,7 @@
 					"sse": { "_title": "Server-Sent Events ✓" },
 					"cookies-and-storage": { "_title": "Cookies &amp; Storage ✓" },
 					"html-deltas": { "_title": "HTML Deltas ✓" },
-					"data-apis": {
-						"_title": "Data-* APIs",
-						"bootstrap": { "_title": "Bootstrap Components" },
-						"subscribe": { "_title": "Subscribe" },
-						"grim-layout": { "_title": "Grim-Layout" },
-						"value": { "_title": "Value-*Of" },
-						"lifepsan": { "_title": "Lifespan" }
-					}
+					"data-apis": { "_title": "Data-* APIs ✓" }
 				}
 			}
 		}

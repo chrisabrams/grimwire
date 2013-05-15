@@ -106,7 +106,6 @@ local.env.setRegionPostProcessor(function(el) {
 		});
 		$("[data-value-classof]", el).each(function(i, inputEl) {
 			inputEl.value = $(inputEl.dataset.valueClassof, el).attr('class');
-			console.log(inputEl);
 		});
 	});
 	// sanitize and whitelist styles

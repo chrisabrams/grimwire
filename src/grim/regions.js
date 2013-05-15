@@ -127,10 +127,11 @@
 							return el;
 						console.error("Element with data-grim-layout set to 'replace' should be a client region, but isn't. This means Grimwire did something wrong. Dropping response.");
 						return null;
-					case 'flow': // when targeted, create a new region in the container
-						subEl = makeClientRegionEl();
-						local.env.addClientRegion(subEl.id);
-						return subEl;
+					// :TODO:
+					// case 'flow': // when targeted, create a new region in the container
+						// subEl = makeClientRegionEl();
+						// local.env.addClientRegion(subEl.id);
+						// return subEl;
 				}
 				return el;
 			}
@@ -145,7 +146,7 @@
 	// -
 	window.grimLayoutPostProcess = function(el) {
 		// find any new layout containers
-		$('[data-grim-layout]', el).each(function(i, container) {
+		$('div[data-grim-layout]', el).each(function(i, container) {
 			// if an initial URL is specified, create a client region and populate with response of a GET to that url
 			var params = container.dataset.grimLayout.split(' ');
 			prepClientRegionEl(container);
