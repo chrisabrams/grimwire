@@ -85,27 +85,37 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 
 // client post-processor
 // -
-local.env.setRegionPostProcessor(function(el) {
+local.env.setRegionPostProcessor(function(el, containerEl) {
 	// grim widgets
-	lifespanPostProcess(el);
-	clientRegionPostProcess(el);
+	lifespanPostProcess(el, containerEl);
+	clientRegionPostProcess(el, containerEl);
 	$("[data-toggle=nav]", el).on('request', function(e) {
 		$('.active', $(this).parents('.nav')[0]).removeClass('active');
 		$(this).parent().addClass('active');
 	});
-	$(el).on('request', function(e) {
-		$("[data-value-valueof]", el).each(function(i, inputEl) {
-			var $target = $(inputEl.dataset.valueValueof, el);
+	$("[data-value-valueof]", el).each(function(i, inputEl) {
+		$(containerEl).on('request', function(e) {
+			if (!inputEl)
+				return;
+			var $target = $(inputEl.dataset.valueValueof, containerEl);
 			if ($target.tagName == 'INPUT' || $target.tagName == 'TEXTAREA')
 				inputEl.value = $target.val();
 			else
 				inputEl.value = $target.attr('value');
 		});
-		$("[data-value-idof]", el).each(function(i, inputEl) {
-			inputEl.value = $(inputEl.dataset.valueIdof, el).getAttribute('id');
+	});
+	$("[data-value-idof]", el).each(function(i, inputEl) {
+		$(containerEl).on('request', function(e) {
+			if (!inputEl)
+				return;
+			inputEl.value = $(inputEl.dataset.valueIdof, containerEl).getAttribute('id');
 		});
-		$("[data-value-classof]", el).each(function(i, inputEl) {
-			inputEl.value = $(inputEl.dataset.valueClassof, el).attr('class');
+	});
+	$("[data-value-classof]", el).each(function(i, inputEl) {
+		$(containerEl).on('request', function(e) {
+			if (!inputEl)
+				return;
+			inputEl.value = $(inputEl.dataset.valueClassof, containerEl).attr('class');
 		});
 	});
 	// sanitize and whitelist styles
