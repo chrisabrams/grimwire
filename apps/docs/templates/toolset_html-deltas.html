@@ -1,7 +1,43 @@
 <h2 class="page-header">HTML Deltas <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p>Often, you'll find yourself needing to make specific updates to the UI without destroying some part of the active state - values in input boxes, scrollbar positions, selected menu items, etc. To get that finer-grained control, Grimwire provides the "application/html-deltas+json" content type.</p>
+		<p>HTML Deltas is a simple data structure which describes ordered operations on the DOM. Every operation takes a selector (automatically scoped to the target region) and some parameters. The schema is defined as follows:</p>
+		<pre>[
+  ['operation 1', 'selector', 'param1', 'param2', ...],
+  ['operation 2', 'selector', 'param1', 'param2', ...],
+  ...
+]</pre>
+	</div>
+	<div class="span6">
+		<pre>response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
+response.end([
+  ['replace', '#status', '&lt;span class="label label-success"&gt;All clear!&lt;/span&gt;'],
+  ['addClass', '.connection', 'available']
+]);</pre>
+		<p class="muted">An example of using HTML Deltas</a>
+	</div>
+</div>
+<br/>
+
+<h3>Supported Operations</h3>
+<div class="row-fluid">
+	<div class="span6">
+		<p>The following operations are currently available:</p>
+		<table class="table">
+			<tr><th>Operation</th><th>Parameters</th><th>Behavior</th></tr>
+			<tr><td>replace</td><td>HTML</td><td>Replaces the <code>innerHTML</code> of the target element(s)</td></tr>
+			<tr><td>append</td><td>HTML</td><td>Appends to the <code>innerHTML</code> of the target element(s)</td></tr>
+			<tr><td>prepend</td><td>HTML</td><td>Prepends to the <code>innerHTML</code> of the target element(s)</td></tr>
+			<tr><td>remove</td><td></td><td>Removes the target element(s)</td></tr>
+			<tr><td>addClass</td><td>class(es)</td><td>Adds the given classes to the target element(s)</td></tr>
+			<tr><td>removeClass</td><td>class(es)</td><td>Removes the given classes from the target element(s)</td></tr>
+			<tr><td>toggleClass</td><td>class(es)</td><td>Toggles the given classes on the target element(s)</td></tr>
+			<tr><td>setAttribute</td><td>attribute, value</td><td>Sets the the value of the given attribute of the target element(s)</td></tr>
+			<tr><td>navigate</td><td>URL</td><td>Triggers a GET request on the target client region<br/><em class="muted">target must be a child region of the current region</em></td></tr>
+		</table>
 	</div>
 	<div class="span6">
 	</div>
 </div>
+<br/>
