@@ -82,7 +82,7 @@ python -m SimpleHTTPServer
 		<p>All workers are stateless, and may be shut down or restarted at any time (without notice). This simplifies reconfiguration. Any persistent data should be stored in external services, such as <code><a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout">storage.env</a></code>.</p>
 	</div>
 	<div class="span6">
-		<pre>var marked = require('vendor/marked.js');
+		<pre class="language-javascript">var marked = require('vendor/marked.js');
 marked.setOptions({ gfm: true, tables: true });
 
 function main(request, response) {
@@ -112,7 +112,7 @@ function main(request, response) {
 		<blockquote class="muted">Applications can create embedded client regions with the <code><a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data APIs">data-client-region</a></code> directive.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;div class="row-fluid" id="docs-layout" data-client-region&gt;
+		<pre class="language-markup">&lt;div class="row-fluid" id="docs-layout" data-client-region&gt;
   &lt;div class="span2"&gt;
     &lt;ul id="docs-nav" class="nav nav-list"&gt;{sidenav}&lt;/ul&gt;
   &lt;/div&gt;

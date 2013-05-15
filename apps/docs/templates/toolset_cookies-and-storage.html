@@ -28,7 +28,7 @@
 		<p>At this time, the cookies do not expire, but an be removed by assigning a null value (or directly mutating the user's appdata, as explained below). All local cookies are scoped to individual worker servers.</p>
 	</div>
 	<div class="span6">
-		<pre>response.setHeader('set-cookie', {
+		<pre class="language-javascript">response.setHeader('set-cookie', {
   q:       { value:request.query.q || '',      query:true, scope:'client' },
   filter:  { value:request.query.filter || '', query:true, scope:'client' },
   columns: { value:request.query.columns || 2, query:true, scope:'client' }
@@ -46,7 +46,7 @@
 		<p>Cookies are actually just special items (under '.cookies') in the appstorage. You can read and write to the '.cookies' item if you need more direct access to their values, but take care not to corrupt the schema in the process.</p>
 	</div>
 	<div class="span6">
-		<pre>local.http.navigator(request.headers.link, 'http://grimwire.com/rel/appstorage')
+		<pre class="language-javascript">local.http.navigator(request.headers.link, 'http://grimwire.com/rel/appstorage')
   .item('user-profile')
   .getJson();
 </pre>

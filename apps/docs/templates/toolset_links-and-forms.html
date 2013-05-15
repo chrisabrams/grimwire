@@ -21,7 +21,7 @@
 		<blockquote class="muted">Read more about targeting behavior in the <a href="httpl://{{domain}}/concepts/client-regions" type="application/html-deltas+json" target="docs-layout" title="Client Regions">Client Regions</a> doc.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;a href="httpl://somewhere.usr" target="other-region"&gt;Navigate in Other Region&lt;/a&gt;</pre>
+		<pre class="language-markup">&lt;a href="httpl://somewhere.usr" target="other-region"&gt;Navigate in Other Region&lt;/a&gt;</pre>
 		<p class="muted">An example of targeting another region</p>
 	</div>
 </div>
@@ -34,7 +34,7 @@
 		<blockquote class="muted">Grimwire chose <code>accept</code> for forms rather than <code>type</code> to avoid confusion with the standard <code>enctype</code> attribute, described below.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;form action="httpl://somewhere.usr" method="post" accept="application/json"&gt;</pre>
+		<pre class="language-markup">&lt;form action="httpl://somewhere.usr" method="post" accept="application/json"&gt;</pre>
 		<p class="muted">An example of specifying a desired response type</p>
 	</div>
 </div>
@@ -46,7 +46,7 @@
 		<p>To specify the content type in the "Content-Type" header of the request, forms should use the <code>enctype</code> attribute. If left unspecified, it defaults to "application/x-www-form-urlencoded".</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;form action="httpl://somewhere.usr" method="post" enctype="application/json"&gt;</pre>
+		<pre class="language-markup">&lt;form action="httpl://somewhere.usr" method="post" enctype="application/json"&gt;</pre>
 		<p class="muted">An example of specifying a request type</p>
 	</div>
 </div>
@@ -59,7 +59,7 @@
 		<p>Additionally, form elements can specify the <code>form</code> attribute with the id of a form which is not its parent. If specified, the given form's values (including the request payload) will be used instead of the parent.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;form action="httpl://somewhere.usr" method="get"&gt;
+		<pre class="language-markup">&lt;form action="httpl://somewhere.usr" method="get"&gt;
   &lt;input type="button" value="Get HTML" /&gt;
   &lt;input type="button" formaccept="application/json" value="Get JSON" /&gt;
 &lt;/form&gt;</pre>

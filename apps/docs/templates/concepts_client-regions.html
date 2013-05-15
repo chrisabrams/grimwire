@@ -8,7 +8,7 @@
 		<blockquote class="muted">Applications can create embedded client regions with the <code><a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data-APIs">data-client-region</a></code> directive.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;div class="row-fluid" id="docs-layout" data-client-region&gt;
+		<pre class="language-markup">&lt;div class="row-fluid" id="docs-layout" data-client-region&gt;
   &lt;div class="span2"&gt;
     &lt;ul id="docs-nav" class="nav nav-list"&gt;{sidenav}&lt;/ul&gt;
   &lt;/div&gt;
@@ -28,9 +28,9 @@
 		<p>Similarly, child client regions can be instructed to issue a GET request using the <code>navigate</code> directive in <a href="httpl://{{domain}}/toolset/html-deltas" type="application/html-deltas+json" target="docs-layout" title="HTML Deltas">HTML Deltas</a>.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;a href="httpl://{{domain}}/" target="docs-content"&gt;Home&lt;/a&gt;</pre>
+		<pre class="language-markup">&lt;a href="httpl://{{domain}}/" target="docs-content"&gt;Home&lt;/a&gt;</pre>
 		<p class="muted">An example of using a link target</p><br/>
-		<pre>response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
+		<pre class="language-javascript">response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 response.end([['navigate', '#docs-content', 'httpl://{{domain}}/']]);</pre>
 		<p class="muted">An example of using HTML Deltas to do navigation</p>
 	</div>

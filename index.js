@@ -135,6 +135,8 @@ local.env.setRegionPostProcessor(function(el, containerEl) {
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
+	// other widgets
+	$("pre[class|=language]").each(function(i, el) { Prism.highlightElement(el); });
 });
 
 //http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules

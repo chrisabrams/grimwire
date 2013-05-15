@@ -16,7 +16,7 @@
         &lt;http://webhost.com/search&gt;; rel="search",
         &lt;http://otherhost.com/&gt;; rel="service"; title="otherhost"</pre>
 		<p class="muted">An example of a link response to a HEAD request</p><br />
-		<pre>response.setHeader('link', [
+		<pre class="language-javascript">response.setHeader('link', [
   { href:'/users', rel:'collection', title:'users' },
   { href:'/search', rel:'search', },
   { href:'http://otherhost.com/', rel:'service', title:'otherhost' }
@@ -56,13 +56,13 @@
 		<blockquote class="muted">If you're worried about latency, remember that much of Grimwire's traffic is local. New transports (such as WebSockets) will eventually be employed to reduce remote connection overhead.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>local.http.navigator('http://myhost.com')
+		<pre class="language-javascript">local.http.navigator('http://myhost.com')
   .collection('users')
   .item('pfraze')
   .getJson();
 </pre>
 		<p class="muted">An example usage of the navigator</p><br/>
-		<pre>local.http.navigator('httpl://anotherhost.usr')
+		<pre class="language-javascript">local.http.navigator('httpl://anotherhost.usr')
   .relation('http://grimwire.com/rel/foobar')
   .post({foo:'baz'}, 'application/json')
 </pre>
@@ -86,7 +86,7 @@
 		<p>When a match is found, its <code>href</code> is run through the URI Template parser using all parameters provided to the Navigator. Because the <code>title</code> tag is used commonly by the navigator, it's often most convenient to use the <code>{title}</code> token in the link. This makes it easy to explicitly title links of a certain relation if they use an atypical URI scheme, then fallback to a generic entry that uses the <code>{title}</code> token in its <code>href</code>.</p>
 	</div>
 	<div class="span6">
-		<pre>response.writeHead(200, 'ok', { link:[
+		<pre class="language-javascript">response.writeHead(200, 'ok', { link:[
   { href:'/misc/mine', rel:'collection', title:'mine' },
   { href:'httpl://otherhost.com/theirs', rel:'collection', title:'theirs' },
   { href:'/{title}', rel:'collection' } // general fallback

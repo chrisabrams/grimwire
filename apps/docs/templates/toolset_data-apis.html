@@ -16,7 +16,7 @@
 		<blockquote class="muted"><a href="http://twitter.github.io/bootstrap/javascript.html" target="_blank" title="Twitter Bootstrap Components">Read the Twitter Bootstrap Components API reference to learn more.</a></blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;li class="dropdown open"&gt;
+		<pre class="language-markup">&lt;li class="dropdown open"&gt;
   &lt;a class="dropdown-toggle" data-toggle="dropdown" href="#"&gt;Dropdown&lt;/a&gt;
   &lt;ul class="dropdown-menu"&gt;
     &lt;li&gt;&lt;a href="httpl://..."&gt;Action&lt;/a&gt;&lt;/li&gt;
@@ -37,7 +37,7 @@
 		<p>If <code>data-subscribe</code> is used on a form element, the content fetch request will include the form's payload in its query fragment. Additionally, the request will use the form's <code>accept</code> attribute to dictate the desired content-type.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;div class="feed" data-subscribe="httpl://myhost.com/feed?output=entries"&gt;</pre>
+		<pre class="language-markup">&lt;div class="feed" data-subscribe="httpl://myhost.com/feed?output=entries"&gt;</pre>
 		<p class="muted">An example of using the subscribe behavior</p>
 	</div>
 </div>
@@ -49,7 +49,7 @@
 		<p>To create child client regions in your UI, Grimwire provides the <code>data-client-region</code> behavior. When this attribute is used on a div element, Grimwire will treat it as a client region and, if an initial URL is specified, dispatch a GET request for html to populate the region.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;div data-client-region="httpl://myhost.com/nav"&gt;&lt;/div&gt;
+		<pre class="language-markup">&lt;div data-client-region="httpl://myhost.com/nav"&gt;&lt;/div&gt;
 &lt;div id="content" data-client-region&gt;
   The content region
 &lt;/div&gt;</pre>
@@ -66,7 +66,7 @@
 		<blockquote class="muted">When combined with <code>data-toggle="nav"</code>, the value-*of behavior can be used to read the active nav selection.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>&lt;input type="hidden" data-value-idof="#nav .active" /&gt;</pre>
+		<pre class="language-markup">&lt;input type="hidden" data-value-idof="#nav .active" /&gt;</pre>
 		<p class="muted">An example of using the value-*of behavior</p>
 	</div>
 </div>
@@ -78,7 +78,7 @@
 		<p>In some situations &ndash; typically with flash notices &ndash; you want an element to only stay on the page for a short period. For that case, you can specify <code>data-lifespan</code> with an integer delay (in seconds) to keep the element, after which it will be removed from the document.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;div class="alert" data-lifespan="5"&gt;Warning! This alert will disappear in 5 seconds.&lt;/div&gt;</pre>
+		<pre class="language-markup">&lt;div class="alert" data-lifespan="5"&gt;Warning! This alert will disappear in 5 seconds.&lt;/div&gt;</pre>
 		<p class="muted">An example of using the lifespan behavior</p>
 	</div>
 </div>

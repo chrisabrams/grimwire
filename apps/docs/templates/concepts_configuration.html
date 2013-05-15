@@ -8,7 +8,7 @@
 		<p>User settings work separately. They are specified per-worker and given to the worker under <code>local.worker.config.usr</code>. The worker can then decide how to merge user-settings with their application settings. (As a result, user settings can be defined for host and user applications.)</p>
 	</div>
 	<div class="span6">
-		<pre>var config = local.worker.config;
+		<pre class="language-javascript">var config = local.worker.config;
 var username = config.usr.username || config.username;
 var profcolors = _.extend({}, config.profcolors, config.usr.profcolors);
 </pre>
@@ -26,11 +26,11 @@ var profcolors = _.extend({}, config.profcolors, config.usr.profcolors);
 		<blockquote class="muted"><code>httpl://config.env/apps</code> also serves a "text/event-stream" which emits an "update" event when apps are added or removed.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>local.http.navigator(sourceUrl)
+		<pre class="language-javascript">local.http.navigator(sourceUrl)
     .relation('http://grimwire.com/rel/index')
     .resolve();</pre>
 		<p class="muted">The search application's technique for finding indexable content on a server</p><br/>
-		<pre>response.setHeader('link', [
+		<pre class="language-javascript">response.setHeader('link', [
   { rel:'self', href:'/' },
   { rel:'collection', href:'/items', title:'items' },
   { rel:'http://grimwire.com/rel/index', href:'/items?schema=grimsearch' }
@@ -47,7 +47,7 @@ var profcolors = _.extend({}, config.profcolors, config.usr.profcolors);
 		<p>To update the user settings, a worker can PUT json to <code>httpl://config.env/workers/{domain}</code>. Doing so will overwrite the current settings in <code>local.worker.config.usr</code>, then trigger a reload of the worker. Because all requests are asynchronous, a worker can dispatch this request then finish responding.</p>
 	</div>
 	<div class="span6">
-		<pre>feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?
+		<pre class="language-javascript">feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?
   request.body.sources.split("\n").filter(function(i) { return i; }) :
   [];
 local.http.dispatch({

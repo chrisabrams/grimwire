@@ -18,7 +18,7 @@
 		<blockquote class="muted">HTML Deltas trigger the post processor on every element that has its <code>innerHTML</code> altered.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>local.env.setRegionPostProcessor(function(el) {
+		<pre class="language-javascript">local.env.setRegionPostProcessor(function(el, containerEl) {
   // bootstrap widgets
   $(el).tooltip({ selector: "[data-toggle=tooltip]" });
   $("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
@@ -37,7 +37,7 @@
 		<p>If you intend to create an alternative response to a request, you must return a promise that's fulfilled or rejected with a <code>local.http.ClientResponse</code> object. You can read about it in the <a href="httpl://{{domain}}/toolset/api" type="application/html-deltas+json" target="docs-layout" title="Local API">Local API docs</a>.</p>
 	</div>
 	<div class="span6">
-		<pre>local.env.setDispatchWrapper(function(request, origin, dispatch) {
+		<pre class="language-javascript">local.env.setDispatchWrapper(function(request, origin, dispatch) {
   // allow request
   return dispatch(request);
 });</pre>

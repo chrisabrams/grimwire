@@ -8,7 +8,7 @@
 		<p>All workers are stateless, and may be shut down or restarted at any time (without notice). This simplifies reconfiguration. Any persistent data should be stored in external services, such as <code><a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout">storage.env</a></code>.</p>
 	</div>
 	<div class="span6">
-		<pre>var marked = require('vendor/marked.js');
+		<pre class="language-javascript">var marked = require('vendor/marked.js');
 marked.setOptions({ gfm: true, tables: true });
 
 function main(request, response) {
@@ -39,9 +39,9 @@ function main(request, response) {
 		<p>Lastly, Grimwire allows the host to add <a href="httpl://{{domain}}/toolset/data-apis" type="application/html-deltas+json" target="docs-layout" title="Data-* APIs">frontend widgets</a> to the UIs, enabling rich interfaces through data-apis. By default, Grimwire includes the <a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout" title="Twitter Bootstrap Components">Twitter Bootstrap Components</a>, along with a few custom additions.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout"&gt;Twitter Bootstrap Components&lt;/a&gt;</pre>
+		<pre class="language-markup">&lt;a href="httpl://{{domain}}/toolset/data-apis/bootstrap" type="application/html-deltas+json" target="docs-layout"&gt;Twitter Bootstrap Components&lt;/a&gt;</pre>
 		<p class="muted">An example of using a link to specify request &amp; response behaviors</p><br/>
-		<pre>response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
+		<pre class="language-javascript">response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 response.end([
   ['removeClass', '#docs-nav li.active', 'active'],
   ['addClass', '#docs-nav li[data-url="'+url+'"]', 'active'],
@@ -61,9 +61,9 @@ response.end([
 		<p>For more extensive user data, requests to Worker Servers include a "Link" header with a "http://grimwire.com/rel/appstorage" relation. This link is guaranteed to be owned by the requesting user and apply only to the Worker's application. Currently, it points to a collection in <a href="httpl://{{domain}}/concepts/page-env/storage-server" type="application/html-deltas+json" target="docs-layout" title="Session Storage">Session Storage</a>.</p>
 	</div>
 	<div class="span6">
-		<pre>&lt;input type="hidden" name="selection" data-value-valueof=".active"&gt;</pre>
+		<pre class="language-markup">&lt;input type="hidden" name="selection" data-value-valueof=".active"&gt;</pre>
 		<p class="muted">An example of using the value-*of tool to pass the current nav item in a request</p><br/>
-		<pre>response.setHeader('set-cookie', {
+		<pre class="language-javascript">response.setHeader('set-cookie', {
   q:       { value:request.query.q || '',      query:true, scope:'client' },
   filter:  { value:request.query.filter || '', query:true, scope:'client' },
   columns: { value:request.query.columns || 2, query:true, scope:'client' }
@@ -80,7 +80,7 @@ response.end([
 		<p>If the content type of the fetched resource is not "application/javascript", and the extension is not ".js", Grimwire will respond the unevaluated string. You can use this characteristic to import templates.</p>
 	</div>
 	<div class="span6">
-		<pre>var templates = {
+		<pre class="language-javascript">var templates = {
   home: require('templates/home.html'),
   profile: require('templates/profile.html')
 };</pre>

@@ -19,10 +19,10 @@
 		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/linkjs/navigator.md" target="_blank" target="http.local.navigator">You can find a full reference to the subscribe API in the Local.js docs</a>.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>var stream = local.http.subscribe('httpl://myhost.com/news');
+		<pre class="language-javascript">var stream = local.http.subscribe('httpl://myhost.com/news');
 stream.on('update', function(e) { console.log(e); });</pre>
 		<p class="muted">An example of subscribing to an event-stream</p><br/>
-		<pre>local.http.navigator('httpl://myhost.com')
+		<pre class="language-javascript">local.http.navigator('httpl://myhost.com')
   .collection('news')
   .subscribe()
   .succeed(function(stream) {
@@ -40,12 +40,12 @@ stream.on('update', function(e) { console.log(e); });</pre>
 		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/linkjs/navigator.md" target="_blank" target="http.local.navigator">You can find a full reference to the broadcaster API in the Local.js docs</a>.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>var broadcast = local.http.broadcaster();
+		<pre class="language-javascript">var broadcast = local.http.broadcaster();
 //...
 response.writeHead(200, 'ok', {'content-type':'text/event-stream'});
 broadcast.addStream(response);</pre>
 		<p class="muted">An example of adding new subscribers to a broadcast</p><br/>
-		<pre>broadcast.emit('update', { foo:'bar' });</pre>
+		<pre class="language-javascript">broadcast.emit('update', { foo:'bar' });</pre>
 		<p class="muted">Emitting an update event</p><br/>
 	</div>
 </div>
