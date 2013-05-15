@@ -5,6 +5,7 @@ Changes
 
  - Changed html-deltas to use an ordered array structure
  - Changed data-grim-layout to data-client-region
+ - Added support for syntax highlighting with pre[class|="language"]
 
 
 2013/05/07 pfraze
