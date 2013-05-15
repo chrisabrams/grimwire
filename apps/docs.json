@@ -14,7 +14,8 @@
 				"_template_vars": {},
 				"intro": {
 					"_title": "Introduction ✓",
-					"status": { "_title": "Project Status" },
+					"architecture": { "_title": "The REST Architecture" },
+					"status": { "_title": "Project Status ✓" },
 					"credits": { "_title": "Credits ✓" },
 					"structured": { "_nav": false },
 					"user-driven": { "_nav": false },

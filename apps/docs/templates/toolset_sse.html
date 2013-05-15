@@ -1,7 +1,46 @@
 <h2 class="page-header">Server-Sent Events <small>Toolset</small></h2>
 <div class="row-fluid">
 	<div class="span6">
+		<p><a href="https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events" target="_blank" title="Server-Sent Events">Server-Sent Events</a> (SSE) are a relatively recent addition to HTML5, and are supported natively by browsers. They work by making a request to a server, then letting the response stay open for the server to add new data. This enables events to reach back to the client from the server.</p>
+		<p>Grimwire uses SSEs to syncronize between uncoupled programs. Most frequently, consumers will subscribe to collections or items which support the "text/event-stream" type and use that to watch for updates.</p>
+		<blockquote class="muted">This is how, for instance, the Search program knows when new applications enter the page environment, so that it can index their content.</blockquote>
+		<p>SSEs are also used by the <a href="httpl://{{domain}}/toolset/data-apis/subscribe" type="application/html-deltas+json" target="docs-layout" title="data-subscribe">data-subscribe</a> attribute to allow the server to trigger targeted refreshes in the UI. This is one way that programs can implement realtime interfaces without breaking REST.</p>
 	</div>
 	<div class="span6">
+		diagram TODO
+	</div>
+</div>
+<br/>
+
+<h3>Subscribing to an Event Source</h3>
+<div class="row-fluid">
+	<div class="span6">
+	</div>
+	<div class="span6">
+		<pre>var stream = local.http.subscribe('httpl://myhost.com/news');
+stream.on('update', function(e) { console.log(e); });</pre>
+		<p class="muted">An example of subscribing to an event-stream</p><br/>
+		<pre>local.http.navigator('httpl://myhost.com')
+  .collection('news')
+  .subscribe()
+  .succeed(function(stream) {
+    stream.on('update', function(e) { console.log(e); });
+  });</pre>
+		<p class="muted">Using the navigator to subscribe to an event-stream</p><br/>
+	</div>
+</div>
+
+<h3>Publishing Events</h3>
+<div class="row-fluid">
+	<div class="span6">
+	</div>
+	<div class="span6">
+		<pre>var broadcast = local.http.broadcaster();
+//...
+response.writeHead(200, 'ok', {'content-type':'text/event-stream'});
+broadcast.addStream(response);</pre>
+		<p class="muted">An example of adding new subscribers to a broadcast</p><br/>
+		<pre>broadcast.emit('update', { foo:'bar' });</pre>
+		<p class="muted">Emitting an update event</p><br/>
 	</div>
 </div>
