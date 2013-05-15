@@ -58,8 +58,8 @@ function getInterface(request, response) {
 		setCookies(request, response);
 		response.setHeader('content-type', 'application/html-deltas+json');
 		response.writeHead(200, 'ok').end([
-			['replace', '#search-results', views.docs(request, resultSet)]
-			['replace', '#search-filters', views.filtersNav(request)]
+			['replace', '#search-results', views.docs(request, resultSet)],
+			['replace', '#search-filters', views.filtersNav(request)],
 			['replace', '#search-filterbtn', views.filtersButton(request)]
 		]);
 	} else if (/event-stream/.test(request.headers.accept)) {
