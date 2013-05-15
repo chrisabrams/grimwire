@@ -316,7 +316,7 @@
 			});
 	};
 
-	ConfigServer.prototype.installUserApp = function(cfg) {
+	ConfigServer.prototype.loadUserApp = function(cfg) {
 		var self = this;
 		return this.getAppConfig(cfg.id)
 			.succeed(function(collidingAppCfg) {
@@ -324,7 +324,7 @@
 				cfg.id = (''+cfg.id).replace(/(\d+)?$/, function(v) { return (+v || 1)+1; });
 				if (cfg.startpage)
 					cfg.startpage = cfg.startpage.replace(/\.([^\/]*)\.usr/, '.'+cfg.id+'.usr');
-				return self.installUserApp(cfg);
+				return self.loadUserApp(cfg);
 			})
 			.fail(function() {
 				// app id free, save
@@ -340,7 +340,7 @@
 			});
 	};
 
-	ConfigServer.prototype.uninstallUserApp = function(appId) {
+	ConfigServer.prototype.unloadUserApp = function(appId) {
 		if (appId && typeof appId == 'object')
 			appId = appId.id;
 		var self = this;
@@ -603,7 +603,7 @@
 		var sendErrResponse = function(errs) {
 			if (/html/.test(request.headers.accept))
 				return response.writeHead(422, 'request errors', {'content-type':'text/html'})
-								.end(views.appInstallNew(errs));
+								.end(views.appLoadNew(errs));
 			return response.writeHead(422, 'request errors').end(errs);
 		};
 
@@ -632,7 +632,7 @@
 			return sendErrResponse({ config:errors });
 
 		var self = this;
-		this.installUserApp(cfg)
+		this.loadUserApp(cfg)
 			.then(function() {
 				self.openApp(cfg.id);
 				if (/html/.test(request.headers.accept)) {
@@ -672,7 +672,7 @@
 		if (appId == '.new') {
 			if (/html/.test(request.headers.accept)) {
 				headers['content-type'] = 'text/html';
-				return response.writeHead(200, 'ok', headers).end(views.appInstallNew());
+				return response.writeHead(200, 'ok', headers).end(views.appLoadNew());
 			} else
 				return response.writeHead(406, 'not acceptable').end();
 		}
@@ -718,7 +718,7 @@
 		var self = this;
 		this.getAppConfig(appId).then(
 			function(cfg) {
-				self.installUserApp(cfg)
+				self.loadUserApp(cfg)
 					.then(function() {
 						self.openApp(cfg.id);
 						if (/html/.test(request.headers.accept))
@@ -753,7 +753,7 @@
 				if (cfg._readonly)
 					return response.writeHead(403, 'forbidden').end();
 				self.closeApp(appId);
-				self.uninstallUserApp(appId);
+				self.unloadUserApp(appId);
 
 				if (/html/.test(request.headers.accept)) {
 					self.getAppConfigs().succeed(function(appCfgs) {
@@ -965,7 +965,7 @@
 				html += views._appHeader(appCfgs[id], { nohtml:true })+'<hr/>';
 			}
 			html += '<br/><br/>'+
-				'<h4>Your Applications <small><a href="httpl://config.env/apps/.new"><i class="icon-download-alt"></i> Install New App</a></small></h4>'+
+				'<h4>Your Applications <small><a href="httpl://config.env/apps/.new"><i class="icon-download-alt"></i> Load New App</a></small></h4>'+
 				'<hr/>';
 			var userHasApps = false;
 			for (var id in appCfgs) {
@@ -1000,7 +1000,7 @@
 					((cfg._readonly) ? '' : '<div class="control-group"><div class="controls"><button class="btn">Update</button></div></div>')+
 				'</form>';
 		},
-		appInstallNew: function(errors) {
+		appLoadNew: function(errors) {
 			var errMsg = '';
 			if (errors) {
 				if (typeof errors.config == 'string')
@@ -1013,11 +1013,11 @@
 					errMsg += '</ul></div>';
 				}
 			}
-			var html = '<h2>Install New Application</h2><hr/>'+
+			var html = '<h2>Load New Application</h2><hr/>'+
 				'<form action="httpl://config.env/apps" method="post">'+
 					errMsg+
 					'<input type="file" name="config" required />'+
-					'<button class="btn"><i class="icon-ok"></i> Install</button>'+
+					'<button class="btn"><i class="icon-ok"></i> Load</button>'+
 				'</form>';
 			return html;
 		},
@@ -1061,7 +1061,7 @@
 					'<ul class="inline">'+
 						'<li><button class="btn btn-link" formmethod="download"><i class="icon-download"></i> Save as File</button></li>'+
 						'<li><button class="btn btn-link" formmethod="duplicate" formaccept="none"><i class="icon-download-alt"></i> Duplicate</button></li>'+
-						'<li><button class="btn btn-link" formmethod="delete"><i class="icon-remove-sign"></i> Uninstall</button></li>'+
+						'<li><button class="btn btn-link" formmethod="delete"><i class="icon-remove-sign"></i> Unload</button></li>'+
 						((cfg._active) ?
 							'<li><button class="btn btn-link" formmethod="disable"><i class="icon-remove"></i> Disable</button></li>' :
 							'<li><button class="btn btn-link" formmethod="enable"><i class="icon-plus"></i> Enable</button></li>'

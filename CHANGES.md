@@ -1,6 +1,11 @@
 Changes
 =======
 
+2013/05/15 pfraze
+
+ - Changed html-deltas to use an ordered array structure
+
+
 2013/05/07 pfraze
 
  - Added 'scope' parameter to cookies with "session" and "client" values

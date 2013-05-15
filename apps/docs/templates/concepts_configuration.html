@@ -5,12 +5,12 @@
 		<p>The host sets default applications with <code>.host.json</code>. The user can choose to add separate app configs, but their applications are kept separate to avoid merging complexity.</p>
 		<p>Applications are JSON files which specify one or more Web Worker to comprise the app.</p>
 		<blockquote class="muted">The schemas for <code>.host.json</code> and application configs are explained in <a href="httpl://{{domain}}/getting-started/overview" type="application/html-deltas+json" target="docs-layout" title="Intro Overview">the Intro Overview</a>.</blockquote>
-		<p>User settings work separately. They are specified per-worker and given to the worker under <code>local.worker.config.user</code>. The worker can then decide how to merge user-settings with their application settings. (As a result, user settings can be defined for host and user applications.)</p>
+		<p>User settings work separately. They are specified per-worker and given to the worker under <code>local.worker.config.usr</code>. The worker can then decide how to merge user-settings with their application settings. (As a result, user settings can be defined for host and user applications.)</p>
 	</div>
 	<div class="span6">
 		<pre>var config = local.worker.config;
-var username = config.user.username || config.username;
-var profcolors = _.extend({}, config.profcolors, config.user.profcolors);
+var username = config.usr.username || config.username;
+var profcolors = _.extend({}, config.profcolors, config.usr.profcolors);
 </pre>
 		<p class="muted">An example of a worker merging user settings with application settings</p>
 	</div>
@@ -44,7 +44,7 @@ var profcolors = _.extend({}, config.profcolors, config.user.profcolors);
 <div class="row-fluid">
 	<div class="span6">
 		<p>User settings can be defined within the application's UI. However, for simplicity, the "Applications" interface embeds interfaces from the <code>/.grim/config</code> resource of each worker.</p>
-		<p>To update the user settings, a worker can PUT json to <code>httpl://config.env/workers/{domain}</code>. Doing so will overwrite the current settings in <code>local.worker.config.user</code>, then trigger a reload of the worker. Because all requests are asynchronous, a worker can dispatch this request then finish responding.</p>
+		<p>To update the user settings, a worker can PUT json to <code>httpl://config.env/workers/{domain}</code>. Doing so will overwrite the current settings in <code>local.worker.config.usr</code>, then trigger a reload of the worker. Because all requests are asynchronous, a worker can dispatch this request then finish responding.</p>
 	</div>
 	<div class="span6">
 		<pre>feedSources = (request.body.sources &amp;&amp; isString(request.body.sources)) ?

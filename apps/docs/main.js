@@ -16,17 +16,17 @@ function main(request, response) {
 
 		if (/html-deltas/.test(request.headers.accept)) {
 			var url = 'httpl://'+config.domain+request.path;
-			var deltas = { addClass:{}, removeClass:{} };
+			var deltas = [];
 
 			// update active nav
 			if (doc.desc._template !== false) {
-				deltas.removeClass['#docs-nav li:not([value="'+url+'"])'] = 'active';
-				deltas.addClass['#docs-nav li[value="'+url+'"]'] = 'active';
+				deltas.push(['removeClass', '#docs-nav li:not([value="'+url+'"])', 'active']);
+				deltas.push(['addClass', '#docs-nav li[value="'+url+'"]', 'active']);
 			}
 
 			// change content
 			if (doc.desc._template !== false)
-				deltas.navigate = { '#docs-content':url };
+				deltas.push(['navigate', '#docs-content', url]);
 
 			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
 			response.end(deltas);
