@@ -57,13 +57,11 @@ function getInterface(request, response) {
 	if (/html-deltas/.test(request.headers.accept)) {
 		setCookies(request, response);
 		response.setHeader('content-type', 'application/html-deltas+json');
-		response.writeHead(200, 'ok').end({
-			replace: {
-				'#search-results': views.docs(request, resultSet),
-				'#search-filters': views.filtersNav(request),
-				'#search-filterbtn': views.filtersButton(request)
-			}
-		});
+		response.writeHead(200, 'ok').end([
+			['replace', '#search-results', views.docs(request, resultSet)]
+			['replace', '#search-filters', views.filtersNav(request)]
+			['replace', '#search-filterbtn', views.filtersButton(request)]
+		]);
 	} else if (/event-stream/.test(request.headers.accept)) {
 		response.setHeader('content-type', 'text/event-stream');
 		response.writeHead(200, 'ok');

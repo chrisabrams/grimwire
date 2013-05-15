@@ -181,12 +181,10 @@ function main(request, response) {
 				response.end(cachedItems);
 			}
 		} else {
-			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({
-				replace: {
-					'#grimreader-app > table': buildFeedInterface(),
-					'#fetchprogress': buildFetchProgressbar()
-				}
-			});
+			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end([
+				['replace', '#grimreader-app > table', buildFeedInterface()],
+				['replace', '#fetchprogress', buildFetchProgressbar()]
+			]);
 		}
 		return;
 	}
@@ -217,9 +215,9 @@ function main(request, response) {
 
 		if (request.query.deltas) {
 			// html deltas
-			var replace = {};
-			replace['#item-'+index] = html;
-			response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'}).end({ replace:replace });
+			response
+				.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'})
+				.end(['replace', '#item-'+index, html]);
 		} else {
 			// html
 			response.writeHead(200, 'ok', {'content-type':'text/html'}).end(html);
