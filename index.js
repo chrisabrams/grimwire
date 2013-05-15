@@ -15,7 +15,7 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 		// attach links
 		if (!request.headers.link)
 			request.headers.link = [];
-		request.headers.link.push({ href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/storage' });
+		request.headers.link.push({ href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/appstorage' });
 		// ^ when multiple peers' servers enter the namespace, this will direct the Worker to the correct user's storage
 
 		var reqCookies = {};
