@@ -1,19 +1,19 @@
 {
-  "id": "rss",
+  "id": "reader",
   "title": "Reader",
   "icon": "list",
-  "startpage": "httpl://feed.rss.usr",
+  "startpage": "httpl://feed.reader.usr",
   "common": {},
   "workers": [
     {
       "id": "feed",
       "title": "Feed Interface",
-      "src": "servers/worker/reader/feed.js"
+      "src": "apps/reader/feed.js"
     },
     {
       "id": "rssproxy",
       "title": "RSS Feed Proxy",
-      "src": "servers/worker/reader/rssproxy.js"
+      "src": "apps/reader/rssproxy.js"
     }
   ]
 }

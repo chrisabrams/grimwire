@@ -1,14 +1,14 @@
 {
-	"id": "index",
+	"id": "search",
 	"title": "Search",
 	"icon": "search",
-	"startpage": "httpl://lunr.index.usr",
+	"startpage": "httpl://lunr.search.usr",
 	"common": {},
 	"workers": [
 		{
 			"id": "lunr",
 			"title": "Lunr.js Index",
-			"src": "servers/worker/index/lunr.js"
+			"src": "apps/search/lunr.js"
 		}
 	]
 }

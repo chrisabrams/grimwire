@@ -2,6 +2,7 @@
 // ==============
 // Search index with lunr.js
 var lunr = require('vendor/lunr.min.js');
+var config = local.worker.config;
 
 
 // Setup
@@ -109,7 +110,7 @@ function updateSources() {
 			// add new
 			var sourceUrls = [], url;
 			for (var appId in cfgs) {
-				if (!cfgs[appId]._active || appId == local.worker.config.appId)
+				if (!cfgs[appId]._active || appId == config.appId)
 					continue;
 				url = cfgs[appId].startpage;
 				addSource(url);
@@ -200,13 +201,13 @@ var views = {
 	filtersButton: function(request) {
 		var ncolumns = (request.query.columns == 1) ? 2 : 1;
 		var active = (request.query.columns != 1) ? 'active' : '';
-		return '<a class="btn btn-mini '+active+'" href="httpl://'+local.worker.config.domain+'?columns='+ncolumns+'">Filters</a>';
+		return '<a class="btn btn-mini '+active+'" href="httpl://'+config.domain+'?columns='+ncolumns+'">Filters</a>';
 	},
 	filtersNav: function(request) {
 		var filter = request.query.filter;
-		var html = '<li '+((!filter)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?filter=">Everything</a></li>';
+		var html = '<li '+((!filter)?'class="active"':'')+'><a href="httpl://'+config.domain+'/?filter=">Everything</a></li>';
 		indexedCategories.forEach(function(cat) {
-			html += '<li '+((filter==cat)?'class="active"':'')+'><a href="httpl://lunr.index.usr/?filter='+encodeURIComponent(cat)+'">'+cat+'</a></li>';
+			html += '<li '+((filter==cat)?'class="active"':'')+'><a href="httpl://'+config.domain+'/?filter='+encodeURIComponent(cat)+'">'+cat+'</a></li>';
 		});
 		return '<ul class="nav nav-pills nav-stacked">'+html+'</ul>';
 	},
@@ -240,7 +241,7 @@ var views = {
 	interface: function(request, resultSet) {
 		var searchPlaceholder = (request.query.filter) ? 'Search '+request.query.filter : 'Search';
 		return [
-			'<form class="form-inline" method="get" action="httpl://',local.worker.config.domain,'" accept="application/html-deltas+json" data-subscribe="httpl://',local.worker.config.domain,'">',
+			'<form class="form-inline" method="get" action="httpl://',config.domain,'" accept="application/html-deltas+json" data-subscribe="httpl://',config.domain,'">',
 				'<input type="text" placeholder="',searchPlaceholder,'..." class="input-xxlarge" name="q" value="'+(request.query.q||'')+'" />',
 				'&nbsp;&nbsp;<button type="submit" class="btn">Search</button>',
 			'</form>',

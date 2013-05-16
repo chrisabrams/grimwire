@@ -1,7 +1,7 @@
 {
 	"applications":[
 		"apps/docs.json",
-		"apps/index.json",
-		"apps/rss.json"
+		"apps/search.json",
+		"apps/reader.json"
 	]
 }

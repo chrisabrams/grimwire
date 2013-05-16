@@ -1,23 +1,55 @@
 src = src/
-local = ${src}local/lib
-local-worker-files =\
+src-local-files =\
+	${src}local/lib/local.min.js\
+	${src}local/lib/local.js
+src-local-worker-files =\
 	${src}local/lib/worker.min.js\
 	${src}local/lib/worker.js
+src-grim-files =\
+	${src}grim/util.js\
+	${src}grim/regions.js\
+	${src}grim/cookies.js
+src-servers-files =\
+	${src}local/servers/env/storage.js\
+	${src}servers/config.js
+src-widgets-files =\
+	${src}widgets/_compiled_header.js\
+	${src}widgets/lifespan.js\
+	${src}widgets/value_of.js\
+	${src}widgets/_compiled_footer.js
 
 lib = lib/
-lib-local = ${lib}local/
+lib-local-files =\
+	lib/local.min.js\
+	lib/local.js
 lib-local-worker-files =\
 	worker.min.js\
 	worker.js
 
-setup: clean concat
+setup: clean concat buildmin
+	@echo Done!
 
 clean:
-	-rm ${lib-local-worker-files}
-	-rm -Rf ${lib-local}
+	@-rm ${lib-local-worker-files}
+	@-rm -Rf ${lib-local-files}
+	@-rm -Rf ${lib}grim.js
+	@echo Cleaned Out Old Libraries
 
-concat: ${lib-local} ${lib-local-worker-files}
-${lib-local}: ${local}
-	cp -R ${local} ${lib-local}
-${lib-local-worker-files}: ${local-worker-files}
-	cp $^ .
+concat: ${lib-local-files} ${lib-local-worker-files} ${lib}grim.js
+	@echo Concatted Libraries
+${lib-local-files}: ${src-local-files}
+	@cp $^ lib
+${lib-local-worker-files}: ${src-local-worker-files}
+	@cp $^ .
+${lib}grim.js: ${src-grim-files} ${src-servers-files} ${src-widgets-files}
+	@cat > $@ $^
+
+buildmin: ${lib}grim.min.js
+	@echo Built Minified Versions
+${lib}grim.min.js: ${lib}grim.js
+	@./src/local/minify.sh $@ $^
+
+deps: uglifyjs
+uglifyjs:
+	-git clone git://github.com/mishoo/UglifyJS2.git
+	(cd UglifyJS2 && npm link .)

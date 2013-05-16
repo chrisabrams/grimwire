@@ -27,7 +27,7 @@ python -m SimpleHTTPServer
 		<blockquote class="muted">User settings are controlled in the "Applications" interface at the top right. If you haven't seen it yet, take a moment to open Applications and look around.</blockquote>
 	</div>
 	<div class="span6">
-		<pre>{ "applications": ["apps/docs.json", "apps/search.json", "apps/rss.json"] }</pre>
+		<pre>{ "applications": ["apps/docs.json", "apps/search.json", "apps/reader.json"] }</pre>
 		<p class="muted">An example .host.json file</p>
 	</div>
 </div>
@@ -47,10 +47,10 @@ python -m SimpleHTTPServer
 	</div>
 	<div class="span6">
 		<pre>{
-  "id": "rss",
+  "id": "reader",
   "title": "Reader",
   "icon": "list",
-  "startpage": "httpl://feed.rss.usr",
+  "startpage": "httpl://feed.reader.usr",
   "common": {
     "storageHost": "httpl://storage.env"
   },
@@ -58,12 +58,12 @@ python -m SimpleHTTPServer
     {
       "id": "feed",
       "title": "Feed Interface",
-      "src": "servers/worker/reader/feed.js"
+      "src": "apps/reader/feed.js"
     },
     {
       "id": "rssproxy",
       "title": "RSS Feed Proxy",
-      "src": "servers/worker/reader/rssproxy.js"
+      "src": "apps/reader/rssproxy.js"
     }
   ]
 }</pre>

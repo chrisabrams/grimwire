@@ -23,7 +23,7 @@ function getAllFeeds() {
 			feeds[url] = null; // set the key, for progress-tracking
 			var getUrl = url;
 			if (getUrl.indexOf('httpl') === -1)
-				getUrl = 'httpl://rssproxy.rss.usr?url='+url; // use the proxy on remote urls (solves CORS)
+				getUrl = 'httpl://rssproxy.reader.usr?url='+url; // use the proxy on remote urls (solves CORS)
 			return local.http.dispatch({ method:'get', url:getUrl, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {

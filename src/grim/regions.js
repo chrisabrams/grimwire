@@ -141,7 +141,45 @@
 			if (initUrl)
 				region.dispatchRequest(initUrl);
 		});
+
+		// sanitize and whitelist styles
+		$("[style]", el).each(function(i, styledElem) {
+			var nStyles = styledElem.style.length;
+			for (var j=0; j < nStyles; j++) {
+				var k = styledElem.style[j];
+
+				if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
+					styledElem.style.setProperty(k, clampSpacingStyles(styledElem.style[k]));
+
+				else if (isStyleAllowed(k) == false)
+					styledElem.style.removeProperty(k);
+			}
+		});
 	};
+
+
+	// styles guarding
+	// -
+	//http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules
+	var styleWhitelist = [
+		'color','background','font','line-height','line-spacing','text-align','text-decoration','vertical-align',
+		'border','box-shadow','overflow','cursor','width','height','max-width','max-height','white-space'
+	];
+	var nStyleWhitelist = styleWhitelist.length;
+	function isStyleAllowed(style) {
+		for (var i=0; i < nStyleWhitelist; i++) {
+			if (style.indexOf(styleWhitelist[i]) === 0)
+				return true;
+		}
+		return false;
+	}
+	function clampSpacingStyles(value) {
+		return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
+			var n = +v;
+			if (n < 0) return 0;
+			return org;
+		});
+	}
 
 
 	// helpers

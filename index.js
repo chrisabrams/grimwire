@@ -12,73 +12,21 @@ local.env.config.workerBootstrapUrl = 'worker.js';
 local.env.setDispatchWrapper(function(request, origin, dispatch) {
 	// attach origin information
 	if (request.urld.protocol == 'httpl') {
+		attachCookies(request, origin);
+
 		// attach links
 		if (!request.headers.link)
 			request.headers.link = [];
 		request.headers.link.push({ href:'httpl://storage.env/'+request.urld.host, rel:'http://grimwire.com/rel/appstorage' });
 		// ^ when multiple peers' servers enter the namespace, this will direct the Worker to the correct user's storage
-
-		var reqCookies = {};
-		// attach client cookies
-		if (origin instanceof local.client.Region) {
-			var clientCookies = origin.cookies[request.urld.authority];
-			if (clientCookies) {
-				for (var k in clientCookies) {
-					reqCookies[k] = clientCookies[k].value || clientCookies[k];
-					// ^ cookies may be given as a single value or as an object with {value:...}
-
-					// add flagged values to the query object
-					if (clientCookies[k].query)
-						request.query[k] = (typeof request.query[k] == 'undefined') ? clientCookies[k].value : request.query[k];
-				}
-			}
-		}
-		// attach session cookies
-		var sessionCookies = storageServer.getItem(request.urld.host, '.cookies');
-		if (sessionCookies && sessionCookies.items) {
-			for (var k in sessionCookies.items) {
-				if (k in reqCookies)
-					continue;
-
-				reqCookies[k] = sessionCookies.items[k].value || sessionCookies.items[k];
-				// ^ cookies may be given as a single value or as an object with {value:...}
-
-				// add flagged values to the query object
-				if (sessionCookies.items[k].query)
-					request.query[k] = (typeof request.query[k] == 'undefined') ? sessionCookies.items[k].value : request.query[k];
-			}
-		}
-		request.headers.cookie = reqCookies;
 	}
 
 	// allow request
 	var response = dispatch(request);
-	response.then(handleResponse, handleResponse);
-	function handleResponse(res) {
-		// log
-		if (Object.keys(request.query).length)
-			console.log(res.status, request.method, request.url, JSON.stringify(request.query));
-		else
-			console.log(res.status, request.method, request.url);
-
-		// update cookies
-		var cookies = res.headers['set-cookie'];
-		if (cookies) {
-			var storedCookies = storageServer.getItem(request.urld.host, '.cookies') || {id:'.cookies',items:{}};
-			if (!storedCookies.items || typeof storedCookies.items != 'object')
-				storedCookies.items = {}; // save us from corruption
-			for (var k in cookies) {
-				if (cookies[k].scope && cookies[k].scope != 'session')
-					continue;
-
-				if (cookies[k] === null)
-					delete storedCookies.items[k];
-				else
-					storedCookies.items[k] = cookies[k];
-			}
-			storageServer.setItem(request.urld.host, storedCookies);
-		}
-	}
+	response.always(function (response) {
+		console.log(response.status, request.method, request.url);
+		updateCookies(request, origin, response);
+	});
 	return response;
 });
 
@@ -87,78 +35,23 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 // -
 local.env.setRegionPostProcessor(function(el, containerEl) {
 	// grim widgets
-	lifespanPostProcess(el, containerEl);
 	clientRegionPostProcess(el, containerEl);
-	$("[data-toggle=nav]", el).on('request', function(e) {
-		$('.active', $(this).parents('.nav')[0]).removeClass('active');
-		$(this).parent().addClass('active');
-	});
-	$("[data-value-valueof]", el).each(function(i, inputEl) {
-		$(containerEl).on('request', function(e) {
-			if (!inputEl)
-				return;
-			var $target = $(inputEl.dataset.valueValueof, containerEl);
-			if ($target.tagName == 'INPUT' || $target.tagName == 'TEXTAREA')
-				inputEl.value = $target.val();
-			else
-				inputEl.value = $target.attr('value');
-		});
-	});
-	$("[data-value-idof]", el).each(function(i, inputEl) {
-		$(containerEl).on('request', function(e) {
-			if (!inputEl)
-				return;
-			inputEl.value = $(inputEl.dataset.valueIdof, containerEl).getAttribute('id');
-		});
-	});
-	$("[data-value-classof]", el).each(function(i, inputEl) {
-		$(containerEl).on('request', function(e) {
-			if (!inputEl)
-				return;
-			inputEl.value = $(inputEl.dataset.valueClassof, containerEl).attr('class');
-		});
-	});
-	// sanitize and whitelist styles
-	$("[style]", el).each(function(i, styledElem) {
-		var nStyles = styledElem.style.length;
-		for (var j=0; j < nStyles; j++) {
-			var k = styledElem.style[j];
+	grimWidgets.lifespan(el, containerEl);
+	grimWidgets.value_of(el, containerEl);
 
-			if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
-				styledElem.style.setProperty(k, clampSpacingStyles(styledElem.style[k]));
-
-			else if (isStyleAllowed(k) == false)
-				styledElem.style.removeProperty(k);
-		}
-	});
 	// bootstrap widgets
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
+	$("[data-toggle=nav]", el).on('request', function(e) {
+		$('.active', $(this).parents('.nav')[0]).removeClass('active');
+		$(this).parent().addClass('active');
+	});
+
 	// other widgets
 	$("pre[class|=language]").each(function(i, el) { Prism.highlightElement(el); });
 });
 
-//http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules
-var styleWhitelist = [
-	'color','background','font','line-height','line-spacing','text-align','text-decoration','vertical-align',
-	'border','box-shadow','overflow','cursor','width','height','max-width','max-height','white-space'
-];
-var nStyleWhitelist = styleWhitelist.length;
-function isStyleAllowed(style) {
-	for (var i=0; i < nStyleWhitelist; i++) {
-		if (style.indexOf(styleWhitelist[i]) === 0)
-			return true;
-	}
-	return false;
-}
-function clampSpacingStyles(value) {
-	return value.replace(/(\-?[\d]+)([A-z]*)/g, function(org, v, unit) {
-		var n = +v;
-		if (n < 0) return 0;
-		return org;
-	});
-}
 
 // environment services
 // -
