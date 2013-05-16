@@ -1,3 +1,0 @@
-[submodule "src/local"]
-	path = src/local
-	url = git://github.com/grimwire/local.git
