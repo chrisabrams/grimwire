@@ -31,7 +31,7 @@
 		<pre class="language-markup">&lt;a href="httpl://{{domain}}/" target="docs-content"&gt;Home&lt;/a&gt;</pre>
 		<p class="muted">An example of using a link target</p><br/>
 		<pre class="language-javascript">response.writeHead(200, 'ok', {'content-type':'application/html-deltas+json'});
-response.end([['navigate', '#docs-content', 'httpl://{{domain}}/']]);</pre>
+response.end(['navigate', '#docs-content', 'httpl://{{domain}}/']);</pre>
 		<p class="muted">An example of using HTML Deltas to do navigation</p>
 	</div>
 </div>

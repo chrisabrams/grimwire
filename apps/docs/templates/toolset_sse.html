@@ -16,7 +16,7 @@
 <div class="row-fluid">
 	<div class="span6">
 		<p>Grimwire provides <code>local.http.subscribe()</code> which issues a GET "text/event-stream" request to the provided URL, then provides an interface for registering to events. <code>local.http.Navigator</code> also provides a subscribe function to accomplish this in its current context.</p>
-		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/linkjs/navigator.md" target="_blank" target="http.local.navigator">You can find a full reference to the subscribe API in the Local.js docs</a>.</blockquote>
+		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/http/subscribe.md" target="_blank" target="http.local.subscribe">You can find a full reference to the subscribe API in the Local.js docs</a>.</blockquote>
 	</div>
 	<div class="span6">
 		<pre class="language-javascript">var stream = local.http.subscribe('httpl://myhost.com/news');
@@ -37,7 +37,7 @@ stream.on('update', function(e) { console.log(e); });</pre>
 <div class="row-fluid">
 	<div class="span6">
 		<p>To broadcast from a server, you must write a 200 response with the 'text/event-stream' content-type, then keep the response open for subsequent writes. In worker servers, individual events can be accomplished with <code>response.write({ event:eventName, data:data });</code>. However, to simplify emitting to multiple streams, Grimwire provides <code>local.http.broadcaster</code>.</p>
-		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/linkjs/navigator.md" target="_blank" target="http.local.navigator">You can find a full reference to the broadcaster API in the Local.js docs</a>.</blockquote>
+		<blockquote class="muted"><a href="http://grimwire.com/local/docs.html#lib/http/broadcaster.md" target="_blank" target="http.local.broadcaster">You can find a full reference to the broadcaster API in the Local.js docs</a>.</blockquote>
 	</div>
 	<div class="span6">
 		<pre class="language-javascript">var broadcast = local.http.broadcaster();
