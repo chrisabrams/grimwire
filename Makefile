@@ -32,10 +32,11 @@ setup: clean concat buildmin
 clean:
 	@-rm ${lib-local-worker-files}
 	@-rm -Rf ${lib-local-files}
-	@-rm -Rf ${lib}grim.js
+	@-rm ${lib}grim.js
+	@-rm ${lib}index.js ${lib}index.css
 	@echo Cleaned Out Old Libraries
 
-concat: ${lib-local-files} ${lib-local-worker-files} ${lib}grim.js
+concat: ${lib-local-files} ${lib-local-worker-files} ${lib}grim.js ${lib}index.js ${lib}index.css
 	@echo Concatted Libraries
 ${lib-local-files}: ${src-local-files}
 	@cp $^ lib
@@ -43,6 +44,10 @@ ${lib-local-worker-files}: ${src-local-worker-files}
 	@cp $^ .
 ${lib}grim.js: ${src-grim-files} ${src-servers-files} ${src-widgets-files}
 	@cat > $@ $^
+${lib}index.js: ${src}index.js
+	@cp $^ lib
+${lib}index.css: ${src}index.css
+	@cp $^ lib
 
 buildmin: ${lib}grim.min.js
 	@echo Built Minified Versions

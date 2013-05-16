@@ -1,7 +1,7 @@
 /* style changes */
 a { color:rgb(20, 110, 201) }
 a[target="_top"], a[target="_blank"] {
-  background: url(assets/external_link.png) center left no-repeat;
+  background: url(../vendor/external_link.png) center left no-repeat;
   padding-left: 16px;
 }
 #grimwire blockquote p { font-size:14px; line-height:20px; }
