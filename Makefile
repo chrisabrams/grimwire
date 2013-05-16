@@ -54,7 +54,9 @@ buildmin: ${lib}grim.min.js
 ${lib}grim.min.js: ${lib}grim.js
 	@./src/local/minify.sh $@ $^
 
-deps: uglifyjs
+deps: uglifyjs localjs
+localjs:
+	-git clone git://github.com/grimwire/local.git src/local
 uglifyjs:
-	-git clone git://github.com/mishoo/UglifyJS2.git
-	(cd UglifyJS2 && npm link .)
+	-git clone git://github.com/mishoo/UglifyJS2.git vendor/UglifyJS2
+	(cd vendor/UglifyJS2 && npm link .)
