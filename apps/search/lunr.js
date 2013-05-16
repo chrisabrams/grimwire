@@ -13,7 +13,8 @@ var indexBroadcast = local.http.broadcaster(); // notifies of new entries in the
 var indexedCategories = []; // a list of categories in the current documentset
 var indexedDocs = {}; // a map of document href -> documents
 var idx = lunr(function () {
-	this.ref('href');
+	this.ref('id');
+	this.field('id');
 	this.field('title', 10);
 	this.field('href');
 	this.field('desc');
@@ -113,7 +114,7 @@ function updateSources() {
 				if (!cfgs[appId]._active || appId == config.appId)
 					continue;
 				url = cfgs[appId].startpage;
-				addSource(url);
+				addSource(appId, url);
 				sourceUrls.push(url);
 			}
 			// remove no-longer-present
@@ -128,16 +129,16 @@ function updateSources() {
 	);
 }
 
-function addSource(sourceUrl) {
+function addSource(appId, sourceUrl) {
 	if (sourceUrl in indexSources)
 		return;
 	resolveSourceIndex(sourceUrl).succeed(function(indexUrl) {
 		// connect event-stream
 		indexSources[sourceUrl] = local.http.subscribe(indexUrl);
-		indexSources[sourceUrl].on('update', function() { getSourceDocuments(sourceUrl, indexUrl); });
+		indexSources[sourceUrl].on('update', function() { getSourceDocuments(appId, sourceUrl, indexUrl); });
 		// fetch documents
 		indexSourcesDocs[sourceUrl] = [];
-		getSourceDocuments(sourceUrl, indexUrl);
+		getSourceDocuments(appId, sourceUrl, indexUrl);
 	});
 }
 
@@ -149,10 +150,10 @@ function removeSource(sourceUrl) {
 	delete indexSources[sourceUrl];
 	// remove documents
 	var doc = { href:null };
-	indexSourcesDocs[sourceUrl].forEach(function (href) {
-		doc.href = href;
+	indexSourcesDocs[sourceUrl].forEach(function (id) {
+		doc.id = id;
 		idx.remove(doc);
-		delete indexedDocs[href];
+		delete indexedDocs[id];
 	});
 	delete indexSourcesDocs[sourceUrl];
 }
@@ -161,16 +162,32 @@ function resolveSourceIndex(sourceUrl) {
 	return local.http.navigator(sourceUrl).relation('http://grimwire.com/rel/index').resolve();
 }
 
-function getSourceDocuments(sourceUrl, indexUrl) {
+function getSourceDocuments(appId, sourceUrl, indexUrl) {
 	local.http.dispatch({ url:indexUrl, headers:{ accept:'application/json' }}).then(
 		function(res) {
 			if (res.body && Array.isArray(res.body)) {
+				// diff new docs against current:
+				// add new
+				var currentDocs = indexSourcesDocs[sourceUrl].slice();
+				var newDocs = [];
 				res.body.forEach(function(doc) {
-					if (indexSourcesDocs[sourceUrl].indexOf(doc.href) != -1)
-						return; // dont add twice
-					addDoc(doc);
-					indexSourcesDocs[sourceUrl].push(doc.href);
+					doc.id = appId+'|'+doc.href;
+					var currentIndex = currentDocs.indexOf(doc.id);
+					if (currentIndex === -1) {
+						addDoc(doc);
+						indexSourcesDocs[sourceUrl].push(doc.id);
+					} else
+						currentDocs.splice(currentIndex, 1);
+					newDocs.push(doc.id);
 				});
+				// remove any no longer present
+				var doc = { href:null };
+				currentDocs.forEach(function(id) {
+					doc.id = id;
+					idx.remove(doc);
+					delete indexedDocs[id];
+				});
+				indexSourcesDocs[sourceUrl] = newDocs; // new list
 				indexBroadcast.emit('update');
 			}
 		},
@@ -187,7 +204,7 @@ function addDoc(doc) {
 		return;
 	}
 
-	indexedDocs[doc.href] = doc;
+	indexedDocs[doc.id] = doc;
 	idx.add(doc);
 	if (doc.category && indexedCategories.indexOf(doc.category) === -1)
 		indexedCategories.push(doc.category);
