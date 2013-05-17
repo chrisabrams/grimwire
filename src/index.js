@@ -10,6 +10,12 @@ var layoutRegion = local.env.addClientRegion(new local.client.GrimRegion('grim-l
 // -
 local.env.config.workerBootstrapUrl = 'worker.js';
 local.env.setDispatchWrapper(function(request, origin, dispatch) {
+	var $requestInProgress;
+	if (origin && origin instanceof local.client.Region) {
+		$requestInProgress =  $('<div class="request-in-progress"></div>');
+		$(document.body).append($requestInProgress);
+	}
+
 	// attach origin information
 	if (request.urld.protocol == 'httpl') {
 		attachCookies(request, origin);
@@ -25,6 +31,8 @@ local.env.setDispatchWrapper(function(request, origin, dispatch) {
 	var response = dispatch(request);
 	response.always(function (response) {
 		console.log(response.status, request.method, request.url);
+		if ($requestInProgress)
+			$requestInProgress.detach();
 		updateCookies(request, origin, response);
 	});
 	return response;
