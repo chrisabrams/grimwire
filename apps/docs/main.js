@@ -10,6 +10,12 @@ var Documentation = config.usr.documentation || config.documentation;
 
 function main(request, response) {
 	if (request.method == 'GET') {
+		if (request.path == '/.grim/config') {
+			response.writeHead(200, 'ok', {'content-type':'text/html'});
+			response.end('<span class="muted">No configuration needed.</span>');
+			return;
+		}
+
 		var doc = lookupDoc(request);
 		if (!doc)
 			return response.writeHead(404, 'not found').end();
