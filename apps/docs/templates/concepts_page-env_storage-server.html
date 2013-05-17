@@ -1,9 +1,21 @@
-<h2 class="page-header">Storage Server <small>Key Concepts - Page Environment</small></h2>
-<div class="row-fluid">
-	<div class="span6">
-		todo
-	</div>
-	<div class="span6">
-		todo
-	</div>
+<div style="max-width:850px">
+	<h2 class="page-header">Storage Server <small>Key Concepts - Page Environment</small></h2>	
+	<p>The storage server is a simple Web API wrapper around <code>sessionStorage</code>. It provides CRUD for collections of json objects, and is used to keep user configuration and application data.</p>
+	<ul>
+		<li><code>/</code><ul>
+			<li><code>GET</code>: Provides a map of collection names to arrays of item ids in the collections</li>
+			<li><code>POST</code>: Generates a new collection with a unique id, which it returns</li>
+		</ul>
+		<li><code>/:collection</code><ul>
+			<li><code>GET</code>: Provides an array of item ids in the collection</li>
+			<li><code>POST</code>: Adds the given item to the collection. If <code>id</code> is not given, generates a unique id.</li>
+			<li><code>DELETE</code>: Removes the collection and its items.</li>
+		</ul>
+		<li><code>/:collection/:item</code><ul>
+			<li><code>GET</code>: Provides the requested item.</li>
+			<li><code>PUT</code>: Overwrites the item at the given URI, creating if DNE.</li>
+			<li><code>PATCH</code>: Updates the item at the given URI, responding 404 if DNE.</li>
+			<li><code>DELETE</code>: Deletes the item.</li>
+		</ul>
+	</ul>
 </div>

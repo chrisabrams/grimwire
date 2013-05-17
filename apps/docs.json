@@ -13,10 +13,9 @@
 				"_template": "layout",
 				"_template_vars": {},
 				"intro": {
-					"_title": "Introduction ✓",
-					"architecture": { "_title": "The REST Architecture" },
-					"status": { "_title": "Project Status ✓" },
-					"credits": { "_title": "Credits ✓" },
+					"_title": "Introduction",
+					"status": { "_title": "Project Status" },
+					"credits": { "_title": "Credits" },
 					"structured": { "_nav": false },
 					"user-driven": { "_nav": false },
 					"multi-threaded": { "_nav": false },
@@ -25,18 +24,18 @@
 				"getting-started": {
 					"_title": "Getting Started",
 					"_template": false,
-					"overview": { "_title": "Intro Overview ✓" },
+					"overview": { "_title": "Intro Overview" },
 					"building": { "_title": "Building" },
 					"contributing": { "_title": "Contributing" }
 				},
 				"concepts": {
 					"_title": "Key Concepts",
 					"_template": false,
-					"configuration": { "_title": "Configuration ✓" },
-					"worker-servers": { "_title": "Worker Servers ✓" },
-					"client-regions": { "_title": "Client Regions ✓" },
+					"configuration": { "_title": "Configuration" },
+					"worker-servers": { "_title": "Worker Servers" },
+					"client-regions": { "_title": "Client Regions" },
 					"page-env": {
-						"_title": "Page Environment ✓",
+						"_title": "Page Environment",
 						"storage-server": { "_title": "storage.env" },
 						"config-server": { "_title": "config.env" }
 					}
@@ -44,15 +43,15 @@
 				"toolset": {
 					"_title": "Toolset",
 					"_template": false,
-					"api": { "_title": "Local API ✓" },
-					"promises": { "_title": "Promises ✓" },
-					"navigator": { "_title": "Navigator ✓" },
-					"links-and-forms": { "_title": "Links and Forms ✓" },
-					"res-interp": { "_title": "Response Interpretation ✓" },
-					"sse": { "_title": "Server-Sent Events ✓" },
-					"cookies-and-storage": { "_title": "Cookies &amp; Storage ✓" },
-					"html-deltas": { "_title": "HTML Deltas ✓" },
-					"data-apis": { "_title": "Data-* APIs ✓" }
+					"api": { "_title": "Local API" },
+					"promises": { "_title": "Promises" },
+					"navigator": { "_title": "Navigator" },
+					"links-and-forms": { "_title": "Links and Forms" },
+					"res-interp": { "_title": "Response Interpretation" },
+					"sse": { "_title": "Server-Sent Events" },
+					"cookies-and-storage": { "_title": "Cookies &amp; Storage" },
+					"html-deltas": { "_title": "HTML Deltas" },
+					"data-apis": { "_title": "Data-* APIs" }
 				}
 			}
 		}

@@ -1,9 +1,29 @@
-<h2 class="page-header">Config Server <small>Key Concepts - Page Environment</small></h2>
-<div class="row-fluid">
-	<div class="span6">
-		todo
-	</div>
-	<div class="span6">
-		todo
-	</div>
+<div style="max-width:850px">
+	<h2 class="page-header">Config Server <small>Key Concepts - Page Environment</small></h2>
+	<p>The configuration server is the primary interface to the page environment's active state. It manages applications, user configuration, and worker source. Use it to discover and alter page state.</p>
+	<ul>
+		<li><code>/workers/:domain</code><ul>
+			<li><code>GET accept=html</code>: Provides an interface for configuring the worker.</li>
+			<li><code>PUT/PATCH type=json,form</code>: Overwrites/updates the user configuration for the Worker, then reloads the Worker so the changes can take effect.</li>
+		</ul></li>
+		<li><code>/workers/:domain/src</code><ul>
+			<li><code>GET accept=html</code>: Provides an interface for editing the worker source.</li>
+			<li><code>PUT/PATCH type=json,form</code>: Overwrites the Worker's source in its application's config, then reloads the Worker so the changes can take effect.</li>
+		</ul></li>
+		<li><code>/apps</code><ul>
+			<li><code>GET accept=html</code>: Provides an interface for configuring the applications.</li>
+			<li><code>GET accept=json</code>: Provides application configuration objects.</li>
+			<li><code>GET accept=event-stream</code>: Provides an event-stream which emits "update" as apps are added or removed from the page.</li>
+			<li><code>POST type=json,form</code>: Adds the application specified in <code>{ config:[object] }</code> to the page.</li>
+		</ul></li>
+		<li><code>/apps/:appId</code><ul>
+			<li><code>GET accept=html</code>: Provides an interface for configuring the application.</li>
+			<li><code>GET accept=json</code>: Provides the application's config object.</li>
+			<li><code>DUPLICATE</code>: Creates a copy of the application into <code>sessionStorage</code> and enables it.</li>
+			<li><code>DELETE</code>: Disables the app and removes its config from <code>sessionStorage</code>.</li>
+			<li><code>ENABLE</code>: Enables the app (loading its Workers) if not currently active.</li>
+			<li><code>DISABLE</code>: Disables the app (unloading its Workers) if currently active.</li>
+			<li><code>POST type=form</code>: Disables the app, updates its configuration object, stores the changes in <code>sessionStorage</code>, then re-enables the app.</li>
+		</li>
+	</ul>
 </div>

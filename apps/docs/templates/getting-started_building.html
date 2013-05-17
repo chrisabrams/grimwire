@@ -1,0 +1,14 @@
+<div style="max-width:850px">
+  <h2 class="page-header">Building <small>Getting Started</small></h2>
+
+  <p>Grimwire's repo includes pre-built files. However, if you make changes to the environment or the Local API, you'll need to run the build step.</p>
+
+  <pre>make deps
+make # runs clean, concat, buildmin</pre>
+
+  <p>On first build, you'll need to run <code>make deps</code> to get uglifyjs2 and the Local source code. The uglifyjs2 install will clone into './vendor/UglifyJS2', then call npm link on that directory. If you already have uglify installed and don't want to use a new copy, you can run <code>make localjs</code> to get Local by itself.</p>
+
+  <p>All core source code is kept in the '/src' directory. Their builds are kept in '/lib'. 3rd-party assets are kept in '/vendor', and applications live in '/apps'. 'worker.min.js' lives in the root directory, as the <code>importScripts()</code> worker function operates relative to the path of the first file to be imported into the namespace.</p>
+
+  <blockquote class="muted">Grimwire loads standard libraries into the Worker (worker.min.js) before loading the user script(s).</blockquote>
+</div>
