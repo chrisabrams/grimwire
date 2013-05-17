@@ -147,9 +147,10 @@
 			var nStyles = styledElem.style.length;
 			for (var j=0; j < nStyles; j++) {
 				var k = styledElem.style[j];
+				var v = styledElem.style.getPropertyValue(k);
 
 				if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
-					styledElem.style.setProperty(k, clampSpacingStyles(styledElem.style[k]));
+					styledElem.style.setProperty(k, clampSpacingStyles(v));
 
 				else if (isStyleAllowed(k) == false)
 					styledElem.style.removeProperty(k);
