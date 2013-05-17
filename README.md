@@ -31,8 +31,8 @@ Grimwire is currently in early development, and can be previewed at [http://grim
 
 ## Documentation
 
-### [GitHub Wiki](https://github.com/grimwire/grimwire/wiki)
-### [Local, the Core API](http://grimwire.com/local/docs.html)
+### [Documentation App](http://grimwire.github.com/grimwire/)
+### [Local, the Core API](http://grimwire.com/local/docs.html#readme.md)
 
 
 ## Getting Started
@@ -47,144 +47,6 @@ cd grimwire
 python -m SimpleHTTPServer
 # open http://localhost:8000
 ```
-
-If developing Grimwire's core software, clone the submodules and run make to build the scripts. **TODO** - link to detailed build instructions.
-
-
-## Security
-
-One of the project's requirements is to allow untrusted code to enter the environment. The (developing) security model puts no trusted code inside the Workers, and instead requires all commands to enter the document as REST messages, where they are subject to permissions, scrubbing, and routing. The model relies on a trustworthy `/index.html` to host the Workers, so it's recommended that you DO NOT MODIFY `/index.html` or introduce new software into the document without a full security review. Instead, use configuration files.
- 
-*Most of the security tools are still in development - do not run untrusted Workers!*
-
- > Read More: [The Security Model](https://github.com/grimwire/grimwire/wiki/Security-Model)
-
-
-## How does it work?
-
-### Load Process
-
-`/index.html` GETs `/.host.json` on page-load to get a list of applications.
-
-```json
-{
- "applications":[
-		"/apps/index.json",
-		"/apps/rss.json"
-	]
-}
-```
-
-`/index.html` then reads each of the applications.
-
-`/apps/index.json`:
-
-```json
-{
- "id": "mail",
-	"title": "Webmail",
-	"icon": "inbox",
-	"layout": [
-		[
-			{ "width":2, "regions":"httpl://bookmarks.usr/" },
-			{ "id":"main", "width":10, "regions":"httpl://index.usr" }
-		]
-	],
-	"workers": [
- 		{
-			"domain": "index.usr",
-			"title": "Search Index",
-			"src": "servers/worker/index/lunr.js"
-		},
- 		{
-			"domain": "bookmarks.usr",
-			"title": "User Bookmarks",
-			"src": "servers/worker/storage/bookmarks.js"
-		}
-	],
-	"common": {
-		"grimHost": "http://grimwire.github.io",
-		"storageHost": "httpl://sessionstorage.env"
-	}
-}
-```
-
-The workers are loaded and given their configuration entries (mixed over the `common` configuration object, above). The layout is then constructed and populated with the HTML from the given URLs.
-
- > Read More: [The Applications](https://github.com/grimwire/grimwire/wiki/The-applications)
-
-
-### How are Worker servers built?
-
-Worker servers are simple, single-purpose programs. They are generally stateless (they write their data to session storage) and are often unloaded or reloaded without warning. This makes them easy to reconfigure and rewrite during the session, and decouples the Workers from the document.
-
-A markdown proxy:
-
-```javascript
-importScripts('linkjs-ext/responder.js');
-importScripts('vendor/marked.js');
-
-marked.setOptions({ gfm: true, tables: true });
-function headerRewrite(headers) {
-	headers['content-type'] = 'text/html';
-	return headers;
-}
-function bodyRewrite(md) { return (md) ? marked(md) : ''; }
-
-localApp.onHttpRequest(function(request, response) {
-	var mdRequest = Link.dispatch({
-		method  : 'get',
-		url     : localApp.config.baseUrl + request.path,
-		headers : { accept:'text/plain' }
-	});
-	Link.responder(response).pipe(mdRequest, headerRewrite, bodyRewrite);
-});
-```
-
- > Read More: [The Workers](https://github.com/grimwire/grimwire/wiki/The-workers)
-
-
-### How is the session managed?
-
-Grimwire provides `httpl://storage.env` as a simple JSON document storage. It stores data in `sessionStorage` and is an ideal place to keep state (so the Workers can reload without losing data). The data in `httpl://storage.env` can be exported and imported as JSON, allowing the user to resume a session by reopening the file.
-
-The API of `httpl://storage.env`:
-
- - `/`
-   - GET: lists collections and the document keys within
-   - POST: generates a unique, unused collection ID, then sets the empty collection there
- - `/:collection`
-   - GET: lists the documents in the collection
-   - POST: adds a document to the collection
-   - DELETE: deletes the collection and its documents
- - `/:collection/:item`
-   - GET: fetches the document
-   - PUT: replaces the document
-   - PATCH: updates the document (must exist first)
-   - DELETE: deletes the document
-
-This can be easily consumed using `Link.navigator`
-
-```javascript
-var storage = Link.navigator('httpl://storage.env').collection('myapp');
-storage.item('usercfg').patch({ id:'johndoe', email:'jdoe@email.com' });
-storage.getJson().then(function(res) {
-	console.log(res.body);
-})
-```
-
-Navigator works by following entries in response `Link` headers and using URI templates. 
-
- > Read More about `Navigator`: [Local APIs](https://github.com/grimwire/grimwire/wiki/Local-APIs)
-
-*Permissions policies will eventually regulate which `httpl://session.env` resources the Workers can access.*
-
-
-### How are permissions managed?
-
-Permissions are not yet implemented. Do not load untrusted software!
-
-Grimwire disables inline scripts and styles through [CSP](https://developer.mozilla.org/en-US/docs/Security/CSP), and does not load `<script>` or `<style>` scripts. It's recommended that you do not alter the CSP unless you can guarantee that only trusted software will be loaded.
 
 
 
