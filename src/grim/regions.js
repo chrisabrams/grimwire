@@ -143,6 +143,7 @@
 		});
 
 		// sanitize and whitelist styles
+		$("style").detach();
 		$("[style]", el).each(function(i, styledElem) {
 			var nStyles = styledElem.style.length;
 			for (var j=0; j < nStyles; j++) {
