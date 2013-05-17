@@ -162,7 +162,7 @@
 	// -
 	//http://wiki.whatwg.org/wiki/Sanitization_rules#CSS_Rules
 	var styleWhitelist = [
-		'color','background','font','line-height','line-spacing','text-align','text-decoration','vertical-align',
+		'display','color','background','font','line-height','line-spacing','text-align','text-decoration','vertical-align',
 		'border','box-shadow','overflow','cursor','width','height','max-width','max-height','white-space'
 	];
 	var nStyleWhitelist = styleWhitelist.length;
