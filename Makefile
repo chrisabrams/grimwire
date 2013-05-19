@@ -3,8 +3,8 @@ src-local-files =\
 	${src}local/lib/local.min.js\
 	${src}local/lib/local.js
 src-local-worker-files =\
-	${src}local/lib/worker.min.js\
-	${src}local/lib/worker.js
+	${src}local/worker.min.js\
+	${src}local/worker.js
 src-grim-files =\
 	${src}grim/util.js\
 	${src}grim/regions.js\

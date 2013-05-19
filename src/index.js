@@ -143,7 +143,8 @@ window.addEventListener('hashchange', function() {
 	var is_opera = navigator.userAgent.indexOf("Presto") > -1;
 	if ((is_chrome)&&(is_safari)) {is_safari=false;}
 
-	if (is_safari) {
-		$('#grim-layout').html('<div class="alert alert-block"><h4>Error!</h4><p>Safari has an <a href="https://github.com/grimwire/local/issues/54" target="_blank">outstanding issue</a> which keeps it from supporting Grimwire. We\'re sorry for the inconvenience! Please try Chrome or Firefox.</p></div>');
-	}
+	if (is_safari)
+		$('#grim-layout').html('<div class="alert alert-error alert-block"><h4>Error!</h4><p>Safari has an <a href="https://github.com/grimwire/local/issues/54" target="_blank">outstanding issue</a> which keeps it from supporting Grimwire. We\'re sorry for the inconvenience! Please try Chrome or Firefox.</p></div>');
+	if (is_explorer)
+		$('#grim-layout').html('<div class="alert alert-error alert-block"><h4>Error!</h4><p>Internet Explorer is not yet supported. We\'re sorry for the inconvenience! Please try Chrome or Firefox.</p></div>');
 })();

@@ -3,11 +3,19 @@
 
 	<p>Grimwire is just now reaching its first release, <span class="label">0.1.0</span>, which is a developer preview. Many of the techniques it's using are new and still being refined. You should expect some amount of API stability as we understand our use-cases better.</p>
 
-	<p>The roadmap for <span class="label">0.1.x</span> is focused on application toolset and usability. This will include work on UI control, credential and user-data management, deployment, and efficiency in core. During this period, Grimwire will not be capable of executing untrusted software, and will be most useful for its architecture, user-modifiability, and privacy tools.</p>
+	<p>The roadmap for <span class="label">0.1.x</span> is focused on application toolset and usability. This will include work on UI control, credential and user-data management, deployment, and efficiency in core. During this period, Grimwire will not be capable of executing untrusted software.</p>
 
-	<p><span class="label">0.2.x</span> will focus on executing untrusted software, enabling software-sharing (app stores, social) and P2P. Its roadmap will include permissions policies, extensive security reviews, and WebRTC integration.</p>
+	<p><span class="label">0.2.x</span> will focus on executing untrusted software, enabling software-sharing (app stores, social) and P2P. Its roadmap will include permissions policies, security reviews, and WebRTC integration.</p>
 
 	<p><span class="label">0.3.x</span> and later will focus on new computing interfaces, including mobile, the Oculus Rift, Google Glass, the Leap Motion, and any other new I/O developments. Some of these features may be introduced earlier in the timeline, depending on some necessary browser technologies.</p>
+
+	<hr />
+
+	<h4>Browser Support</h4>
+
+	<p>At this time, Chrome 26, Firefox 21, Opera 12.12, and Safari 5.1.7 (Windows &amp; iOS) have been tested and appear to work correctly. Internet Explorer is not yet supported.</p>
+
+	<p><strong>Content Security Policies.</strong> CSP are an important part of Grimwire's security model. However, Safari 5 does not correctly support them (breaking the page) and Firefox does not yet allow the directive through the <code>&lt;meta&gt;</code> tag (currently filed as a bug). As Grimwire's security model is not yet finished, CSP is temporarily disabled to improve support. If untrusted code will be run on your service, make sure CSPs are set!</p>
 
 	<hr />
 
@@ -20,10 +28,4 @@
 	<blockquote class="muted">The best tools cover the most use-cases with the least effort. If you find ways to improve Grimwire, let us know!</blockquote>
 
 	<p>If you find yourself at a dead end that's not UI related, then you might have found a problem we haven't anticipated. <a href="https://groups.google.com/forum/?fromgroups#!forum/grimwire" target="_blank" title="Grimwire Groogle Group">Be sure to let us know about it</a> so that we can find a solution for you!</p>
-
-	<hr />
-
-	<h4>Should I Use Grimwire Yet?</h4>
-
-	<p>This is a good question to ask. The viability of Grimwire is entirely dependent on support. If your users are likely to use old versions of Internet Explorer or are mobile-bound, Grimwire may not be the right choice. (<a href="http://caniuse.com/#search=web%20workers" target="_blank" title="CanIUse.com: WebWorkers">At this time, Web Workers are the blocking dependency.</a>) However, if you can weather some alpha-stage quirks (and diss the users with outdated browsers) we think Grimwire will be a strong investment that will increase in value as its community and platform is developed.</p>
 </div>

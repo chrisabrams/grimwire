@@ -1,5 +1,14 @@
 Changes
 =======
+0.1.1
+
+2013/05/19 pfraze
+
+ - Commented out the CSP directives, as they are breaking browsers which cant be upgraded (iOS)
+
+
+0.1.0
+=====
 
 2013/05/15 pfraze
 
