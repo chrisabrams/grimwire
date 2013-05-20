@@ -116,7 +116,6 @@ function renderTopbarApps(appCfgs) {
 	for (var id in appCfgs) {
 		if (id.charAt(0) == '_') continue; // env app, no nav item
 		html.push('<li><a href="#',id,'"><i class="icon-',(appCfgs[id].icon || 'folder-close'),'"></i> ',appCfgs[id].title,'</a></li>');
-		html.push('<li class="divider-vertical"></li>');
 	}
 	$topbarAppsEl.html(html.join(''));
 }
