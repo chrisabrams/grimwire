@@ -51,7 +51,7 @@ local.env.setRegionPostProcessor(function(el, containerEl) {
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
-	$("[data-toggle=nav]", el).on('request', function(e) {
+	$("[data-toggle=nav]", el).on('click', function(e) {
 		$('.active', $(this).parents('.nav')[0]).removeClass('active');
 		$(this).parent().addClass('active');
 	});
@@ -129,6 +129,13 @@ function highlightActiveApp(appId) {
 // -
 window.addEventListener('hashchange', function() {
 	configServer.setActiveApp(window.location.hash.slice(1));
+});
+// stop any action on href="#" (noop)
+document.body.addEventListener('click', function(e) {
+	if (e.button !== 0) { return; } // handle left-click only
+	if (e.target.tagName != 'A') { return; } // handle link clicks only
+	if (e.target.attributes.href.value == '#')
+		e.preventDefault();	
 });
 
 
