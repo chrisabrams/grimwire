@@ -209,7 +209,12 @@ function main(request, response) {
 			html = [
 				'<p><a href="/items/',index,'/link'+deltas+'"><strong style="text-decoration:underline">',item.title,'</strong></a>',
 				' <a href="',item.link,'" target="_blank">permalink</a></p>',
-				item.content
+				'<div itemscope itemtype="http://grimwire.com/type/shareable http://grimwire.com/type/blogpost">',
+					'<meta itemprop="title" content="',item.title,'" />',
+					'<meta itemprop="href" content="',item.link,'" />',
+					'<meta itemprop="published" content="',item.date,'" />',
+					'<div itemprop="content">',item.content,'</div>',
+				'</div>'
 			].join('');
 		}
 

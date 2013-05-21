@@ -8,7 +8,8 @@ src-local-worker-files =\
 src-grim-files =\
 	${src}grim/util.js\
 	${src}grim/regions.js\
-	${src}grim/cookies.js
+	${src}grim/cookies.js\
+	${src}grim/transform-links.js
 src-servers-files =\
 	${src}local/servers/env/storage.js\
 	${src}servers/config.js
@@ -16,6 +17,7 @@ src-widgets-files =\
 	${src}widgets/_compiled_header.js\
 	${src}widgets/lifespan.js\
 	${src}widgets/value_of.js\
+	${src}widgets/dismiss-region.js\
 	${src}widgets/_compiled_footer.js
 
 lib = lib/

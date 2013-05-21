@@ -51,7 +51,16 @@ function main(request, response) {
 			{ rel:'self', href:'/messages/.new' }
 		]);
 		response.writeHead(200, 'ok', {'content-type':'text/html'});
-		response.end(templates.compose());
+		var content = '';
+		if (request.query.href)
+			content += request.query.href+"\n\n";
+		if (request.query.content)
+			content += request.query.content;
+		response.end(templates.compose({
+			recp: (request.query.recp || ''),
+			subject: (request.query.subject || request.query.title || ''),
+			content: content
+		}));
 		return;
 	}
 	if (/HEAD|GET/.test(request.method) && request.path == '/contacts') {

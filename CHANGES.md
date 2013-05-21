@@ -2,6 +2,13 @@ Changes
 =======
 0.1.2
 
+2013/05/21 pfraze
+
+ - Added region close on status 210
+ - Added region close with data-dismiss="region"
+ - Added transform-link drag&drop behaviors
+
+
 2013/05/20 pfraze
 
  - Altered link click behavior to treat href="#" as a noop

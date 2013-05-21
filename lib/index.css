@@ -1,5 +1,7 @@
 /* layout */
 #grim-transformsbar { display: inline-block; }
+#grim-transformsbar li { padding-left: 1em; }
+#grim-transformsbar li:first-child { padding-left: 0; }
 
 /* bootstrap style changes */
 a { color:rgb(20, 110, 201) }
@@ -17,7 +19,6 @@ a[target="_top"], a[target="_blank"] {
 
 /* transform links */
 a.transform { color: #555; }
-a.transform:before { content: ":"; font-weight: bold; }
 
 /* custom styles */
 .request-in-progress {
@@ -31,9 +32,9 @@ a.transform:before { content: ":"; font-weight: bold; }
   -webkit-animation: fadein 0.5s; /* Safari and Chrome */
   -o-animation: fadein 0.5s; /* Opera */
 }
-.interface-hover {
-  background-color: red;
-  box-shadow: 0 0 15px red;
+.transform-hover {
+  background-color: #fcf8e3;
+  box-shadow: 0 0 15px #fcf8e3;
 }
 
 /* common animations */

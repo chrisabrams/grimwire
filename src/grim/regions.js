@@ -5,6 +5,11 @@
 	function GrimRegion(id) {
 		local.client.Region.call(this, id);
 		this.cookies = {}; // a map of hostname -> cookie maps
+
+		this.element.addEventListener('drop', this.__handleDrop.bind(this));
+		this.element.addEventListener('dragover', this.__handleDragover.bind(this));
+		this.element.addEventListener('dragenter', this.__handleDragenter.bind(this));
+		this.element.addEventListener('dragleave', this.__handleDragleave.bind(this));
 	}
 	GrimRegion.prototype = Object.create(local.client.Region.prototype);
 	local.client.GrimRegion = GrimRegion;
@@ -17,6 +22,18 @@
 		var mine = this.context.urld.host.split('.').slice(-2).join('.');
 		var theirs = region.context.urld.host.split('.').slice(-2).join('.');
 		return mine == theirs;
+	};
+
+	// closes the view
+	GrimRegion.prototype.dismiss = function() {
+		local.env.removeClientRegion(this.element.id);
+		if (this.element.dataset.itemhtml) {
+			// we have serialized previous state -- revert!
+			this.element.innerHTML = this.element.dataset.itemhtml;
+			delete this.element.dataset.itemhtml;
+			delete this.element.dataset.itemdata;
+		} else
+			this.element.parentNode.removeChild(this.element);
 	};
 
 	// adds to local's region behaviors:
@@ -35,14 +52,6 @@
 			// if the target is owned by the app, it's safe to allow mutations
 			if (targetRegion.hasSameOrigin(this))
 				containerEl = requestTarget;
-
-			// :TODO: is there a better way to handle this?
-			/*if (requestTarget.id != 'layout' && !response.body && response.status == 200) {
-				// destroy region if it's served blank html
-				local.env.removeClientRegion(requestTarget.id);
-				targetRegion.element.parentNode.removeChild(targetRegion.element);
-				return;
-			}*/
 		}
 
 		// react to the response
@@ -51,37 +60,49 @@
 			case 304:
 				// no content
 				break;
+
 			case 205:
 				// reset form
 				// :TODO: should this try to find a parent form to requestTarget?
 				if (requestTarget.tagName === 'FORM')
 					requestTarget.reset();
 				break;
+
+			case 210:
+				// close view
+				targetRegion.dismiss();
+				renderResponseNotice(request, response);
+				break;
+
 			case 302:
 			case 303:
 				// dispatch for contents
 				var request2 = { method:'get', url:response.headers.location, headers:{ accept:'text/html' }};
 				this.dispatchRequest(request2);
 				break;
+
 			default:
-				if (response.headers['content-type']) {
+				if (response.headers['content-type'])
 					local.client.renderResponse(requestTarget, containerEl, response);
-				} else {
-					// render a notice
-					var noticeType = 'success';
-					if (response.status >= 400)
-						noticeType = 'info';
-					if (response.status >= 500)
-						noticeType = 'error';
-					$.pnotify({
-						title: response.status + ' ' + response.reason,
-						text: request.method.toUpperCase() + ' ' + request.url,
-						type: noticeType,
-						styling: 'bootstrap'
-					});
-				}
+				else
+					renderResponseNotice(request, response);
 		}
 	};
+
+	function renderResponseNotice(request, response) {
+		// render a notice
+		var noticeType = 'success';
+		if (response.status >= 400)
+			noticeType = 'info';
+		if (response.status >= 500)
+			noticeType = 'error';
+		$.pnotify({
+			title: response.status + ' ' + response.reason,
+			text: request.method.toUpperCase() + ' ' + request.url,
+			type: noticeType,
+			styling: 'bootstrap'
+		});
+	}
 
 	// adds to local's region behaviors:
 	// - cookies with scope=client are stored in the client
@@ -128,20 +149,142 @@
 		return this.element;
 	};
 
+
+	// dragdrop behaviors
+	// -
+	function dataTransferHasType(e, t) {
+		if (e.dataTransfer.types.indexOf)
+			return e.dataTransfer.types.indexOf(t) !== -1;
+		if (e.dataTransfer.types.contains)
+			return e.dataTransfer.types.contains(t);
+		throw "Unable to check type on data transfer object";
+	}
+
+	function findParentMicrodataElement(el) {
+		return local.client.findParentNode(el, function(node) {
+			return (node.tagName == 'DIV' && node.hasAttribute('itemscope'));
+		});
+	}
+
+	function extractMicroData(el) {
+		if (el.dataset.itemdata) {
+			try { return JSON.parse(el.dataset.itemdata); }
+			catch (e) {}
+		}
+
+		var data = {};
+		// :TODO: embedded items
+		$('[itemprop]', el).each(function(i, propEl) {
+			var k = propEl.getAttribute('itemprop');
+			if (!k) return;
+
+			switch (propEl.tagName) {
+				case 'INPUT':
+				case 'TEXTAREA':
+					data[k] = propEl.value;
+					break;
+
+				case 'AREA':
+				case 'LINK':
+				case 'A':
+					data[k] = propEl.href;
+					break;
+
+				case 'META':
+					data[k] = propEl.getAttribute('content');
+					break;
+
+				case 'AUDIO':
+				case 'VIDEO':
+				case 'IFRAME':
+				case 'IMG':
+				case 'SOURCE':
+				case 'EMBED':
+					data[k] = propEl.getAttribute('src');
+					break;
+
+				default:
+					data[k] = propEl.innerText;
+			}
+		});
+		return data;
+	}
+
+	GrimRegion.prototype.__handleDrop = function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		$('.transform-hover').removeClass('transform-hover');
+
+		if (dataTransferHasType(e, 'text/transform-href')) {
+			var transformHref = e.dataTransfer.getData('text/transform-href');
+			var microdataElement = findParentMicrodataElement(e.target);
+			if (microdataElement) {
+				var data = extractMicroData(microdataElement);
+				var url = local.http.UriTemplate.parse(transformHref).expand(data);
+
+				// preserve existing state for restoration
+				if (!microdataElement.dataset.itemdata)
+					microdataElement.dataset.itemdata = JSON.stringify(data);
+				if (!microdataElement.dataset.itemhtml)
+					microdataElement.dataset.itemhtml = microdataElement.innerHTML;
+
+				// convert the region into a client region
+				var region;
+				if (!microdataElement.id || !(region = local.env.getClientRegion(microdataElement.id))) {
+					prepClientRegionEl(microdataElement);
+					region = new local.client.GrimRegion(microdataElement.id);
+					local.env.addClientRegion(region);
+				}
+
+				var request = {
+					method: 'get',
+					url: url,
+					headers: { accept: 'text/html' }
+				};
+				region.dispatchRequest(request);
+				return false;
+			}
+		}
+	};
+
+	GrimRegion.prototype.__handleDragover = function(e) {
+		if (!e.dataTransfer.types) return;
+
+		if (dataTransferHasType(e, 'text/transform-href')) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'move';
+			return false;
+		}
+	};
+
+	GrimRegion.prototype.__handleDragenter = function(e) {
+		if (!e.dataTransfer.types) return;
+
+		if (dataTransferHasType(e, 'text/transform-href')) {
+			var microdataElement = findParentMicrodataElement(e.target);
+			if (microdataElement)
+				microdataElement.classList.add('transform-hover');
+		}
+	};
+
+	GrimRegion.prototype.__handleDragleave = function(e) {
+		var rect;
+
+		// dragleave is fired on all children, so only pay attention if it dragleaves a targetable region
+		var microdataElement = findParentMicrodataElement(e.target);
+		if (microdataElement) {
+			rect = microdataElement.getBoundingClientRect();
+			if (e.clientX >= (rect.left + rect.width) || e.clientX <= rect.left || e.clientY >= (rect.top + rect.height) || e.clientY <= rect.top) {
+				microdataElement.classList.remove('transform-hover');
+			}
+		}
+	};
+
+
 	// post-processors
 	// -
-	window.clientRegionPostProcess = function(el) {
-		// find any new regions
-		$('div[data-client-region]', el).each(function(i, container) {
-			prepClientRegionEl(container);
-			var region = new local.client.GrimRegion(container.id);
-			local.env.addClientRegion(region);
-
-			var initUrl = container.dataset.clientRegion;
-			if (initUrl)
-				region.dispatchRequest(initUrl);
-		});
-
+	window.clientRegionPostProcess = function(el, containerEl) {
 		// sanitize and whitelist styles
 		$("style").detach();
 		$("[style]", el).each(function(i, styledElem) {
@@ -153,9 +296,20 @@
 				if (k.indexOf('padding') != -1 || k.indexOf('margin') != -1)
 					styledElem.style.setProperty(k, clampSpacingStyles(v));
 
-				else if (isStyleAllowed(k) == false)
+				else if (isStyleAllowed(k) === false)
 					styledElem.style.removeProperty(k);
 			}
+		});
+
+		// find any new regions
+		$('div[data-client-region]', el).each(function(i, container) {
+			prepClientRegionEl(container);
+			var region = new local.client.GrimRegion(container.id);
+			local.env.addClientRegion(region);
+
+			var initUrl = container.dataset.clientRegion;
+			if (initUrl)
+				region.dispatchRequest(initUrl);
 		});
 	};
 

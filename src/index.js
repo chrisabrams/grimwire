@@ -46,6 +46,7 @@ local.env.setRegionPostProcessor(function(el, containerEl) {
 	clientRegionPostProcess(el, containerEl);
 	grimWidgets.lifespan(el, containerEl);
 	grimWidgets.value_of(el, containerEl);
+	grimWidgets.dismissRegion(el, containerEl);
 
 	// bootstrap widgets
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
