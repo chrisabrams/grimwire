@@ -2,6 +2,11 @@ Changes
 =======
 0.1.2
 
+2013/05/21 pfraze
+
+ - Fixed issue: worker source truncated when edited in-session
+
+
 2013/05/20 pfraze
 
  - Altered link click behavior to treat href="#" as a noop
