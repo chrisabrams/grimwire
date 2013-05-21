@@ -51,7 +51,7 @@ local.env.setRegionPostProcessor(function(el, containerEl) {
 	$(el).tooltip({ selector: "[data-toggle=tooltip]" });
 	$("[data-toggle=popover]", el).popover().click(function(e) { e.preventDefault(); });
 	$("[data-loading-text]", el).click(function() { $(this).button('loading'); });
-	$("[data-toggle=nav]", el).on('click', function(e) {
+	$("[data-toggle=nav]", el).on('click request', function(e) {
 		$('.active', $(this).parents('.nav')[0]).removeClass('active');
 		$(this).parent().addClass('active');
 	});
