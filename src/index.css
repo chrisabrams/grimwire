@@ -1,5 +1,6 @@
 /* layout */
-#grim-transformsbar { display: inline-block; }
+#grim-transformsbar-sticky-wrapper { margin-bottom: 1em; }
+#grim-transformsbar { display: inline-block }
 #grim-transformsbar li { padding-left: 1em; }
 #grim-transformsbar li:first-child { padding-left: 0; }
 

@@ -44,6 +44,7 @@ function main(request, response) {
 		else
 			response.writeHead(406, 'bad accept').end();
 	}
+	response.writeHead(405, 'bad method').end();
 }
 
 // finds a node in the `Documentation` tree using the request path

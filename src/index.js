@@ -1,6 +1,7 @@
 var $layoutContainerEl = $('#grim-layout');
 var $topbarEl = $('#grim-topbar');
 var $topbarAppsEl = $('#grim-topbar-apps');
+var $transformsBar = $('#grim-transformsbar');
 if ($layoutContainerEl.length === 0) throw "#grim-layout element not found";
 if ($topbarEl.length === 0) throw "#grim-topbar element not found";
 if ($topbarAppsEl.length === 0) throw "#grim-topbar-apps element not found";
@@ -86,6 +87,7 @@ local.env.addServer('config.env', configServer);
 		apps.on('update', function(e) {
 			renderTopbarApps(e.data);
 			highlightActiveApp(configServer.activeAppId);
+			renderTransformLinks(e.data);
 		});
 	});
 
@@ -124,6 +126,38 @@ function highlightActiveApp(appId) {
 	$('.active', $topbarEl).removeClass('active');
 	$('[href="#'+appId+'"]', $topbarEl).parent().addClass('active');
 }
+function renderTransformLinks(appCfgs) {
+	// :TODO: if applications fire the "update" event in quick succession
+	//        and a previous call to this func is still waiting on responses
+	//        we'll start getting duplicates.
+	//        to solve this, there needs to be a way to cancel the requests
+	//        which are in progress... which local cant do yet
+
+	var html = [];
+	var requests = [];
+	$('ul', $transformsBar).html('');
+	// issue head requests to each
+	for (var id in appCfgs) {
+		(function(appCfg) {
+			local.http.dispatch({ method: 'head', url: appCfg.startpage })
+				.succeed(function(response) {
+					if (response.headers && response.headers.link && Array.isArray(response.headers.link)) {
+						for (var j=0,jj=response.headers.link.length; j < jj; j++) {
+							var link = response.headers.link[j];
+
+							if (link.title && link.href && RegExp('\\bhttp://grimwire.com/rel/transform\\b').test(link.rel)) {
+								var href = link.href;
+								var urld = local.http.parseUri(href);
+								if (!urld.host) // handle relative URLs
+									href = appCfg.startpage + urld.relative;
+								$('ul', $transformsBar).append('<li><a class="transform" href="'+href+'">'+link.title+'</a></li>');
+							}
+						}
+					}
+				});
+		})(appCfgs[id]);
+	}
+}
 
 
 // UI behaviors
@@ -139,7 +173,7 @@ document.body.addEventListener('click', function(e) {
 		e.preventDefault();
 });
 // stick the transforms on scroll
-$('#grim-transformsbar').sticky({ topSpacing: 6 });
+$transformsBar.sticky({ topSpacing: 6 });
 
 
 // Browser compat messages

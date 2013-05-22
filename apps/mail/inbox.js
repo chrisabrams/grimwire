@@ -17,7 +17,8 @@ function main(request, response) {
 		response.setHeader('link', [
 			{ rel:'self', href:'/' },
 			{ rel:'collection', href:'/messages', title:'messages' },
-			{ rel:'collection', href:'/contacts', title:'contacts' }
+			{ rel:'collection', href:'/contacts', title:'contacts' },
+			{ rel:'http://grimwire.com/rel/transform', href:'/messages/.new{?title,subject,content,href}', title:'Email' }
 		]);
 		response.writeHead(200, 'ok', {'content-type':'text/html'}).end(templates.layout());
 		return;
