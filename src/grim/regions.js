@@ -135,7 +135,7 @@
 
 		var el = document.getElementById(request.target);
 		if (el) {
-			if (el.dataset.clientRegion) {
+			if (typeof el.dataset.clientRegion != 'undefined') {
 				var region = local.env.getClientRegion(el.id);
 				if (region)
 					return el;
