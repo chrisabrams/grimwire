@@ -448,7 +448,8 @@
 					workerCfg.usr = workerUserCfg;
 
 					self.storageHost.workerCfgs.item(domain).put(workerUserCfg);
-					reloadWorker(server, workerCfg);
+					if (!request.query.noreload)
+						reloadWorker(server, workerCfg);
 
 					response.writeHead(204, 'no content').end();
 				});

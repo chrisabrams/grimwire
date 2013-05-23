@@ -2,6 +2,11 @@ Changes
 =======
 0.1.2
 
+2013/05/23 pfraze
+
+ - Added ?noreload to PUT & PATCH httpl://config.env/workers/:domain
+
+
 2013/05/22 pfraze
 
  - Added transform-link discovery through response headers
