@@ -12,6 +12,7 @@ var templates = {
 	messagesItem: makeTemplateFn('templates/messages-item.html'),
 	message: makeTemplateFn('templates/message.html'),
 	compose: makeTemplateFn('templates/compose.html'),
+	composeEmbed: makeTemplateFn('templates/compose-embed.html'),
 	contacts: makeTemplateFn('templates/contacts.html'),
 	configure: makeTemplateFn('templates/configure.html')
 };
@@ -33,7 +34,7 @@ function main(request, response) {
 	if (/HEAD|GET/.test(request.method) && request.path == '/messages')
 		return serveMessages(request, response);
 
-	if (/HEAD|GET/.test(request.method) && request.path == '/messages/.new')
+	if (request.path == '/messages/.new')
 		return serveCompose(request, response);
 
 	if (/HEAD|GET/.test(request.method) && request.path.slice(0, 10) == '/messages/')
@@ -50,7 +51,7 @@ function serveLayout(request, response) {
 		{ rel:'self', href:'/' },
 		{ rel:'collection', href:'/messages', title:'messages' },
 		{ rel:'collection', href:'/contacts', title:'contacts' },
-		{ rel:'http://grimwire.com/rel/transform', href:'/messages/.new{?title,subject,content,href,sender}', title:'Email' }
+		{ rel:'http://grimwire.com/rel/transform', href:'/messages/.new?embed=1{&title,subject,content,href,sender}', title:'Email' }
 	]);
 	respond(request, response, { html: templates.layout() });
 }
@@ -94,28 +95,83 @@ function serveCompose(request, response) {
 		{ rel:'self', href:'/messages/.new' }
 	]);
 
-	var recipient = '';
-	if (request.query.sender)
-		recipient = request.query.sender;
+	var emailSendRequest = 1;
+	var context = {
+		message: null,
+		errors: {},
+		recipient: '',
+		subject: '',
+		content: ''
+	};
 
-	var subject = '';
-	if (request.query.subject)
-		subject = 'RE: '+request.query.subject;
-	else if (request.query.title)
-		subject = request.query.title;
+	if (request.method == 'POST') {
+		// validate
+		if (!request.body) context.errors._error = 'Request body required.';
+		else {
+			if (!request.body.recipient) context.errors.recipient = 'Required.';
+		}
 
-	var content = '';
-	if (request.query.href)
-		content += request.query.href+"\n\n";
-	if (request.query.content)
-		content += quoteContent(request.query.content);
+		if (Object.keys(context.errors).length === 0) {
+			// send email
+			emailSendRequest = local.http.dispatch({
+				method: 'post',
+				url: config.usr.mailhostUrl,
+				body: {
+					to: request.body.recipient,
+					subject: request.body.subject,
+					text: request.body.content
+				},
+				headers: {
+					accept: 'application/json',
+					authorization: 'Basic '+btoa(config.usr.username+':'+config.usr.password),
+					'content-type': 'application/json'
+				}
+			}).succeed(function() {
+				context.message = '<div class="alert alert-success" data-lifespan="5">Message sent!</div>';
+				return 2;
+			}).fail(function(res) {
+				context.message = '<div class="alert alert-error">Failed to deliver the email: '+JSON.stringify(res.body)+'</div>';
+				// hold onto the request vars so the user can resend
+				context.recipient = request.body.recipient;
+				context.subject = request.body.subject;
+				context.content = request.body.content;
+				return 3;
+			});
+		} else {
+			context.message = '<div class="alert alert-error">There are errors in the email.</div>';
+			// hold onto the request vars so the user can resend
+			context.recipient = request.body.recipient;
+			context.subject = request.body.subject;
+			context.content = request.body.content;
+		}
+	}
+	else {
+		// populate inputs from query params
+		if (request.query.sender)
+			context.recipient = request.query.sender;
 
-	respond(request, response, {
-		html: templates.compose({
-			recipient: recipient,
-			subject: subject,
-			content: content
-		})
+		if (request.query.subject)
+			context.subject = 'RE: '+request.query.subject;
+		else if (request.query.title)
+			context.subject = request.query.title;
+
+		if (request.query.href)
+			context.content += request.query.href+"\n\n";
+		if (request.query.content)
+			context.content += quoteContent(request.query.content);
+	}
+
+	local.promise(emailSendRequest).always(function(result) {
+		var isEmbed = (request.query.embed == '1');
+		if (result == 2 && isEmbed) // successful send
+			return response.writeHead(210, 'message sent').end();
+		else {
+			context.errors = makeErrorHtml(context.errors);
+			var html = isEmbed ? templates.composeEmbed(context) : templates.compose(context);
+			respond(request, response, {
+				html: html
+			});
+		}
 	});
 }
 
