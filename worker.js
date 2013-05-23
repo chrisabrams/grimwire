@@ -787,7 +787,6 @@ function __dispatchLocal(req, resPromise) {
 
 	// rebuild the request
 	// :NOTE: could just pass `req`, but would rather be explicit about what a local server receives
-	//        (you want me to be... explicit?)
 	var req2 = {
 		path    : req.urld.path,
 		method  : req.method,
@@ -799,7 +798,7 @@ function __dispatchLocal(req, resPromise) {
 
 	// standardize the path
 	if (!req2.path) req2.path = '/';
-	else req2.path = req2.path.replace(/(.)\/$/, '$1'); // no trailing slash
+	else req2.path = req2.path.replace(/(.)\/$/, '$1');
 
 	// if the urld has query parameters, mix them into the request's query object
 	if (req.urld.query) {
