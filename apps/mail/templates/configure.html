@@ -1,0 +1,32 @@
+<div style="max-width: 650px">
+	{{message}}
+
+	<form action="httpl://{{domain}}/.grim/config?redirectAfter={{redirectAfter}}" method="post">
+		<div class="control-group {{errors.mailhostUrlState}}">
+			<label for="grimmail-mailhostUrl">Email Host URL</label>
+			<div class="controls">
+				<input id="grimmail-mailhostUrl" name="mailhostUrl" class="input-block-level" type="url" required value="{{mailhostUrl}}" placeholder="http://yourhost.com/mailgun">
+				{{errors.mailhostUrlHelp}}
+				<p class="help-block"><span class="muted">This app was built for the Mailgun service of <a href="https://github.com/grimwire/grimserver" target="_blank" tabindex="-1">github.com/grimwire/grimserver</a>.</span></p>
+			</div>
+		</div>
+
+		<div class="control-group {{errors.usernameState}}">
+			<label for="grimmail-username">Username</label>
+			<div class="controls">
+				<input id="grimmail-username" name="username" class="input-block-level" type="text" required value="{{username}}" placeholder="bob">
+				{{errors.usernameHelp}}
+			</div>
+		</div>
+
+		<div class="control-group {{errors.passwordState}}">
+			<label for="grimmail-password">Password</label>
+			<div class="controls">
+				<input id="grimmail-password" name="password" class="input-block-level" type="password" required value="{{password}}">
+				{{errors.passwordHelp}}
+			</div>
+		</div>
+
+		<button class="btn">Submit</button>
+	</form>
+</div>

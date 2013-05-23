@@ -1,16 +1,11 @@
-<div style="margin-bottom: 1em">
-	<div class="btn-group">
-		<button class="btn dropdown-toggle" data-toggle="dropdown">New Message <span class="caret"></span></button>
-		<ul class="dropdown-menu">
-			<li><a href="#">Webmail</a></li>
-			<li><a href="#">REST pipe</a></li>
-			<li><a href="#">BASH pipe</a></li>
-		</ul>
-	</div>
-</div>
+<div id="grimmail-layout" data-client-region>
+	<ul id="grimmail-nav" class="nav nav-tabs">
+		<li><a href="httpl://{{domain}}/messages/.new" target="grimmail-content" data-toggle="nav">Compose</a></li>
+		<li class="active"><a href="httpl://{{domain}}/messages" target="grimmail-content" data-toggle="nav">Messages</a></li>
+		<li><a href="#" data-toggle="nav">"Coding for Intervi...</a></li>
+		<li><a href="#" data-toggle="nav">"Project Update #33...</a></li>
+		<li><a href="#" data-toggle="nav">"The Austin Phoenix...</a></li>
+	</ul>
 
-<div class="row-fluid">
-	<div class="span2" data-client-region="httpl://{{domain}}/contacts"></div>
-	<div class="span4" data-client-region="httpl://{{domain}}/messages/.new"></div>
-	<div class="span6" data-client-region="httpl://{{domain}}/messages"></div>
+	<div id="grimmail-content" data-client-region="httpl://{{domain}}/messages"></div>
 </div>
