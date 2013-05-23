@@ -2,8 +2,16 @@ Changes
 =======
 0.1.2
 
+2013/05/22 pfraze
+
+ - Added transform-link discovery through response headers
+
+
 2013/05/21 pfraze
 
+ - Added region close on status 210
+ - Added region close with data-dismiss="region"
+ - Added transform-link drag&drop behaviors
  - Fixed issue: worker source truncated when edited in-session
 
 

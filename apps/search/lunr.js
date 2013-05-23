@@ -244,11 +244,11 @@ var views = {
 						if (!doc) return '';
 						var icon = (doc.icon) ? '<i class="icon-'+doc.icon+'" style="padding-right:2px"></i> ' : '';
 						var target = (doc.target == '_top' || doc.target == '_blank') ? 'target="'+doc.target+'"' : '';
-						return '<tr><td style="padding:20px">'+
-								'<p>'+icon+'<a href="'+doc.href+'" '+target+'>'+doc.title+'</a><br/>'+
-								'<span class="muted">'+doc.href+'</span></p>'+
-								doc.desc+
-							'</td></tr>';
+						return '<tr><td style="padding:20px"><div itemscope itemtype="http://grimwire.com/type/shareable">'+
+								'<p>'+icon+'<a itemprop="href" href="'+doc.href+'" '+target+'><span itemprop="title">'+doc.title+'</span></a><br/>'+
+								doc.href+'</p>'+
+								'<div itemprop="content">'+doc.desc+'</div>'+
+							'</div></td></tr>';
 					})
 					.join(''),
 			'</table>'

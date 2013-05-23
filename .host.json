@@ -2,6 +2,7 @@
 	"applications":[
 		"apps/docs.json",
 		"apps/search.json",
-		"apps/reader.json"
+		"apps/reader.json",
+    "apps/mail.json"
 	]
 }

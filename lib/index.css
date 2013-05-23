@@ -1,4 +1,10 @@
-/* style changes */
+/* layout */
+#grim-transformsbar-sticky-wrapper { margin-bottom: 1em; }
+#grim-transformsbar { display: inline-block }
+#grim-transformsbar li { padding-left: 1em; }
+#grim-transformsbar li:first-child { padding-left: 0; }
+
+/* bootstrap style changes */
 a { color:rgb(20, 110, 201) }
 a[target="_top"], a[target="_blank"] {
   background: url(../lib/external_link.png) center left no-repeat;
@@ -6,11 +12,14 @@ a[target="_top"], a[target="_blank"] {
 }
 #grimwire blockquote p { font-size:14px; line-height:20px; }
 
-/* minor improvements */
+/* sub-item highlighting in navs */
 .nav-list > li > ul > .active > a,
 .nav-list > li > ul > .active > a:hover {
   font-weight: bold;
 }
+
+/* transform links */
+a.transform { color: #555; }
 
 /* custom styles */
 .request-in-progress {
@@ -24,19 +33,25 @@ a[target="_top"], a[target="_blank"] {
   -webkit-animation: fadein 0.5s; /* Safari and Chrome */
   -o-animation: fadein 0.5s; /* Opera */
 }
+.transform-hover {
+  background-color: #fcf8e3;
+  box-shadow: 0 0 15px #fcf8e3;
+}
+
+/* common animations */
 @keyframes fadein {
-    from { opacity:0; }
-    to { opacity:1; }
+  from { opacity:0; }
+  to { opacity:1; }
 }
 @-moz-keyframes fadein { /* Firefox */
-    from { opacity:0; }
-    to { opacity:1; }
+  from { opacity:0; }
+  to { opacity:1; }
 }
 @-webkit-keyframes fadein { /* Safari and Chrome */
-    from { opacity:0; }
-    to { opacity:1; }
+  from { opacity:0; }
+  to { opacity:1; }
 }
 @-o-keyframes fadein { /* Opera */
-    from { opacity:0; }
-    to { opacity: 1; }
-}​
+  from { opacity:0; }
+  to { opacity: 1; }
+}

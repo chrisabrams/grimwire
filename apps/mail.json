@@ -1,0 +1,14 @@
+{
+  "id": "mail",
+  "title": "Mail",
+  "icon": "inbox",
+  "startpage": "httpl://inbox.mail.usr",
+  "common": {},
+  "workers": [
+    {
+      "id": "inbox",
+      "title": "Inbox Interface",
+      "src": "apps/mail/inbox.js"
+    }
+  ]
+}

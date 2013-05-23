@@ -4,7 +4,7 @@ var yahooPipeId = local.worker.config.usr.yahooPipeId || local.worker.config.yah
 var yahooPipeTemplate = local.http.UriTemplate.parse('http://pipes.yahoo.com/pipes/pipe.run?_id='+yahooPipeId+'{&_render,url}');
 function getFeed(url, format) {
 	var opts = {
-		url: encodeURIComponent(url),
+		url: url,
 		_render: format
 	};
 	return local.http.dispatch({ method:'get', url:yahooPipeTemplate.expand(opts) });

@@ -24,4 +24,4 @@ grimWidgets.value_of = function(el, containerEl) {
       inputEl.value = $(inputEl.dataset.valueClassof, containerEl).attr('class');
     });
   });  
-}
+};
