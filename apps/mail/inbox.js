@@ -37,8 +37,21 @@ function main(request, response) {
 	if (request.path == '/messages/.new')
 		return serveCompose(request, response);
 
-	if (/HEAD|GET/.test(request.method) && request.path.slice(0, 10) == '/messages/')
-		return serveMessage(request, response, request.path.slice(10));
+	if (request.path.slice(0, 10) == '/messages/') {
+		var mid = request.path.slice(10);
+		response.setHeader('link', [
+			{ rel:'via', href:'/' },
+			{ rel:'up collection', href:'/messages' },
+			{ rel:'self', href:'/messages/'+mid }
+		]);
+
+		if (/HEAD|GET/.test(request.method))
+			return serveMessage(request, response, mid);
+		else if (/MARKREAD|MARKUNREAD|DELETE/.test(request.method))
+			return dismissMessage(request, response, mid);
+		else
+			return response.writeHead(405, 'bad method').end();
+	}
 
 	if (request.path == '/.grim/config')
 		return serveConfig(request, response);
@@ -66,10 +79,9 @@ function serveMessages(request, response) {
 	getMessages().succeed(function(result) {
 		// render messages
 		var messages = result.items.map(normalizeMessage)
-			.map(function(message, index) {
-				// map index to be ascending, so that new messages dont mess them all up
-				index = (result.meta.total - index - 1); // :NOTE: dont forget the offset, once we're paginating
-				message.href = 'httpl://'+config.domain+'/messages/'+index;
+			.map(function(message) {
+				message.href = 'httpl://'+config.domain+'/messages/'+message.id;
+				message.unreadStyle = (message.unread) ? 'font-weight: bold;' : '';
 				return message;
 			})
 			.map(templates.messagesItem)
@@ -177,20 +189,14 @@ function serveCompose(request, response) {
 	});
 }
 
-function serveMessage(request, response, messageIndex) {
-	response.setHeader('link', [
-		{ rel:'via', href:'/' },
-		{ rel:'up collection', href:'/messages' },
-		{ rel:'self', href:'/messages/'+messageIndex }
-	]);
-
-	getMessages({ offset: messageIndex, count: 1, sort: 'asc' }).succeed(function(result) {
-		var message = (result.items) ? result.items[0] : null;
+function serveMessage(request, response, messageId) {
+	getMessage(messageId).succeed(function(result) {
+		var message = result.item;
 		if (!message)
 			return response.writeHead(404, 'not found').end();
 
 		// render message content
-		message.href = 'httpl://'+config.domain+'/messages/'+messageIndex;
+		message.href = 'httpl://'+config.domain+'/messages/'+messageId;
 		message.from = message.from.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		message.recipient = message.recipient.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		var content = templates.message(message);
@@ -199,39 +205,66 @@ function serveMessage(request, response, messageIndex) {
 		// console.log(request.headers);
 		var deltas = [];
 		var openTabs = request.headers.cookie.openTabs || [];
-		if (openTabs.indexOf(messageIndex) === -1) {
+		if (openTabs.indexOf(messageId) === -1) {
 			// create tab
-			openTabs.push(messageIndex);
+			openTabs.push(messageId);
 			var title = message.subject;
 			if (title.length > 22) title = title.slice(0,19) + '...';
 			else title += '"';
 			var tab = (
-				'<li class="message-'+messageIndex+'">'+
-					'<a href="httpl://'+config.domain+'/messages/'+messageIndex+'" target="grimmail-content" data-toggle="nav">"'+title+'</a>'+
+				'<li class="message-'+messageId+'">'+
+					'<a href="httpl://'+config.domain+'/messages/'+messageId+'" target="grimmail-content" data-toggle="nav">"'+title+'</a>'+
 				'</li>'
 			);
 			deltas = [
-				['remove', '#grimmail-nav .message-'+messageIndex],
 				['append', '#grimmail-nav', tab],
 				['removeClass', '#grimmail-nav .active', 'active'],
-				['addClass', '#grimmail-nav .message-'+messageIndex, 'active'],
+				['addClass', '#grimmail-nav .message-'+messageId, 'active'],
 				['replace', '#grimmail-content', content]
 			];
 		} else {
 			// open tab
 			deltas = [
 				['removeClass', '#grimmail-nav .active', 'active'],
-				['addClass', '#grimmail-nav .message-'+messageIndex, 'active'],
+				['addClass', '#grimmail-nav .message-'+messageId, 'active'],
 				['replace', '#grimmail-content', content]
 			];
 		}
 
-		// console.log(openTabs);
 		respond(request, response, {
 			html: content,
 			deltas: deltas
 		}, { 'set-cookie':{ openTabs:{ value:openTabs, scope:'client' }}});
 	});
+}
+
+function dismissMessage(request, response, messageId) {
+	var p;
+	if (request.method == 'DELETE')
+		p = deleteMessage(messageId);
+	else {
+		var unread = (request.method == 'MARKUNREAD');
+		p = patchMessage(messageId, { unread: unread });
+	}
+	p.then(
+		function() {
+			var openTabs = request.headers.cookie.openTabs || [];
+			var tabIndex = openTabs.indexOf(messageId);
+			if (tabIndex !== -1)
+				openTabs.splice(tabIndex, 1);
+
+			respond(request, response, {
+				deltas: [
+					['remove', '#grimmail-nav .message-'+messageId],
+					['addClass', '#grimmail-nav .messages', 'active'],
+					['navigate', '#grimmail-content', 'httpl://'+config.domain+'/messages']
+				]
+			}, { 'set-cookie':{ openTabs:{ value:openTabs, scope:'client' }}});
+		},
+		function(res) {
+			response.writeHead(500, res.body).end();
+		}
+	);
 }
 
 function serveConfig(request, response, message, redirectAfter) {
@@ -313,6 +346,7 @@ function respond(request, response, content, headers) {
 		response.writeHead(406, 'bad accept').end();
 }
 
+// :TODO: switch to navigator
 function getMessages(query) {
 	if (!query) query = {};
 	if (!query.sort) query.sort = 'desc';
@@ -341,6 +375,59 @@ function getMessages(query) {
 			};
 		}
 	);
+}
+
+// :TODO: switch to navigator
+function getMessage(messageId, query) {
+	return local.http.dispatch({
+		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+		query: query,
+		headers: {
+			accept: 'application/json',
+			authorization: 'Basic '+btoa(config.usr.username+':'+config.usr.password)
+		}
+	}).then(
+		function(res) {
+			if (res.body && res.body.item)
+				return res.body;
+			return {
+				error: '<div class="alert alert-error"><strong>Error!</strong> Invalid response from the email host.</div>',
+				item: null,
+				meta: null
+			};
+		},
+		function() {
+			return {
+				error: '<div class="alert alert-error"><strong>Error!</strong> Failure response from the email host.</div>',
+				item: null,
+				meta: null
+			};
+		}
+	);
+}
+
+// :TODO: switch to navigator
+function patchMessage(messageId, body) {
+	return local.http.dispatch({
+		method: 'patch',
+		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+		body: body,
+		headers: {
+			'content-type': 'application/json',
+			authorization: 'Basic '+btoa(config.usr.username+':'+config.usr.password)
+		}
+	});
+}
+
+// :TODO: switch to navigator - seriously, this is shameful
+function deleteMessage(messageId) {
+	return local.http.dispatch({
+		method: 'delete',
+		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+		headers: {
+			authorization: 'Basic '+btoa(config.usr.username+':'+config.usr.password)
+		}
+	});
 }
 
 // gets the schema in a nice, natr'al place
