@@ -2,6 +2,13 @@ Changes
 =======
 0.1.2
 
+2013/05/24 pfraze
+
+ - Updated cookie scope behaviors
+   - scope=client now targets the topmost parent region of same origin
+   - scope=region now targets the originating region
+
+
 2013/05/23 pfraze
 
  - Added ?noreload to PUT & PATCH httpl://config.env/workers/:domain

@@ -26,6 +26,27 @@
 		return mine == theirs;
 	};
 
+	// gives the parent client region, if of the same origin
+	GrimRegion.prototype.getParent = function() {
+		var el = local.client.findParentNode(this.element.parentNode, function(node) {
+			return (node.tagName == 'DIV' && typeof node.dataset.clientRegion != 'undefined');
+		});
+		if (el) {
+			var region = local.env.getClientRegion(el.id);
+			if (region && region.hasSameOrigin(this))
+				return region;
+		}
+		return null;
+	};
+
+	// gives the uppermost client region of the same origin
+	GrimRegion.prototype.getTopmostParent = function() {
+		var parent, region = this;
+		while ((region = region.getParent()))
+			parent = region;
+		return parent;
+	};
+
 	// closes the view
 	GrimRegion.prototype.dismiss = function() {
 		local.env.removeClientRegion(this.element.id);
@@ -113,16 +134,21 @@
 		if (!(authority in this.cookies))
 			this.cookies[authority] = {};
 
+		var region;
 		var cookies = response.headers['set-cookie'];
 		if (cookies) {
 			for (var k in cookies) {
-				if (cookies[k].scope != 'client')
+				if (cookies[k].scope == 'region')
+					region = this;
+				else if (cookies[k].scope == 'client')
+					region = this.getTopmostParent() || this;
+				else
 					continue;
 
 				if (cookies[k] === null)
-					delete this.cookies[authority][k];
+					delete region.cookies[authority][k];
 				else
-					this.cookies[authority][k] = cookies[k];
+					region.cookies[authority][k] = cookies[k];
 			}
 		}
 	};

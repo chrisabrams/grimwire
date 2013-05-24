@@ -1,35 +1,37 @@
 function attachCookies(request, origin) {
-	var reqCookies = {};
-		// attach client cookies
-		if (origin instanceof local.client.Region) {
-			var clientCookies = origin.cookies[request.urld.authority];
-			if (clientCookies) {
-				for (var k in clientCookies) {
-					reqCookies[k] = clientCookies[k].value || clientCookies[k];
-					// ^ cookies may be given as a single value or as an object with {value:...}
+	request.headers.cookie = {};
+	// attach session cookies
+	var sessionCookies = storageServer.getItem(request.urld.host, '.cookies');
+	if (sessionCookies && sessionCookies.items)
+		__addCookies(request, sessionCookies.items);
 
-					// add flagged values to the query object
-					if (clientCookies[k].query)
-						request.query[k] = (typeof request.query[k] == 'undefined') ? clientCookies[k].value : request.query[k];
-				}
-			}
+	// attach client & region cookies
+	if (origin instanceof local.client.Region) {
+		var client = origin.getTopmostParent();
+		if (client) {
+			var clientCookies = client.cookies[request.urld.authority];
+			if (clientCookies)
+				__addCookies(request, clientCookies);
 		}
-		// attach session cookies
-		var sessionCookies = storageServer.getItem(request.urld.host, '.cookies');
-		if (sessionCookies && sessionCookies.items) {
-			for (var k in sessionCookies.items) {
-				if (k in reqCookies)
-					continue;
 
-				reqCookies[k] = sessionCookies.items[k].value || sessionCookies.items[k];
-				// ^ cookies may be given as a single value or as an object with {value:...}
+		var regionCookies = origin.cookies[request.urld.authority];
+		if (regionCookies)
+			__addCookies(request, regionCookies);
+	}
+}
 
-				// add flagged values to the query object
-				if (sessionCookies.items[k].query)
-					request.query[k] = (typeof request.query[k] == 'undefined') ? sessionCookies.items[k].value : request.query[k];
-			}
-		}
-		request.headers.cookie = reqCookies;
+function __addCookies(request, cookies) {
+	for (var k in cookies) {
+		if (k in request.headers.cookie)
+			continue;
+
+		request.headers.cookie[k] = cookies[k].value || cookies[k];
+		// ^ cookies may be given as a single value or as an object with {value:...}
+
+		// add flagged values to the query object
+		if (cookies[k].query)
+			request.query[k] = (typeof request.query[k] == 'undefined') ? cookies[k].value : request.query[k];
+	}
 }
 
 function updateCookies(request, origin, response) {
