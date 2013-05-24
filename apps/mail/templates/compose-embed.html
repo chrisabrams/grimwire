@@ -1,23 +1,17 @@
 {{message}}
 <form method="post" action="httpl://{{domain}}/messages/.new?embed=1">
 	<p class="label label-info">New Message</p>
-	<div class="control-group {{errors.recipientState}}">
-		<div class="controls">
-			<input class="input-block-level" type="text" required name="recipient" placeholder="Recipient" value="{{recipient}}" />
-			{{errors.recipientHelp}}
-		</div>
+	<div class="controls {{errors.recipientState}}">
+		<input class="input-block-level" type="text" required name="recipient" placeholder="Recipient" value="{{recipient}}" />
+		{{errors.recipientHelp}}
 	</div>
-	<div class="control-group {{errors.subjectState}}">
-		<div class="controls">
-			<input class="input-block-level" type="text" name="subject" placeholder="Subject" value="{{subject}}" />
-			{{errors.subjectHelp}}
-		</div>
+	<div class="controls {{errors.subjectState}}">
+		<input class="input-block-level" type="text" name="subject" placeholder="Subject" value="{{subject}}" />
+		{{errors.subjectHelp}}
 	</div>
-	<div class="control-group {{errors.contentState}}">
-		<div class="controls">
-			<textarea class="input-block-level" name="content" rows="20">{{content}}</textarea>
-			{{errors.contentHelp}}
-		</div>
+	<div class="controls {{errors.contentState}}">
+		<textarea class="input-block-level" name="content" rows="20">{{content}}</textarea>
+		{{errors.contentHelp}}
 	</div>
 	<a class="btn" href="#" data-dismiss="region">Cancel</a>
 	<button type="submit" class="btn btn-primary">Submit</button>

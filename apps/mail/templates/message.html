@@ -1,13 +1,22 @@
 <div itemscope itemtype="http://grimwire.com/type/shareable http://grimwire.com/type/message">
-  <h3>
-    <span itemprop="subject">{{subject}}</span>
-    <small itemprop="date">{{Date}}</small>
-  </h3>
-  <p>
-    <strong>From:</strong> <span itemprop="sender">{{from}}</span><br/>
-    <strong>To:</strong> <span itemprop="recipient">{{recipient}}</span>
-  </p>
-  <hr/>
-  <div>{{body-html}}</div>
-  <meta itemprop="content" content="{{body-plain}}">
+	<h3 style="margin-bottom: 0">
+		<span itemprop="subject">{{subject}}</span>
+		<small itemprop="date">{{Date}}</small>
+	</h3>
+	<p>
+		<strong>From:</strong> <span itemprop="sender">{{from}}</span><br/>
+		<strong>To:</strong> <span itemprop="recipient">{{recipient}}</span>
+	</p>
+	<form action="{{href}}" accept="application/html-deltas+json" style="margin-bottom: 0">
+		<div class="btn-group">
+			<button class="btn btn-mini" title="Mark Unread" formmethod="markunread"><i class="icon-eye-close"></i></button>
+			<button class="btn btn-mini" title="Mark Read" formmethod="markread"><i class="icon-eye-open"></i></button>
+		</div>
+		<div class="btn-group">
+			<button class="btn btn-mini" title="Delete" formmethod="delete"><i class="icon-remove"></i></button>
+		</div>
+	</form>
+	<hr/>
+	<div>{{body-html}}</div>
+	<meta itemprop="content" content="{{body-plain}}">
 </div>

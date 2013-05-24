@@ -22,7 +22,7 @@ var cache = {
 };
 
 function main(request, response) {
-	if (isConfigNeeded) {
+	if (request.method != 'HEAD' && isConfigNeeded) {
 		var message = '<div class="alert alert-info"><strong>Setup Required!</strong><br/>'+
 			'Before I can find your email, I need to to know where your host is.</div>';
 		return serveConfig(request, response, message, (request.path != '/.grim/config'));
@@ -65,8 +65,10 @@ function serveMessages(request, response) {
 
 	getMessages().succeed(function(result) {
 		// render messages
-		var messages = result.body.map(normalizeMessage)
+		var messages = result.items.map(normalizeMessage)
 			.map(function(message, index) {
+				// map index to be ascending, so that new messages dont mess them all up
+				index = (result.meta.total - index - 1); // :NOTE: dont forget the offset, once we're paginating
 				message.href = 'httpl://'+config.domain+'/messages/'+index;
 				return message;
 			})
@@ -182,35 +184,53 @@ function serveMessage(request, response, messageIndex) {
 		{ rel:'self', href:'/messages/'+messageIndex }
 	]);
 
-	getMessages({ offset: messageIndex, count: 1 }).succeed(function(result) {
-		var message = result.body[0];
+	getMessages({ offset: messageIndex, count: 1, sort: 'asc' }).succeed(function(result) {
+		var message = (result.items) ? result.items[0] : null;
 		if (!message)
 			return response.writeHead(404, 'not found').end();
 
+		// render message content
+		message.href = 'httpl://'+config.domain+'/messages/'+messageIndex;
 		message.from = message.from.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		message.recipient = message.recipient.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		var content = templates.message(message);
-		var title = message.subject;
-		if (title.length > 22)
-			title = title.slice(0,19) + '...';
-		else
-			title += '"';
-		var tab = (
-			'<li class="message-'+messageIndex+'">'+
-				'<a href="httpl://'+config.domain+'/messages/'+messageIndex+'" target="grimmail-content" data-toggle="nav">"'+title+'</a>'+
-			'</li>'
-		);
 
-		respond(request, response, {
-			html: content,
-			deltas: [
+		// create/open the tab
+		// console.log(request.headers);
+		var deltas = [];
+		var openTabs = request.headers.cookie.openTabs || [];
+		if (openTabs.indexOf(messageIndex) === -1) {
+			// create tab
+			openTabs.push(messageIndex);
+			var title = message.subject;
+			if (title.length > 22) title = title.slice(0,19) + '...';
+			else title += '"';
+			var tab = (
+				'<li class="message-'+messageIndex+'">'+
+					'<a href="httpl://'+config.domain+'/messages/'+messageIndex+'" target="grimmail-content" data-toggle="nav">"'+title+'</a>'+
+				'</li>'
+			);
+			deltas = [
 				['remove', '#grimmail-nav .message-'+messageIndex],
 				['append', '#grimmail-nav', tab],
 				['removeClass', '#grimmail-nav .active', 'active'],
 				['addClass', '#grimmail-nav .message-'+messageIndex, 'active'],
 				['replace', '#grimmail-content', content]
-			]
-		});
+			];
+		} else {
+			// open tab
+			deltas = [
+				['removeClass', '#grimmail-nav .active', 'active'],
+				['addClass', '#grimmail-nav .message-'+messageIndex, 'active'],
+				['replace', '#grimmail-content', content]
+			];
+		}
+
+		// console.log(openTabs);
+		respond(request, response, {
+			html: content,
+			deltas: deltas
+		}, { 'set-cookie':{ openTabs:{ value:openTabs, scope:'client' }}});
 	});
 }
 
@@ -274,7 +294,11 @@ function quoteContent(content) {
 	return content.replace(/(.{80})\s/g, "$1\n").replace(/^([^\n])/mg, '> $1');
 }
 
-function respond(request, response, content) {
+function respond(request, response, content, headers) {
+	if (headers) {
+		for (var k in headers)
+			response.setHeader(k, headers[k]);
+	}
 	if (request.method == 'HEAD') {
 		response.writeHead(200, 'ok').end();
 		return;
@@ -290,6 +314,8 @@ function respond(request, response, content) {
 }
 
 function getMessages(query) {
+	if (!query) query = {};
+	if (!query.sort) query.sort = 'desc';
 	return local.http.dispatch({
 		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username),
 		query: query,
@@ -299,17 +325,19 @@ function getMessages(query) {
 		}
 	}).then(
 		function(res) {
-			if (Array.isArray(res.body))
-				return { error: null, body: res.body };
+			if (res.body && Array.isArray(res.body.items))
+				return res.body;
 			return {
 				error: '<div class="alert alert-error"><strong>Error!</strong> Invalid response from the email host.</div>',
-				body: []
+				items: null,
+				meta: null
 			};
 		},
 		function() {
 			return {
 				error: '<div class="alert alert-error"><strong>Error!</strong> Failure response from the email host.</div>',
-				body: []
+				items: null,
+				meta: null
 			};
 		}
 	);
