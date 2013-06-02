@@ -442,7 +442,7 @@ function normalizeMessage(message) {
 		message.time = '';
 	}
 	if (!message['body-html'])
-		message['body-html'] = message['body-plain'];
+		message['body-html'] = (message['body-plain']||'').replace(/\n/g, "<br>\n");
 	return message;
 }
 
