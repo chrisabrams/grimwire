@@ -432,9 +432,14 @@ function deleteMessage(messageId) {
 
 // gets the schema in a nice, natr'al place
 function normalizeMessage(message) {
-	var dateParts = message.Date.split(' ');
-	message.date = dateParts.slice(0,4).join(' ');
-	message.time = toAMPM(dateParts[4]) + ' ' + dateParts[5];
+	if (message.Date) {
+		var dateParts = message.Date.split(' ');
+		message.date = dateParts.slice(0,4).join(' ');
+		message.time = toAMPM(dateParts[4]) + ' ' + dateParts[5];
+	} else {
+		message.date = '';
+		message.time = '';
+	}
 	return message;
 }
 
