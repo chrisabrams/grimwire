@@ -440,6 +440,8 @@ function normalizeMessage(message) {
 		message.date = '';
 		message.time = '';
 	}
+	if (!message['body-html'])
+		message['body-html'] = message['body-plain'];
 	return message;
 }
 
