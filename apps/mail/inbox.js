@@ -196,6 +196,7 @@ function serveMessage(request, response, messageId) {
 			return response.writeHead(404, 'not found').end();
 
 		// render message content
+		normalizeMessage(message);
 		message.href = 'httpl://'+config.domain+'/messages/'+messageId;
 		message.from = message.from.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		message.recipient = message.recipient.replace(/</g, '&lt;').replace(/>/g, '&gt;');
