@@ -262,7 +262,7 @@
 					};
 				}
 
-				var url = local.http.UriTemplate.parse(transformHref).expand(data);
+				var url = local.web.UriTemplate.parse(transformHref).expand(data);
 				var request = {
 					method: 'get',
 					url: url,

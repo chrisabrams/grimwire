@@ -39,7 +39,8 @@ function main(request, response) {
 		}
 		else if (/html/.test(request.headers.accept)) {
 			response.writeHead(200, 'ok', {'content-type':'text/html'});
-			response.end(doc.renderDoc());
+			doc.renderDoc().always(response.end.bind(response));
+			return;
 		}
 		else
 			response.writeHead(406, 'bad accept').end();
@@ -68,16 +69,24 @@ function docInterface(doc, path, request) {
 		path: path,
 		renderDoc: function() {
 			var templateName = doc._template || request.path.slice(1).replace(/\//g, '_');
-			var template = require('templates/' + templateName + '.html') || '<h2>Error</h2><p>Template not found at <code>templates/'+templateName+'.html</code></p>';
-			template = template.replace(/\{\{domain\}\}/g, config.domain);
-			template = template.replace(/\{\{sidenav\}\}/g, renderSidenav());
-			if (doc._template_vars) {
-				for (var k in doc._template_vars) {
-					var v = doc._template_vars[k];
-					template = template.replace(RegExp('{{'+k+'}}', 'g'), v);
-				}
-			}
-			return template;
+			return local.web.dispatch('apps/docs/templates/' + templateName + '.html')
+				.then(
+					function(res) {
+						return res.body;
+					}, function() {
+						return '<h2>Error</h2><p>Template not found at <code>templates/'+templateName+'.html</code></p>';
+					}
+				).then(function(template) {
+					template = template.replace(/\{\{domain\}\}/g, config.domain);
+					template = template.replace(/\{\{sidenav\}\}/g, renderSidenav());
+					if (doc._template_vars) {
+						for (var k in doc._template_vars) {
+							var v = doc._template_vars[k];
+							template = template.replace(RegExp('{{'+k+'}}', 'g'), v);
+						}
+					}
+					return template;
+				});
 		}
 	};
 }

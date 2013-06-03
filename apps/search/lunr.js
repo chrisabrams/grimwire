@@ -1,13 +1,13 @@
 // index/lunr.js
 // ==============
 // Search index with lunr.js
-var lunr = require('vendor/lunr.min.js');
+importScripts('apps/search/vendor/lunr.min.js');
 var config = local.worker.config;
 
 
 // Setup
 // -
-var indexBroadcast = local.http.broadcaster(); // notifies of new entries in the index
+var indexBroadcast = local.web.broadcaster(); // notifies of new entries in the index
 
 // init index
 var indexedCategories = []; // a list of categories in the current documentset
@@ -23,7 +23,7 @@ var idx = lunr(function () {
 // listen for new applications
 var indexSources = {}; // a map of sources -> event streams
 var indexSourcesDocs = {}; // tracks the ids of documents from each source
-local.http.subscribe('httpl://config.env/apps').on('update', updateSources);
+local.web.subscribe('httpl://config.env/apps').on('update', updateSources);
 updateSources();
 
 
@@ -105,7 +105,7 @@ function setCookies(request, response) {
 
 // gets the current applications in the environment and syncs the current sources to include what's active
 function updateSources() {
-	local.http.dispatch({ url:'httpl://config.env/apps', headers:{ accept:'application/json' }}).then(
+	local.web.dispatch({ url:'httpl://config.env/apps', headers:{ accept:'application/json' }}).then(
 		function(res) {
 			var cfgs = res.body;
 			// add new
@@ -134,7 +134,7 @@ function addSource(appId, sourceUrl) {
 		return;
 	resolveSourceIndex(sourceUrl).succeed(function(indexUrl) {
 		// connect event-stream
-		indexSources[sourceUrl] = local.http.subscribe(indexUrl);
+		indexSources[sourceUrl] = local.web.subscribe(indexUrl);
 		indexSources[sourceUrl].on('update', function() { getSourceDocuments(appId, sourceUrl, indexUrl); });
 		// fetch documents
 		indexSourcesDocs[sourceUrl] = [];
@@ -159,11 +159,11 @@ function removeSource(sourceUrl) {
 }
 
 function resolveSourceIndex(sourceUrl) {
-	return local.http.navigator(sourceUrl).relation('http://grimwire.com/rel/index').resolve();
+	return local.web.navigator(sourceUrl).relation('http://grimwire.com/rel/index').resolve();
 }
 
 function getSourceDocuments(appId, sourceUrl, indexUrl) {
-	local.http.dispatch({ url:indexUrl, headers:{ accept:'application/json' }}).then(
+	local.web.dispatch({ url:indexUrl, headers:{ accept:'application/json' }}).then(
 		function(res) {
 			if (res.body && Array.isArray(res.body)) {
 				// diff new docs against current:

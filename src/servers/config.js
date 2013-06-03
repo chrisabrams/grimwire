@@ -28,8 +28,8 @@
 		};
 
 		this.broadcasts = {
-			apps: local.http.broadcaster(),
-			activeApp: local.http.broadcaster()
+			apps: local.web.broadcaster(),
+			activeApp: local.web.broadcaster()
 		};
 	}
 	ConfigServer.prototype = Object.create(local.env.Server.prototype);
@@ -55,7 +55,7 @@
 		url = url || '.host.json';
 		var self = this;
 		// load json at given url
-		return local.http.navigator(url).getJson()
+		return local.web.navigator(url).getJson()
 			.succeed(function(res) {
 				self.hostEnvConfig = res.body;
 
@@ -64,7 +64,7 @@
 					self.hostEnvConfig = JSON.parse(self.hostEnvConfig);
 
 				// load application configs
-				var appConfigGETs = self.hostEnvConfig.applications.map(function(url) { return local.http.navigator(url).getJson(); });
+				var appConfigGETs = self.hostEnvConfig.applications.map(function(url) { return local.web.navigator(url).getJson(); });
 				return local.promise.bundle(appConfigGETs);
 			})
 			.succeed(function(responses) {
@@ -906,12 +906,12 @@
 
 	function reloadWorker(server, cfg) {
 		// local.env.killServer(domain);
-		local.http.unregisterLocal(server.config.domain);
+		local.web.unregisterLocal(server.config.domain);
 		server.terminate();
 		// local.env.addServer(domain, new local.env.WorkerServer(server.config));
 		server = local.env.servers[cfg.domain] = new local.env.WorkerServer(cfg);
 		server.loadUserScript();
-		local.http.registerLocal(cfg.domain, server.handleHttpRequest, server);
+		local.web.registerLocal(cfg.domain, server.handleHttpRequest, server);
 		return server;
 	}
 

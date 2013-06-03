@@ -6,57 +6,56 @@
 var config = local.worker.config;
 var isConfigNeeded = !config.usr.mailhostUrl && !config.usr.username && !config.usr.password;
 
+var templateRequests = [];
 var templates = {
-	layout: makeTemplateFn('templates/layout.html'),
-	messages: makeTemplateFn('templates/messages.html'),
-	messagesItem: makeTemplateFn('templates/messages-item.html'),
-	message: makeTemplateFn('templates/message.html'),
-	compose: makeTemplateFn('templates/compose.html'),
-	composeEmbed: makeTemplateFn('templates/compose-embed.html'),
-	contacts: makeTemplateFn('templates/contacts.html'),
-	configure: makeTemplateFn('templates/configure.html')
-};
-
-var cache = {
-	messages: null
+	layout: makeTemplateFn('apps/mail/templates/layout.html'),
+	messages: makeTemplateFn('apps/mail/templates/messages.html'),
+	messagesItem: makeTemplateFn('apps/mail/templates/messages-item.html'),
+	message: makeTemplateFn('apps/mail/templates/message.html'),
+	compose: makeTemplateFn('apps/mail/templates/compose.html'),
+	composeEmbed: makeTemplateFn('apps/mail/templates/compose-embed.html'),
+	contacts: makeTemplateFn('apps/mail/templates/contacts.html'),
+	configure: makeTemplateFn('apps/mail/templates/configure.html')
 };
 
 function main(request, response) {
-	if (request.method != 'HEAD' && isConfigNeeded) {
-		var message = '<div class="alert alert-info"><strong>Setup Required!</strong><br/>'+
-			'Before I can find your email, I need to to know where your host is.</div>';
-		return serveConfig(request, response, message, (request.path != '/.grim/config'));
-	}
+	local.promise.bundle(templateRequests).always(function() {
+		if (request.method != 'HEAD' && isConfigNeeded) {
+			var message = '<div class="alert alert-info"><strong>Setup Required!</strong><br/>'+
+				'Before I can find your email, I need to to know where your host is.</div>';
+			return serveConfig(request, response, message, (request.path != '/.grim/config'));
+		}
 
-	if (/HEAD|GET/.test(request.method) && request.path == '/')
-		return serveLayout(request, response);
+		if (/HEAD|GET/.test(request.method) && request.path == '/')
+			return serveLayout(request, response);
 
-	if (/HEAD|GET/.test(request.method) && request.path == '/messages')
-		return serveMessages(request, response);
+		if (/HEAD|GET/.test(request.method) && request.path == '/messages')
+			return serveMessages(request, response);
 
-	if (request.path == '/messages/.new')
-		return serveCompose(request, response);
+		if (request.path == '/messages/.new')
+			return serveCompose(request, response);
 
-	if (request.path.slice(0, 10) == '/messages/') {
-		var mid = request.path.slice(10);
-		response.setHeader('link', [
-			{ rel:'via', href:'/' },
-			{ rel:'up collection', href:'/messages' },
-			{ rel:'self', href:'/messages/'+mid }
-		]);
+		if (request.path.slice(0, 10) == '/messages/') {
+			var mid = request.path.slice(10);
+			response.setHeader('link', [
+				{ rel:'via', href:'/' },
+				{ rel:'up collection', href:'/messages' },
+				{ rel:'self', href:'/messages/'+mid }
+			]);
 
-		if (/HEAD|GET/.test(request.method))
-			return serveMessage(request, response, mid);
-		else if (/MARKREAD|MARKUNREAD|DELETE/.test(request.method))
-			return dismissMessage(request, response, mid);
-		else
-			return response.writeHead(405, 'bad method').end();
-	}
+			if (/HEAD|GET/.test(request.method))
+				return serveMessage(request, response, mid);
+			else if (/MARKREAD|MARKUNREAD|DELETE/.test(request.method))
+				return dismissMessage(request, response, mid);
+			else
+				return response.writeHead(405, 'bad method').end();
+		}
 
-	if (request.path == '/.grim/config')
-		return serveConfig(request, response);
+		if (request.path == '/.grim/config')
+			return serveConfig(request, response);
 
-	response.writeHead(404, 'not found').end();
+		response.writeHead(404, 'not found').end();
+	});
 }
 
 function serveLayout(request, response) {
@@ -127,7 +126,7 @@ function serveCompose(request, response) {
 
 		if (Object.keys(context.errors).length === 0) {
 			// send email
-			emailSendRequest = local.http.dispatch({
+			emailSendRequest = local.web.dispatch({
 				method: 'post',
 				url: config.usr.mailhostUrl,
 				body: {
@@ -291,7 +290,7 @@ function serveConfig(request, response, message, redirectAfter) {
 			isConfigNeeded = false;
 
 			// update stored config
-			local.http.dispatch({
+			local.web.dispatch({
 				method: 'put',
 				url: 'httpl://config.env/workers/'+config.domain,
 				query: { noreload: true }, // we updated ourselves, kthx
@@ -351,8 +350,8 @@ function respond(request, response, content, headers) {
 function getMessages(query) {
 	if (!query) query = {};
 	if (!query.sort) query.sort = 'desc';
-	return local.http.dispatch({
-		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username),
+	return local.web.dispatch({
+		url: local.web.joinUrl(config.usr.mailhostUrl, config.usr.username),
 		query: query,
 		headers: {
 			accept: 'application/json',
@@ -380,8 +379,8 @@ function getMessages(query) {
 
 // :TODO: switch to navigator
 function getMessage(messageId, query) {
-	return local.http.dispatch({
-		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+	return local.web.dispatch({
+		url: local.web.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
 		query: query,
 		headers: {
 			accept: 'application/json',
@@ -409,9 +408,9 @@ function getMessage(messageId, query) {
 
 // :TODO: switch to navigator
 function patchMessage(messageId, body) {
-	return local.http.dispatch({
+	return local.web.dispatch({
 		method: 'patch',
-		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+		url: local.web.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
 		body: body,
 		headers: {
 			'content-type': 'application/json',
@@ -422,9 +421,9 @@ function patchMessage(messageId, body) {
 
 // :TODO: switch to navigator - seriously, this is shameful
 function deleteMessage(messageId) {
-	return local.http.dispatch({
+	return local.web.dispatch({
 		method: 'delete',
-		url: local.http.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
+		url: local.web.joinUrl(config.usr.mailhostUrl, config.usr.username, messageId),
 		headers: {
 			authorization: 'Basic '+btoa(config.usr.username+':'+config.usr.password)
 		}
@@ -460,7 +459,13 @@ function toAMPM(time) {
 // -
 
 function makeTemplateFn(path) {
-	var template = require(path);
+	var template = '';
+	var req = local.web.dispatch(path);
+	templateRequests.push(req);
+	req.then(
+		function(res) { template = res.body; },
+		function() { template = 'Failed to load template: '+path; }
+	);
 	return function(context) {
 		if (!context)
 			context = {};

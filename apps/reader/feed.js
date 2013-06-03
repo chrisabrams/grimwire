@@ -11,7 +11,7 @@ var feedSources =
 // feed data
 var feeds = null;
 var cachedItems = [], nCachedItems=0;
-var feedBroadcast = local.http.broadcaster();
+var feedBroadcast = local.web.broadcaster();
 
 function getAllFeeds() {
 	if (feeds)
@@ -24,7 +24,7 @@ function getAllFeeds() {
 			var getUrl = url;
 			if (getUrl.indexOf('httpl') === -1)
 				getUrl = 'httpl://rssproxy.reader.usr?url='+url; // use the proxy on remote urls (solves CORS)
-			return local.http.dispatch({ method:'get', url:getUrl, headers:{ accept:'application/json' }})
+			return local.web.dispatch({ method:'get', url:getUrl, headers:{ accept:'application/json' }})
 				.then(
 					function(res) {
 						feeds[url] = res.body;
@@ -118,7 +118,7 @@ function buildFeedInterface() {
 		cachedItems.map(function(item, index) {
 			return [
 				'<tr>',
-					'<td class="muted" style="padding:20px 10px">',local.http.parseUri(item.link).host,'</td>',
+					'<td class="muted" style="padding:20px 10px">',local.web.parseUri(item.link).host,'</td>',
 					'<td style="padding:20px 10px"><div id="item-',index,'"><a href="/items/',index,'/desc?deltas=1">',item.title,'</a></div></td>',
 					'<td style="padding:20px 10px">',formatDate(item.date),'</td>',
 				'</tr>'
@@ -230,31 +230,33 @@ function main(request, response) {
 		return;
 	}
 	if (request.path == '/.grim/config') {
-		var msg = '';
-		if (request.method == 'POST') {
-			feedSources = (request.body.sources && typeof request.body.sources == 'string') ?
-				request.body.sources.split("\n").filter(function(i) { return i; }) :
-				[];
-			local.http.dispatch({
-				method: 'put',
-				url: 'httpl://config.env/workers/'+local.worker.config.domain,
-				body: { sources:feedSources },
-				headers: { 'content-type':'application/json' }
-			});
-			msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
-		}
+		request.body_.always(function() {
+			var msg = '';
+			if (request.method == 'POST') {
+				feedSources = (request.body.sources && typeof request.body.sources == 'string') ?
+					request.body.sources.split("\n").filter(function(i) { return i; }) :
+					[];
+				local.web.dispatch({
+					method: 'put',
+					url: 'httpl://config.env/workers/'+local.worker.config.domain,
+					body: { sources:feedSources },
+					headers: { 'content-type':'application/json' }
+				});
+				msg = '<div class="alert alert-success" data-lifespan="5">Updated</div>';
+			}
 
-		response.writeHead(200, 'ok', {'content-type':'text/html'});
-		response.end(
-			'<form action="httpl://'+local.worker.config.domain+'/.grim/config" method="post">'+
-				msg+
-				'<label for="reader-feed-sources">Feed Sources</label>'+
-				'<textarea id="reader-feed-sources" name="sources" rows="5" class="span8">'+
-					feedSources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
-				'</textarea><br/>'+
-				'<button class="btn">Submit</button>'+
-			'</form>'
-		);
+			response.writeHead(200, 'ok', {'content-type':'text/html'});
+			response.end(
+				'<form action="httpl://'+local.worker.config.domain+'/.grim/config" method="post">'+
+					msg+
+					'<label for="reader-feed-sources">Feed Sources</label>'+
+					'<textarea id="reader-feed-sources" name="sources" rows="5" class="span8">'+
+						feedSources.join("\n").replace(/</g,'&lt;').replace(/>/g,'&gt;')+
+					'</textarea><br/>'+
+					'<button class="btn">Submit</button>'+
+				'</form>'
+			);
+		});
 		return;
 	}
 	response.writeHead(404, 'not found').end();

@@ -39,8 +39,12 @@ function routeMap(request, response, methodMap, pathMap) {
 
       // try to find and call the function
       var args = [request, response].concat(match.slice(1));
-      if (method in handlerObj)
-        return handlerObj[method].apply(handlerObj, args);
+      if (method in handlerObj) {
+        request.body_.always(function() { // after the body comes in
+          handlerObj[method].apply(handlerObj, args);
+        });
+        return;
+      }
       else
         return response.writeHead(405, 'bad method').end();
     }
