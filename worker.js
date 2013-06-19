@@ -406,12 +406,12 @@ local.web.parseLinkHeader = function parseLinkHeader(headerStr) {
 	if (typeof headerStr !== 'string') {
 		return headerStr;
 	}
-	// '</foo/bar>; rel="baz"; title="blah", </foo/bar>; rel="baz"; title="blah", </foo/bar>; rel="baz"; title="blah"'
+	// '</foo/bar>; rel="baz"; id="blah", </foo/bar>; rel="baz"; id="blah", </foo/bar>; rel="baz"; id="blah"'
 	return headerStr.replace(/,[\s]*</g, '|||<').split('|||').map(function(linkStr) {
-		// ['</foo/bar>; rel="baz"; title="blah"', '</foo/bar>; rel="baz"; title="blah"']
+		// ['</foo/bar>; rel="baz"; id="blah"', '</foo/bar>; rel="baz"; id="blah"']
 		var link = {};
 		linkStr.trim().split(';').forEach(function(attrStr) {
-			// ['</foo/bar>', 'rel="baz"', 'title="blah"']
+			// ['</foo/bar>', 'rel="baz"', 'id="blah"']
 			attrStr = attrStr.trim();
 			if (!attrStr) { return; }
 			if (attrStr.charAt(0) === '<') {
@@ -431,33 +431,33 @@ local.web.parseLinkHeader = function parseLinkHeader(headerStr) {
 
 // EXPORTED
 // looks up a link in the cache and generates the URI
-//  - first looks for a matching rel and title
-//    eg lookupLink(links, 'item', 'foobar'), Link: <http://example.com/some/foobar>; rel="item"; title="foobar" -> http://example.com/some/foobar
-//  - then looks for a matching rel with no title and uses that to generate the link
-//    eg lookupLink(links, 'item', 'foobar'), Link: <http://example.com/some/{title}>; rel="item" -> http://example.com/some/foobar
-local.web.lookupLink = function lookupLink(links, rel, title) {
+//  - first looks for a matching rel and id
+//    eg lookupLink(links, 'item', 'foobar'), Link: <http://example.com/some/foobar>; rel="item"; id="foobar" -> http://example.com/some/foobar
+//  - then looks for a matching rel with no id and uses that to generate the link
+//    eg lookupLink(links, 'item', 'foobar'), Link: <http://example.com/some/{id}>; rel="item" -> http://example.com/some/foobar
+local.web.lookupLink = function lookupLink(links, rel, id) {
 	var len = links ? links.length : 0;
 	if (!len) { return null; }
 
-	if (title)
-		title = title.toLowerCase();
+	if (id)
+		id = id.toLowerCase();
 	var relRegex = RegExp('\\b'+rel+'\\b');
 
-	// try to find the link with a title equal to the param we were given
+	// try to find the link with a id equal to the param we were given
 	var match = null;
 	for (var i=0; i < len; i++) {
 		var link = links[i];
 		if (!link) { continue; }
 		// find all links with a matching rel
 		if (relRegex.test(link.rel)) {
-			// look for a title match to the primary parameter
-			if (title && link.title) {
-				if (link.title.toLowerCase() === title) {
+			// look for a id match to the primary parameter
+			if (id && link.id) {
+				if (link.id.toLowerCase() === id) {
 					match = link;
 					break;
 				}
 			} else {
-				// no title attribute -- it's the template URI, so hold onto it
+				// no id attribute -- it's the template URI, so hold onto it
 				match = link;
 			}
 		}
@@ -840,7 +840,6 @@ function Response() {
 	this.status = 0;
 	this.reason = null;
 	this.headers = {};
-	this.isConnOpen = true;
 	this.body = '';
 
 	// non-enumerables (dont include in response messages)
@@ -1008,55 +1007,57 @@ local.web.schemes.register(['http', 'https'], function(request, response) {
 
 			// extract headers
 			var headers = {};
-			if (xhrRequest.getAllResponseHeaders()) {
-				xhrRequest.getAllResponseHeaders().split("\n").forEach(function(h) {
-					if (!h) { return; }
-					var kv = h.toLowerCase().replace('\r','').split(': ');
-					headers[kv[0]] = kv[1];
-				});
-			} else {
-				// a bug in firefox causes getAllResponseHeaders to return an empty string on CORS
-				// (not ideal, but) iterate the likely headers
-				var extractHeader = function(k) {
-					var v = xhrRequest.getResponseHeader(k);
-					if (v)
-						headers[k.toLowerCase()] = v.toLowerCase();
-				};
-				extractHeader('Accept-Ranges');
-				extractHeader('Age');
-				extractHeader('Allow');
-				extractHeader('Cache-Control');
-				extractHeader('Connection');
-				extractHeader('Content-Encoding');
-				extractHeader('Content-Language');
-				extractHeader('Content-Length');
-				extractHeader('Content-Location');
-				extractHeader('Content-MD5');
-				extractHeader('Content-Disposition');
-				extractHeader('Content-Range');
-				extractHeader('Content-Type');
-				extractHeader('Date');
-				extractHeader('ETag');
-				extractHeader('Expires');
-				extractHeader('Last-Modified');
-				extractHeader('Link');
-				extractHeader('Location');
-				extractHeader('Pragma');
-				extractHeader('Refresh');
-				extractHeader('Retry-After');
-				extractHeader('Server');
-				extractHeader('Set-Cookie');
-				extractHeader('Trailer');
-				extractHeader('Transfer-Encoding');
-				extractHeader('Vary');
-				extractHeader('Via');
-				extractHeader('Warning');
-				extractHeader('WWW-Authenticate');
-			}
+			if (xhrRequest.status !== 0) {
+				if (xhrRequest.getAllResponseHeaders()) {
+					xhrRequest.getAllResponseHeaders().split("\n").forEach(function(h) {
+						if (!h) { return; }
+						var kv = h.toLowerCase().replace('\r','').split(': ');
+						headers[kv[0]] = kv[1];
+					});
+				} else {
+					// a bug in firefox causes getAllResponseHeaders to return an empty string on CORS
+					// (not ideal, but) iterate the likely headers
+					var extractHeader = function(k) {
+						var v = xhrRequest.getResponseHeader(k);
+						if (v)
+							headers[k.toLowerCase()] = v.toLowerCase();
+					};
+					extractHeader('Accept-Ranges');
+					extractHeader('Age');
+					extractHeader('Allow');
+					extractHeader('Cache-Control');
+					extractHeader('Connection');
+					extractHeader('Content-Encoding');
+					extractHeader('Content-Language');
+					extractHeader('Content-Length');
+					extractHeader('Content-Location');
+					extractHeader('Content-MD5');
+					extractHeader('Content-Disposition');
+					extractHeader('Content-Range');
+					extractHeader('Content-Type');
+					extractHeader('Date');
+					extractHeader('ETag');
+					extractHeader('Expires');
+					extractHeader('Last-Modified');
+					extractHeader('Link');
+					extractHeader('Location');
+					extractHeader('Pragma');
+					extractHeader('Refresh');
+					extractHeader('Retry-After');
+					extractHeader('Server');
+					extractHeader('Set-Cookie');
+					extractHeader('Trailer');
+					extractHeader('Transfer-Encoding');
+					extractHeader('Vary');
+					extractHeader('Via');
+					extractHeader('Warning');
+					extractHeader('WWW-Authenticate');
+				}
 
-			// parse any headers we use often
-			if (headers.link)
-				headers.link = local.web.parseLinkHeader(headers.link);
+				// parse any headers we use often
+				if (headers.link)
+					headers.link = local.web.parseLinkHeader(headers.link);
+			}
 
 			response.writeHead(xhrRequest.status, xhrRequest.statusText, headers);
 
@@ -1073,7 +1074,8 @@ local.web.schemes.register(['http', 'https'], function(request, response) {
 		if (xhrRequest.readyState === XMLHttpRequest.DONE) {
 			if (streamPoller)
 				clearInterval(streamPoller);
-			response.write(xhrRequest.responseText.slice(lenOnLastPoll));
+			if (xhrRequest.responseText)
+				response.write(xhrRequest.responseText.slice(lenOnLastPoll));
 			response.end();
 		}
 	};
@@ -2444,24 +2446,26 @@ Navigator.prototype.dispatch = function Navigator__dispatch(req) {
 };
 
 // executes a GET text/event-stream request to our context
-Navigator.prototype.subscribe = function Navigator__dispatch() {
+Navigator.prototype.subscribe = function Navigator__subscribe(opts) {
+	if (!opts) opts = {};
 	return this.resolve()
 		.succeed(function(url) {
-			return local.web.subscribe(url);
+			opts.url = url;
+			return local.web.subscribe(opts);
 		});
 };
 
 // follows a link relation from our context, generating a new navigator
 //  - uses URI Templates to generate links
-//  - first looks for a matching rel and title
-//    eg relation('item', 'foobar'), Link: <http://example.com/some/foobar>; rel="item"; title="foobar" -> http://example.com/some/foobar
-//  - then looks for a matching rel with no title and uses that to generate the link
-//    eg relation('item', 'foobar'), Link: <http://example.com/some/{title}>; rel="item" -> http://example.com/some/foobar
+//  - first looks for a matching rel and id
+//    eg relation('item', 'foobar'), Link: <http://example.com/some/foobar>; rel="item"; id="foobar" -> http://example.com/some/foobar
+//  - then looks for a matching rel with no id and uses that to generate the link
+//    eg relation('item', 'foobar'), Link: <http://example.com/some/{id}>; rel="item" -> http://example.com/some/foobar
 //  - `extraParams` are any other URI template substitutions which should occur
-//    eg relation('item', 'foobar', { limit:5 }), Link: <http://example.com/some/{item}{?limit}>; rel="item" -> http://example.com/some/foobar?limit=5
-Navigator.prototype.relation = function Navigator__relation(rel, title, extraParams) {
+//    eg relation('item', 'foobar', { limit:5 }), Link: <http://example.com/some/{id}{?limit}>; rel="item" -> http://example.com/some/foobar?limit=5
+Navigator.prototype.relation = function Navigator__relation(rel, id, extraParams) {
 	var params = extraParams || {};
-	params['title'] = (title || '').toLowerCase();
+	params.id = (id || '').toLowerCase();
 
 	return new Navigator(new NavigatorContext(rel, params), this);
 };
@@ -2539,13 +2543,13 @@ Navigator.prototype.__resolveChild = function Navigator__resolveChild(childNav, 
 };
 
 // looks up a link in the cache and generates the URI
-//  - first looks for a matching rel and title
-//    eg item('foobar') -> Link: <http://example.com/some/foobar>; rel="item"; title="foobar" -> http://example.com/some/foobar
-//  - then looks for a matching rel with no title and uses that to generate the link
+//  - first looks for a matching rel and id
+//    eg item('foobar') -> Link: <http://example.com/some/foobar>; rel="item"; id="foobar" -> http://example.com/some/foobar
+//  - then looks for a matching rel with no id and uses that to generate the link
 //    eg item('foobar') -> Link: <http://example.com/some/{item}>; rel="item" -> http://example.com/some/foobar
 Navigator.prototype.__lookupLink = function Navigator__lookupLink(context) {
-	// try to find the link with a title equal to the param we were given
-	var href = local.web.lookupLink(this.links, context.rel, context.relparams.title);
+	// try to find the link with a id equal to the param we were given
+	var href = local.web.lookupLink(this.links, context.rel, context.relparams.id);
 
 	if (href) {
 		var url = local.web.UriTemplate.parse(href).expand(context.relparams);
@@ -2598,12 +2602,12 @@ NAV_RELATION_FNS.forEach(function (r) {
 });
 
 // builder fn
-local.web.navigator = function(urlOrNavOrLinks, optRel, optTitle) {
+local.web.navigator = function(urlOrNavOrLinks, optRel, optId) {
 	if (urlOrNavOrLinks instanceof Navigator)
 		return urlOrNavOrLinks;
 	var url;
 	if (Array.isArray(urlOrNavOrLinks))
-		url = local.web.lookupLink(urlOrNavOrLinks, optRel, optTitle);
+		url = local.web.lookupLink(urlOrNavOrLinks, optRel, optId);
 	else
 		url = urlOrNavOrLinks;
 	return new Navigator(url);

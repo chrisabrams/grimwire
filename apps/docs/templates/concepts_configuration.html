@@ -32,7 +32,7 @@ var profcolors = _.extend({}, config.profcolors, config.usr.profcolors);
 		<p class="muted">The search application's technique for finding indexable content on a server</p><br/>
 		<pre class="language-javascript">response.setHeader('link', [
   { rel:'self', href:'/' },
-  { rel:'collection', href:'/items', title:'items' },
+  { rel:'collection', href:'/items', id:'items' },
   { rel:'http://grimwire.com/rel/index', href:'/items?schema=grimsearch' }
 ]);</pre>
 		<p class="muted">The rss reader's exported links at its root resource</p>

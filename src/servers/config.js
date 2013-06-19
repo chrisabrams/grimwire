@@ -377,8 +377,8 @@
 		var headers = {
 			link: [
 				{ rel:'self', href:'/' },
-				{ rel:'collection', href:'/apps', title:'apps' },
-				{ rel:'collection', href:'/{title}' }
+				{ rel:'collection', href:'/apps', id:'apps' },
+				{ rel:'collection', href:'/{id}' }
 			]
 		};
 		if (/html/.test(request.headers.accept))
@@ -394,7 +394,7 @@
 			link: [
 				{ rel:'up via service', href:'/' },
 				{ rel:'self', href:'/workers' },
-				{ rel:'item', href:'/workers/{title}' }
+				{ rel:'item', href:'/workers/{id}' }
 			]
 		};
 		if (/html/.test(request.headers.accept)) {
@@ -538,7 +538,7 @@
 			link: [
 				{ rel:'up via service', href:'/' },
 				{ rel:'self', href:'/apps' },
-				{ rel:'item', href:'/apps/{title}' },
+				{ rel:'item', href:'/apps/{id}' },
 				{ rel:'http://grimwire.com/rel/index', href:'/apps?schema=grimsearch' }
 			]
 		};
@@ -597,7 +597,7 @@
 			link: [
 				{ rel:'up via service', href:'/' },
 				{ rel:'self', href:'/apps' },
-				{ rel:'item', href:'/apps/{title}' }
+				{ rel:'item', href:'/apps/{id}' }
 			]
 		};
 

@@ -29,14 +29,12 @@ local.env.setDispatchWrapper(function(request, response, dispatch, origin) {
 	}
 
 	// allow request
-	var response = dispatch(request, response);
-	response.always(function (response) {
+	dispatch(request, response).always(function (response) {
 		console.log(response.status, request.method, request.url);
 		if ($requestInProgress)
 			$requestInProgress.detach();
 		updateCookies(request, origin, response);
 	});
-	return response;
 });
 
 
