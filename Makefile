@@ -12,7 +12,8 @@ src-grim-files =\
 	${src}grim/transform-links.js
 src-servers-files =\
 	${src}local/servers/env/storage.js\
-	${src}servers/config.js
+	${src}servers/config.js\
+	${src}servers/rtcpeer.js
 src-widgets-files =\
 	${src}widgets/_compiled_header.js\
 	${src}widgets/lifespan.js\
