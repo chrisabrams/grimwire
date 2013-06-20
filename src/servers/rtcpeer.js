@@ -14,6 +14,7 @@
 	// server wrapper for WebRTC connections
 	// - currently only supports Chrome
 	// - `config.sigRelay`: a URI or navigator instance for a grimwire.com/rel/sse/relay
+	// - `config.initiate`: should this peer send the offer? If false, will wait for one
 	var DEBUGname = 'A';
 	function RTCPeerServer(config) {
 		// :DEBUG:
@@ -46,6 +47,9 @@
 		// state handling
 		this.isOfferExchanged = false;
 		this.queuedCandidates = []; // cant add candidates till we get the offer
+
+		this.notifySignal({ type: 'ready' });
+		this.offerOnReady = config.initiate;
 	}
 	window.RTCPeerServer = RTCPeerServer;
 	RTCPeerServer.prototype = Object.create(local.env.Server.prototype);
@@ -56,6 +60,7 @@
 		this.peerConn.createOffer(
 			function(desc) {
 				console.debug(self.debugname, 'CREATED OFFER', desc);
+				desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
 				self.peerConn.setLocalDescription(desc);
 				self.notifySignal({
 					type: 'offer',
@@ -80,16 +85,20 @@
 	}
 
 	function setupRequestChannel() {
+		// :DEBUG: remove when reliable: true is supported
+		this.reqChannelReliable = new Reliable(this.reqChannel);
 		this.reqChannel.onopen = onReqChannelOpen.bind(this);
 		this.reqChannel.onclose = onReqChannelClose.bind(this);
 		this.reqChannel.onerror = onReqChannelError.bind(this);
-		this.reqChannel.onmessage = onReqChannelMessage.bind(this);
+		// this.reqChannel.onmessage = onReqChannelMessage.bind(this);
+		this.reqChannelReliable.onmessage = onReqChannelReliableMessage.bind(this);
 	}
 
 	function onReqChannelOpen(e) {
 		// :TODO:
 		console.debug(this.debugname, 'REQ CHANNEL OPEN', e);
-		this.reqChannel.send('Hello! from '+this.debugname);
+		// this.reqChannel.send('Hello! from '+this.debugname);
+		this.reqChannelReliable.send('Reliable Hello! from '+this.debugname);
 	}
 
 	function onReqChannelClose(e) {
@@ -107,6 +116,11 @@
 		console.debug(this.debugname, 'REQ CHANNEL MSG', e);
 	}
 
+	function onReqChannelReliableMessage(e) {
+		// :TODO:
+		console.debug(this.debugname, 'REQ CHANNEL MSG', e);
+	}
+
 	// called when we receive a message from the relay
 	function onSigRelayMessage(m) {
 		var self = this;
@@ -117,6 +131,12 @@
 		// console.debug(this.debugname, 'SIG', m, from, data.type, data);
 
 		switch (data.type) {
+			case 'ready':
+				// peer's ready to start
+				if (this.offerOnReady)
+					this.sendOffer();
+				break;
+
 			case 'candidate':
 				console.debug(this.debugname, 'GOT CANDIDATE', data.candidate);
 				// received address info from the peer
@@ -132,6 +152,7 @@
 				this.peerConn.createAnswer(
 					function(desc) {
 						console.debug(self.debugname, 'CREATED ANSWER', desc);
+						desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
 						self.peerConn.setLocalDescription(desc);
 						self.notifySignal({
 							type: 'answer',
