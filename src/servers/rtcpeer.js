@@ -57,8 +57,9 @@
 		this.__isOfferExchanged = false;
 		this.__candidateQueue = []; // cant add candidates till we get the offer
 		this.__ridcounter = 1; // current request id
-		this.__incomingRequests = {};
-		this.__incomingResponses = {};
+		this.__incomingRequests = {}; // only includes requests currently being received
+		this.__incomingResponses = {}; // only includes responses currently being received
+		this.__reqChannelBuffer = {}; // used to buffer messages that arrive out of order
 
 		// internal state flags
 		this.state = {
@@ -72,10 +73,15 @@
 	window.RTCPeerServer = RTCPeerServer;
 	RTCPeerServer.prototype = Object.create(local.env.Server.prototype);
 
+	RTCPeerServer.prototype.debugLog = function() {
+		var args = [this.debugname].concat([].slice.call(arguments));
+		console.debug.apply(console, args);
+	};
+
 	// request handler
 	RTCPeerServer.prototype.handleHttpRequest = function(request, response) {
 		var self = this;
-		console.debug(this.debugname, 'HANDLING REQUEST', request);
+		this.debugLog('HANDLING REQUEST', request);
 		if (request.path == '/') {
 			// self info
 			response.setHeader('link', [
@@ -168,18 +174,23 @@
 		this.__incomingResponses[resid] = response;
 
 		// shuttle request across
+		var reqmid = 0;
 		var chan = this.reqChannelReliable;
-		chan.send(reqid+':h:'+JSON.stringify(request));
-		request.on('data', function(data) { chan.send(reqid+':d:'+data); });
-		request.on('end', function() { chan.send(reqid+':e'); });
-		request.on('close', function() { chan.send(reqid+':c'); });
+		chan.send(reqid+':'+(reqmid++)+':h:'+JSON.stringify(request));
+		request.on('data', function(data) { chan.send(reqid+':'+(reqmid++)+':d:'+data); });
+		request.on('end', function() { chan.send(reqid+':'+(reqmid++)+':e'); });
+		request.on('close', function() { chan.send(reqid+':'+(reqmid++)+':c'); });
 
 		if (selfEnd) request.end(body);
 		return response_;
 	};
 
 	// request channel traffic handling
-	// - message format: <rid>:<message type>[:<message>]
+	// - message format: <rid>:<mid>:<message type>[:<message data>]
+	//   - rid: request/response id, used to group together messages
+	//   - mid: message id, used to guarantee arrival ordering
+	//   - message type: indicates message content
+	//   - message data: optional, the message content
 	// - message types:
 	//   - 'h': headers* (new request)
 	//   - 'd': data* (request content, may be sent multiple times)
@@ -188,18 +199,20 @@
 	//   - *includes a message body
 	// - responses use the negated rid (request=5 -> response=-5)
 	function handleReqChannelReliableMessage(msg) {
-		console.debug(this.debugname, 'REQ CHANNEL RELIABLE MSG', msg);
+		this.debugLog('REQ CHANNEL RELIABLE MSG', msg);
 
 		var parsedmsg = parseReqChannelMessage(msg);
 		if (!parsedmsg) return;
 
-		if (parsedmsg[0] > 0)
-			handlePeerRequest.apply(this, parsedmsg);
-		else
-			handlePeerResponse.apply(this, parsedmsg);
+		ensureReqChannelOrder.call(this, parsedmsg, function() {
+			if (parsedmsg[0] > 0)
+				handlePeerRequest.apply(this, parsedmsg);
+			else
+				handlePeerResponse.apply(this, parsedmsg);
+		});
 	}
 
-	function handlePeerRequest(reqid, mtype, mdata) {
+	function handlePeerRequest(reqid, mid, mtype, mdata) {
 		var chan = this.reqChannelReliable;
 		var request;
 		if (mtype == 'h') {
@@ -209,11 +222,12 @@
 			request.stream = true;
 			request = new local.web.Request(request);
 			local.web.dispatch(request, this).always(function(response) {
+				var resmid = 0;
 				var resid = -reqid; // indicate response with negated request id
-				chan.send(resid+':h:'+JSON.stringify(response));
-				response.on('data', function(data) { chan.send(resid+':d:'+data); });
-				response.on('end', function() { chan.send(resid+':e'); });
-				response.on('close', function() { chan.send(resid+':c'); });
+				chan.send(resid+':'+(resmid++)+':h:'+JSON.stringify(response));
+				response.on('data', function(data) { chan.send(resid+':'+(resmid++)+':d:'+data); });
+				response.on('end', function() { chan.send(resid+':'+(resmid++)+':e'); });
+				response.on('close', function() { chan.send(resid+':'+(resmid++)+':c'); });
 			});
 
 			this.__incomingRequests[reqid] = request; // start tracking
@@ -226,13 +240,14 @@
 				case 'c':
 					request.close();
 					delete this.__incomingRequests[reqid];
+					delete this.__reqChannelBuffer[reqid];
 					break;
 				default: console.warn('RTCPeerServer - Unrecognized message from peer', reqid, mtype, mdata);
 			}
 		}
 	}
 
-	function handlePeerResponse(resid, mtype, mdata) {
+	function handlePeerResponse(resid, mid, mtype, mdata) {
 		var response = this.__incomingResponses[resid];
 		if (!response)
 			return console.warn('RTCPeerServer - Invalid response id', resid, mtype, mdata);
@@ -247,6 +262,7 @@
 			case 'c':
 				response.close();
 				delete this.__incomingResponses[resid]; // stop tracking
+				delete this.__reqChannelBuffer[resid];
 				break;
 			default: console.warn('RTCPeerServer - Unrecognized message from peer', resid, mtype, mdata);
 		}
@@ -254,13 +270,38 @@
 
 	// splits the message into its parts
 	// - format: <rid>:<message type>[:<message>]
+	var reqChannelMessageRE = /([\-\d]+):([\-\d]+):(.)(:.*)?/;
 	function parseReqChannelMessage(msg) {
-		var i1 = msg.indexOf(':');
-		var i2 = msg.indexOf(':', i1+1);
-		if (i1 === -1) { console.warn('RTCPeerServer - Unparseable message from peer', msg); return null; }
-		if (i2 === -1)
-			return [parseInt(msg.slice(0, i1), 10), msg.slice(i1+1)];
-		return [parseInt(msg.slice(0, i1), 10), msg.slice(i1+1, i2), msg.slice(i2+1)];
+		var match = reqChannelMessageRE.exec(msg);
+		if (!match) { console.warn('RTCPeerServer - Unparseable message from peer', msg); return null; }
+		var parsedmsg = [parseInt(match[1], 10), parseInt(match[2], 10), match[3]];
+		if (match[4])
+			parsedmsg.push(match[4].slice(1));
+		return parsedmsg;
+	}
+
+	// tracks messages received in the request channel and delays processing if received out of order
+	function ensureReqChannelOrder(parsedmsg, cb) {
+		var rid = parsedmsg[0];
+		var mid = parsedmsg[1];
+
+		var buffer = this.__reqChannelBuffer[rid];
+		if (!buffer)
+			buffer = this.__reqChannelBuffer[rid] = { nextmid: 0, cbs: {} };
+
+		if (mid > buffer.nextmid) { // not the next message?
+			buffer.cbs[mid] = cb; // hold onto that callback
+			this.debugLog('REQ CHANNEL MSG OoO, BUFFERING', parsedmsg);
+		} else {
+			cb.call(this);
+			buffer.nextmid++;
+			while (buffer.cbs[buffer.nextmid]) { // burn through the queue
+				this.debugLog('REQ CHANNEL DRAINING OoO MSG', buffer.nextmid);
+				buffer.cbs[buffer.nextmid].call(this);
+				delete buffer.cbs[buffer.nextmid];
+				buffer.nextmid++;
+			}
+		}
 	}
 
 	function setupRequestChannel() {
@@ -274,7 +315,7 @@
 
 	function onReqChannelOpen(e) {
 		// :TODO:
-		console.debug(this.debugname, 'REQ CHANNEL OPEN', e);
+		this.debugLog('REQ CHANNEL OPEN', e);
 		this.state.connected = true;
 		if (typeof this.chanOpenCb == 'function')
 			this.chanOpenCb();
@@ -284,17 +325,17 @@
 
 	function onReqChannelClose(e) {
 		// :TODO:
-		console.debug(this.debugname, 'REQ CHANNEL CLOSE', e);
+		this.debugLog('REQ CHANNEL CLOSE', e);
 	}
 
 	function onReqChannelError(e) {
 		// :TODO:
-		console.debug(this.debugname, 'REQ CHANNEL ERR', e);
+		this.debugLog('REQ CHANNEL ERR', e);
 	}
 
 	// function handleReqChannelMessage(e) {
 	// 	// :TODO:
-	// 	console.debug(this.debugname, 'REQ CHANNEL MSG', e);
+	// 	this.debugLog('REQ CHANNEL MSG', e);
 	// }
 
 	// called when we receive a message from the relay
@@ -307,7 +348,7 @@
 			return;
 		}
 
-		// console.debug(this.debugname, 'SIG', m, from, data.type, data);
+		// this.debugLog('SIG', m, from, data.type, data);
 		switch (data.type) {
 			case 'ready':
 				// peer's ready to start
@@ -316,20 +357,20 @@
 				break;
 
 			case 'candidate':
-				console.debug(this.debugname, 'GOT CANDIDATE', data.candidate);
+				this.debugLog('GOT CANDIDATE', data.candidate);
 				// received address info from the peer
 				if (!this.__isOfferExchanged) this.__candidateQueue.push(data.candidate);
 				else this.peerConn.addIceCandidate(new RTCIceCandidate({ candidate: data.candidate }));
 				break;
 
 			case 'offer':
-				console.debug(this.debugname, 'GOT OFFER', data);
+				this.debugLog('GOT OFFER', data);
 				// received a session offer from the peer
 				this.peerConn.setRemoteDescription(new RTCSessionDescription(data));
 				handleOfferExchanged.call(self);
 				this.peerConn.createAnswer(
 					function(desc) {
-						console.debug(self.debugname, 'CREATED ANSWER', desc);
+						self.debugLog('CREATED ANSWER', desc);
 						desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
 						self.peerConn.setLocalDescription(desc);
 						self.signal({
@@ -343,7 +384,7 @@
 				break;
 
 			case 'answer':
-				console.debug(this.debugname, 'GOT ANSWER', data);
+				this.debugLog('GOT ANSWER', data);
 				// received session confirmation from the peer
 				this.peerConn.setRemoteDescription(new RTCSessionDescription(data));
 				handleOfferExchanged.call(self);
@@ -373,7 +414,7 @@
 		var self = this;
 		this.peerConn.createOffer(
 			function(desc) {
-				console.debug(self.debugname, 'CREATED OFFER', desc);
+				self.debugLog('CREATED OFFER', desc);
 				desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
 				self.peerConn.setLocalDescription(desc);
 				self.signal({
@@ -400,7 +441,7 @@
 	// called by the RTCPeerConnection when we get a possible connection path
 	function onIceCandidate(e) {
 		if (e && e.candidate) {
-			console.debug(this.debugname, 'FOUND ICE CANDIDATE', e.candidate);
+			this.debugLog('FOUND ICE CANDIDATE', e.candidate);
 			// send connection info to peers on the relay
 			this.signal({
 				type: 'candidate',

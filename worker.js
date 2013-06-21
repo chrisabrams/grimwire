@@ -820,7 +820,7 @@ Request.prototype.serializeHeaders = function(headers) {
 				v.host,
 				((v.comment) ? v.comment : '')
 			].join(' ');
-		}).join(', ')
+		}).join(', ');
 	}
 };
 
