@@ -47,6 +47,7 @@
 		// state handling
 		this.isOfferExchanged = false;
 		this.queuedCandidates = []; // cant add candidates till we get the offer
+		this.ridcounter = 1; // current request id
 
 		this.notifySignal({ type: 'ready' });
 		this.offerOnReady = config.initiate;
@@ -54,51 +55,126 @@
 	window.RTCPeerServer = RTCPeerServer;
 	RTCPeerServer.prototype = Object.create(local.env.Server.prototype);
 
-	// initiates a session with peers on the relay
-	RTCPeerServer.prototype.sendOffer = function() {
-		var self = this;
-		this.peerConn.createOffer(
-			function(desc) {
-				console.debug(self.debugname, 'CREATED OFFER', desc);
-				desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
-				self.peerConn.setLocalDescription(desc);
-				self.notifySignal({
-					type: 'offer',
-					sdp: desc.sdp
-				});
-			},
-			null,
-			mediaConstraints
-		);
+	// request handler
+	RTCPeerServer.prototype.handleHttpRequest = function(request, response) {
+		// :TODO:
 	};
 
-	// called by the RTCPeerConnection when we get a possible connection path
-	function onIceCandidate(e) {
-		if (e && e.candidate) {
-			console.debug(this.debugname, 'FOUND ICE CANDIDATE', e.candidate);
-			// send connection info to peers on the relay
-			this.notifySignal({
-				type: 'candidate',
-				candidate: e.candidate.candidate
-			});
+	RTCPeerServer.prototype.terminate = function() {
+		// :TODO:
+	};
+
+	// sends a request to the peer to dispatch for us
+	RTCPeerServer.prototype.peerDispatch = function(request) {
+		var selfEnd = false;
+		if (!(request instanceof local.web.Request)) {
+			request = new local.web.Request(request);
+			selfEnd = true;
+		}
+
+		var chan = this.reqChannelReliable;
+		var rid = this.ridcounter++;
+		chan.send(rid+':h:'+JSON.stringify(request));
+		request.on('data', function(data) { chan.send(rid+':d:'+data); });
+		request.on('end', function() { chan.send(rid+':e'); });
+		request.on('close', function() { chan.send(rid+':c'); });
+
+		// :TODO: track response
+
+		if (selfEnd) request.end();
+	};
+
+	// request channel traffic handling
+	// - message format: <rid>:<message type>[:<message>]
+	// - message types:
+	//   - 'h': headers* (new request)
+	//   - 'd': data* (request content, may be sent multiple times)
+	//   - 'e': end (request finished)
+	//   - 'c': close (request closed)
+	//   - *includes a message body
+	// - responses use the negated rid (request=5 -> response=-5)
+	function handleReqChannelReliableMessage(msg) {
+		var self = this;
+		var chan = this.reqChannelReliable;
+		console.debug(this.debugname, 'REQ CHANNEL RELIABLE MSG', msg);
+
+		// parse
+		var rid, mtype, mdata;
+		var parsedmsg = parseReqChannelMessage(msg);
+		if (!parsedmsg) return;
+		rid = parsedmsg[0]; mtype = parsedmsg[1]; mdata = parsedmsg[2];
+
+		if (rid > 0) {
+			// handle request from peer
+			var request;
+			if (mtype == 'h') {
+				try { request = JSON.parse(mdata); }
+				catch (e) { return console.warn('RTCPeerServer - Unparseable request headers message from peer', msg); }
+
+				// :DEBUG: just pipe out directly
+				request.stream = true;
+				request = new local.web.Request(request);
+				local.web.dispatch(request, this).always(function(response) {
+					// send response with negated request id
+					chan.send((-rid)+':h:'+JSON.stringify(response));
+					response.on('data', function(data) { chan.send((-rid)+':d:'+data); });
+					response.on('end', function() { chan.send((-rid)+':e'); });
+					response.on('close', function() { chan.send((-rid)+':c'); });
+				});
+
+				// :TODO: track request
+			} else {
+				request = throw "getrequest(rid)";
+				if (!request) { return console.warn('RTCPeerServer - Invalid request id', msg); }
+				switch (mtype) {
+					case 'd': request.write(mdata); break;
+					case 'e': request.end(); break;
+					case 'c': request.close(); break;
+					default: console.warn('RTCPeerServer - Unrecognized message from peer', msg);
+				}
+			}
+		} else {
+			// handle response from peer
+			var response;
+			response = throw "getresponse(-rid)";
+			if (!response) { return console.warn('RTCPeerServer - Invalid response id', msg); }
+			switch (mtype) {
+				case 'h':
+					try { mdata = JSON.parse(mdata); }
+					catch (e) { return console.warn('RTCPeerServer - Unparseable response headers message from peer', msg); }
+					response.writeHead(mdata.status, mdata.reason, mdata.headers);
+					break;
+				case 'd': response.write(mdata); break;
+				case 'e': response.end(); break;
+				case 'c': response.close(); break;
+				default: console.warn('RTCPeerServer - Unrecognized message from peer', msg);
+			}
 		}
 	}
 
+	function parseReqChannelMessage(msg) {
+		var i1 = msg.indexOf(':');
+		var i2 = msg.indexOf(':', i1+1);
+		if (i1 === -1) { console.warn('RTCPeerServer - Unparseable message from peer', msg); return null; }
+		if (i2 === -1)
+			return [parseInt(msg.slice(0, i1), 10), msg.slice(i1+1)];
+		return [parseInt(msg.slice(0, i1), 10), msg.slice(i1+1, i2), msg.slice(i2+1)];
+	}
+
 	function setupRequestChannel() {
-		// :DEBUG: remove when reliable: true is supported
-		this.reqChannelReliable = new Reliable(this.reqChannel);
+		this.reqChannelReliable = new Reliable(this.reqChannel); // :DEBUG: remove when reliable: true is supported
 		this.reqChannel.onopen = onReqChannelOpen.bind(this);
 		this.reqChannel.onclose = onReqChannelClose.bind(this);
 		this.reqChannel.onerror = onReqChannelError.bind(this);
-		// this.reqChannel.onmessage = onReqChannelMessage.bind(this);
-		this.reqChannelReliable.onmessage = onReqChannelReliableMessage.bind(this);
+		// this.reqChannel.onmessage = handleReqChannelMessage.bind(this);
+		this.reqChannelReliable.onmessage = handleReqChannelReliableMessage.bind(this);
 	}
 
 	function onReqChannelOpen(e) {
 		// :TODO:
 		console.debug(this.debugname, 'REQ CHANNEL OPEN', e);
 		// this.reqChannel.send('Hello! from '+this.debugname);
-		this.reqChannelReliable.send('Reliable Hello! from '+this.debugname);
+		// this.reqChannelReliable.send('Reliable Hello! from '+this.debugname);
 	}
 
 	function onReqChannelClose(e) {
@@ -111,30 +187,27 @@
 		console.debug(this.debugname, 'REQ CHANNEL ERR', e);
 	}
 
-	function onReqChannelMessage(e) {
-		// :TODO:
-		console.debug(this.debugname, 'REQ CHANNEL MSG', e);
-	}
-
-	function onReqChannelReliableMessage(e) {
-		// :TODO:
-		console.debug(this.debugname, 'REQ CHANNEL MSG', e);
-	}
+	// function handleReqChannelMessage(e) {
+	// 	// :TODO:
+	// 	console.debug(this.debugname, 'REQ CHANNEL MSG', e);
+	// }
 
 	// called when we receive a message from the relay
 	function onSigRelayMessage(m) {
 		var self = this;
 		var from = m.event, data = m.data;
 
-		// :TODO: validate from?
+		if (data && typeof data != 'object') {
+			console.warn('RTCPeerServer - Unparseable signal message from'+from, m);
+			return;
+		}
 
 		// console.debug(this.debugname, 'SIG', m, from, data.type, data);
-
 		switch (data.type) {
 			case 'ready':
 				// peer's ready to start
 				if (this.offerOnReady)
-					this.sendOffer();
+					sendOffer.call(this);
 				break;
 
 			case 'candidate':
@@ -190,6 +263,24 @@
 		});
 	};
 
+	// helper initiates a session with peers on the relay
+	function sendOffer() {
+		var self = this;
+		this.peerConn.createOffer(
+			function(desc) {
+				console.debug(self.debugname, 'CREATED OFFER', desc);
+				desc.sdp = Reliable.higherBandwidthSDP(desc.sdp); // :DEBUG: remove when reliable: true is supported
+				self.peerConn.setLocalDescription(desc);
+				self.notifySignal({
+					type: 'offer',
+					sdp: desc.sdp
+				});
+			},
+			null,
+			mediaConstraints
+		);
+	}
+
 	// helper called whenever we have a remote session description
 	// (candidates cant be added before then, so they're queued in case they come first)
 	function handleOfferExchanged() {
@@ -201,15 +292,15 @@
 		this.queuedCandidates.length = 0;
 	}
 
-	// request handler, should be overwritten by subclasses
-	RTCPeerServer.prototype.handleHttpRequest = function(request, response) {
-		response.writeHead(0, 'server not implemented');
-		response.end();
-	};
-
-	// called before server destruction, should be overwritten by subclasses
-	// - executes syncronously - does not wait for cleanup to finish
-	RTCPeerServer.prototype.terminate = function() {
-		// :TODO:
-	};
+	// called by the RTCPeerConnection when we get a possible connection path
+	function onIceCandidate(e) {
+		if (e && e.candidate) {
+			console.debug(this.debugname, 'FOUND ICE CANDIDATE', e.candidate);
+			// send connection info to peers on the relay
+			this.notifySignal({
+				type: 'candidate',
+				candidate: e.candidate.candidate
+			});
+		}
+	}
 })();
