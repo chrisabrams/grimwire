@@ -129,6 +129,12 @@ configServer.loadFromHost()
 		});
 })();*/
 
+local.web.registerLocal('httpl://echo', function(req, res) {
+	console.log(req);
+	req.on('data', console.log.bind(console));
+	req.body_.always(console.log.bind(console));
+});
+
 function startRTC() {
 	var peer;
 	var auth = "Basic cGZyYXplOmRvbnRsb29rc29ncmltd2lyZQ==";
@@ -157,19 +163,12 @@ function rtcTest() {
 			console.log('relay created at', res.headers.location);
 			var sigRelay1 = local.web.navigator(res.headers.location);
 			sigRelay1.setAuthHeader(ownerAuth);
-			var peer1 = new RTCPeerServer({ sigRelay: sigRelay1, initiate: true });
+			local.env.addServer('pfraze.peer', new RTCPeerServer({ sigRelay: sigRelay1, initiate: true }));
 
 			var sigRelay2 = local.web.navigator(res.headers.location);
 			sigRelay2.setAuthHeader("Basic cGZyYXplMjpkb250bG9va3NvZ3JpbXdpcmU=");
-			var peer2 = new RTCPeerServer({ sigRelay: sigRelay2 }, function() {
-				peer2.peerDispatch({
-					method:'get',
-					url:'httpl://config.env/apps',
-					headers: { accept: 'application/json' }
-				}).always(console.log.bind(console));
-			});
+			local.env.addServer('pfraze2.peer', new RTCPeerServer({ sigRelay: sigRelay2 }));
 		});
-	
 }
 
 

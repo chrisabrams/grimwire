@@ -26,6 +26,7 @@
 		this.debugname = DEBUGname;
 		DEBUGname = 'B';
 
+		var self = this;
 		local.env.Server.call(this);
 		if (!config) config = {};
 		if (!config.sigRelay) throw "`config.sigRelay` is required";
@@ -38,6 +39,7 @@
 		this.sigRelay = local.web.navigator(config.sigRelay);
 		this.sigRelay.subscribe({ headers: { 'last-event-id': -1 } })
 			.then(function(stream) {
+				self.state.signaling = true;
 				stream.on('message', signalHandler);
 			});
 
@@ -50,13 +52,20 @@
 		setupRequestChannel.call(this);
 		this.chanOpenCb = chanOpenCb;
 
-		// internal state handling
+		// internal state
 		this.__offerOnReady = !!config.initiate;
 		this.__isOfferExchanged = false;
 		this.__candidateQueue = []; // cant add candidates till we get the offer
 		this.__ridcounter = 1; // current request id
 		this.__incomingRequests = {};
 		this.__incomingResponses = {};
+
+		// internal state flags
+		this.state = {
+			alive: true,
+			signaling: false,
+			connected: false
+		};
 
 		this.signal({ type: 'ready' });
 	}
@@ -65,11 +74,68 @@
 
 	// request handler
 	RTCPeerServer.prototype.handleHttpRequest = function(request, response) {
-		// :TODO:
+		var self = this;
+		console.debug(this.debugname, 'HANDLING REQUEST', request);
+		if (request.path == '/') {
+			// self info
+			response.setHeader('link', [
+				{ href: '/', rel: 'self service via' },
+				{ href: '/{id}', rel: 'http://grimwire.com/rel/proxy' }
+				// :TODO: any links shared by the peer
+			]);
+			if (request.method == 'GET')
+				response.writeHead(200, 'ok').end(this.state);
+			else if (request.method == 'HEAD')
+				response.writeHead(200, 'ok').end();
+			else
+				response.writeHead(405, 'bad method').end();
+		} else {
+			// proxy
+			var targetUrl = decodeURIComponent(request.path.slice(1));
+			var targetUrld = local.web.parseUri(targetUrl);
+			var theirHost = targetUrld.authority ? (targetUrld.protocol + '://' + targetUrld.authority) : myHost;
+			var myHost = 'httpl://'+self.config.domain+'/';
+			var via = getViaDesc.call(this);
+
+			var req2 = new local.web.Request(request);
+			req2.url = targetUrl;
+			req2.headers.via = (req2.headers.via) ? req2.headers.via.concat(via) : [via];
+			
+			req2.stream = true;
+			this.peerDispatch(req2).always(function(res2) {
+				res2.headers.via = (res2.headers.via) ? res2.headers.via.concat(via) : [via];
+
+				if (res2.headers.link) {
+					res2.headers.link.forEach(function(link) {
+						var urld = local.web.parseUri(link.href);
+						if (!urld.host) link.href = theirHost + link.href;
+						link.href = myHost + link.href;
+					});
+				}
+
+				response.writeHead(res2.status, res2.reason, res2.headers);
+				res2.on('data', response.write.bind(response));
+				res2.on('end', response.end.bind(response));
+			});
+
+			request.on('data', req2.write.bind(req2));
+			request.on('end', req2.end.bind(req2));
+		}
 	};
+
+	function getViaDesc() {
+		return {
+			protocol: { name:'httpl', version:'0.4' },
+			host: this.config.domain,
+			comment: 'Grimwire/0.2'
+		};
+	}
 
 	RTCPeerServer.prototype.terminate = function() {
 		// :TODO:
+		this.state.alive = false;
+		this.state.signaling = false;
+		this.state.connected = false;
 	};
 
 	// sends a request to the peer to dispatch for us
@@ -209,6 +275,7 @@
 	function onReqChannelOpen(e) {
 		// :TODO:
 		console.debug(this.debugname, 'REQ CHANNEL OPEN', e);
+		this.state.connected = true;
 		if (typeof this.chanOpenCb == 'function')
 			this.chanOpenCb();
 		// this.reqChannel.send('Hello! from '+this.debugname);
